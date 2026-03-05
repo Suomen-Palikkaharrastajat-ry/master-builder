@@ -10,7 +10,7 @@ devenv.local.yaml
 .pre-commit-config.yaml
 
 # Agents
-TODO*
+TODO.md
 
 # elm-pages generated code
 .elm-pages/

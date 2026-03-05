@@ -132,6 +132,12 @@ export function wireAdminPorts(app) {
     requestAnimationFrame(() => {
       mountEditor((newContent) => {
         app.ports.editorContentChanged.send(newContent);
+        // Auto-save draft with debounce
+        clearTimeout(draftSaveTimer);
+        draftSaveTimer = setTimeout(() => {
+          const path = window.__currentEditPath;
+          if (path) localStorage.setItem(DRAFT_PREFIX + path, newContent);
+        }, 1000);
       });
     });
   });
@@ -144,15 +150,6 @@ export function wireAdminPorts(app) {
   // ── setEditorContent ───────────────────────────────────────────────────────
   app.ports.setEditorContent.subscribe((content) => {
     setContent(content);
-  });
-
-  // ── editorContentChanged: auto-save draft with debounce ────────────────────
-  app.ports.editorContentChanged.subscribe((content) => {
-    clearTimeout(draftSaveTimer);
-    draftSaveTimer = setTimeout(() => {
-      const path = window.__currentEditPath;
-      if (path) localStorage.setItem(DRAFT_PREFIX + path, content);
-    }, 1000);
   });
 
   // ── saveDraft ──────────────────────────────────────────────────────────────

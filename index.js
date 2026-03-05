@@ -1,3 +1,4 @@
+import './style.css';
 import { wireAdminPorts } from './public/admin-ports.js';
 
 const config = {

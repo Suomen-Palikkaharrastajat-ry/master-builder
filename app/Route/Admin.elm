@@ -487,89 +487,130 @@ view _ _ model =
 
 viewBody : Model -> Html Msg
 viewBody model =
-    Html.div [ Attr.class "admin" ]
-        [ Html.h1 [] [ Html.text "Site Editor" ]
+    Html.div [ Attr.class "min-h-screen bg-gray-50 flex flex-col" ]
+        [ viewNav model
         , viewBuildStatus model.buildStatus
-        , case model.auth of
-            NotLoggedIn ->
-                viewNotLoggedIn
+        , Html.main_ [ Attr.class "flex-1 max-w-5xl mx-auto w-full px-6 py-8" ]
+            [ case model.auth of
+                NotLoggedIn ->
+                    viewNotLoggedIn
 
-            RequestingDeviceCode ->
-                Html.p [] [ Html.text "Requesting device code\u{2026}" ]
+                RequestingDeviceCode ->
+                    viewCard []
+                        [ Html.p [ Attr.class "text-gray-600" ]
+                            [ Html.text "Requesting device code\u{2026}" ]
+                        ]
 
-            AwaitingUserAuth state ->
-                viewAwaitingAuth state
+                AwaitingUserAuth state ->
+                    viewAwaitingAuth state
 
-            PATEntry draft ->
-                viewPATEntry draft
+                PATEntry draft ->
+                    viewPATEntry draft
 
-            LoggedIn token ->
-                viewLoggedIn token model
+                LoggedIn _ ->
+                    viewEditorState model.editorState
 
-            AuthError err ->
-                Html.div []
-                    [ Html.p [ Attr.style "color" "red" ] [ Html.text ("Error: " ++ err) ]
-                    , Html.button [ Events.onClick ClickedLoginWithGitHub ]
-                        [ Html.text "Try again" ]
-                    ]
+                AuthError err ->
+                    viewCard []
+                        [ Html.p [ Attr.class "text-red-600 mb-4" ] [ Html.text ("Error: " ++ err) ]
+                        , btnPrimary [ Events.onClick ClickedLoginWithGitHub ] "Try again"
+                        ]
+            ]
+        ]
+
+
+viewNav : Model -> Html Msg
+viewNav model =
+    Html.nav [ Attr.class "bg-gray-900 text-white shadow-md" ]
+        [ Html.div [ Attr.class "max-w-5xl mx-auto px-6 py-4 flex items-center justify-between" ]
+            [ Html.span [ Attr.class "text-lg font-semibold tracking-tight" ]
+                [ Html.text "Site Editor" ]
+            , case model.auth of
+                LoggedIn token ->
+                    Html.div [ Attr.class "flex items-center gap-4" ]
+                        [ Html.span [ Attr.class "text-sm text-gray-300" ]
+                            [ Html.text
+                                (if String.isEmpty token.login then
+                                    "Logged in"
+
+                                 else
+                                    "Signed in as " ++ token.login
+                                )
+                            ]
+                        , Html.button
+                            [ Events.onClick ClickedLogout
+                            , Attr.class "text-sm text-gray-300 hover:text-white underline"
+                            ]
+                            [ Html.text "Log out" ]
+                        ]
+
+                _ ->
+                    Html.text ""
+            ]
         ]
 
 
 viewNotLoggedIn : Html Msg
 viewNotLoggedIn =
-    Html.div []
-        [ Html.p [] [ Html.text "Sign in to edit pages." ]
-        , Html.button [ Events.onClick ClickedLoginWithGitHub ]
-            [ Html.text "Login with GitHub (device flow)" ]
-        , Html.text " or "
-        , Html.button [ Events.onClick ClickedUsePAT ]
-            [ Html.text "Use Personal Access Token" ]
+    viewCard [ Attr.class "max-w-md mx-auto" ]
+        [ Html.h2 [ Attr.class "text-xl font-semibold text-gray-800 mb-2" ]
+            [ Html.text "Sign in to edit pages" ]
+        , Html.p [ Attr.class "text-gray-500 text-sm mb-6" ]
+            [ Html.text "Authenticate with your GitHub account to browse and edit content." ]
+        , Html.div [ Attr.class "flex flex-col gap-3" ]
+            [ btnPrimary [ Events.onClick ClickedLoginWithGitHub ]
+                "Login with GitHub (device flow)"
+            , Html.div [ Attr.class "flex items-center gap-3" ]
+                [ Html.hr [ Attr.class "flex-1 border-gray-200" ] []
+                , Html.span [ Attr.class "text-xs text-gray-400" ] [ Html.text "or" ]
+                , Html.hr [ Attr.class "flex-1 border-gray-200" ] []
+                ]
+            , btnSecondary [ Events.onClick ClickedUsePAT ]
+                "Use Personal Access Token"
+            ]
         ]
 
 
 viewAwaitingAuth : DeviceCodeState -> Html Msg
 viewAwaitingAuth state =
-    Html.div []
-        [ Html.p [] [ Html.text "Open this URL in your browser:" ]
-        , Html.a [ Attr.href state.verificationUri, Attr.target "_blank" ]
+    viewCard [ Attr.class "max-w-md mx-auto" ]
+        [ Html.h2 [ Attr.class "text-xl font-semibold text-gray-800 mb-4" ]
+            [ Html.text "Authorise in GitHub" ]
+        , Html.p [ Attr.class "text-sm text-gray-600 mb-2" ]
+            [ Html.text "1. Open this URL in your browser:" ]
+        , Html.a
+            [ Attr.href state.verificationUri
+            , Attr.target "_blank"
+            , Attr.class "text-blue-600 hover:underline text-sm break-all block mb-4"
+            ]
             [ Html.text state.verificationUri ]
-        , Html.p [] [ Html.text "Then enter this code:" ]
-        , Html.pre [] [ Html.text state.userCode ]
-        , Html.p [] [ Html.text "Waiting for authorisation\u{2026}" ]
+        , Html.p [ Attr.class "text-sm text-gray-600 mb-2" ]
+            [ Html.text "2. Enter this code:" ]
+        , Html.div [ Attr.class "bg-gray-100 rounded-lg px-6 py-4 text-center font-mono text-2xl font-bold tracking-widest text-gray-800 mb-4" ]
+            [ Html.text state.userCode ]
+        , Html.p [ Attr.class "text-sm text-gray-500 italic" ]
+            [ Html.text "Waiting for authorisation\u{2026}" ]
         ]
 
 
 viewPATEntry : String -> Html Msg
 viewPATEntry draft =
-    Html.div []
-        [ Html.p [] [ Html.text "Paste a GitHub Personal Access Token with repo scope:" ]
-        , Html.input
-            [ Attr.type_ "password"
-            , Attr.value draft
-            , Attr.placeholder "ghp_..."
-            , Events.onInput PATChanged
+    viewCard [ Attr.class "max-w-md mx-auto" ]
+        [ Html.h2 [ Attr.class "text-xl font-semibold text-gray-800 mb-2" ]
+            [ Html.text "Personal Access Token" ]
+        , Html.p [ Attr.class "text-sm text-gray-500 mb-4" ]
+            [ Html.text "Paste a GitHub PAT with " ]
+        , Html.div [ Attr.class "flex gap-2" ]
+            [ Html.input
+                [ Attr.type_ "password"
+                , Attr.value draft
+                , Attr.placeholder "ghp_..."
+                , Events.onInput PATChanged
+                , Attr.class "flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                ]
+                []
+            , btnPrimary [ Events.onClick PATSubmitted ] "Save"
             ]
-            []
-        , Html.button [ Events.onClick PATSubmitted ] [ Html.text "Save" ]
-        ]
-
-
-viewLoggedIn : Token -> Model -> Html Msg
-viewLoggedIn token model =
-    Html.div []
-        [ Html.p []
-            [ Html.text
-                ("Logged in"
-                    ++ (if String.isEmpty token.login then
-                            ""
-
-                        else
-                            " as " ++ token.login
-                       )
-                )
-            ]
-        , Html.button [ Events.onClick ClickedLogout ] [ Html.text "Log out" ]
-        , viewEditorState model.editorState
         ]
 
 
@@ -577,20 +618,27 @@ viewEditorState : EditorState -> Html Msg
 viewEditorState editorState =
     case editorState of
         NoBrowserOpen ->
-            Html.button [ Events.onClick ClickedBrowseFiles ]
-                [ Html.text "Browse files" ]
+            viewCard [ Attr.class "max-w-sm mx-auto text-center" ]
+                [ Html.p [ Attr.class "text-gray-500 mb-4" ]
+                    [ Html.text "Browse the content directory to pick a file to edit." ]
+                , btnPrimary [ Events.onClick ClickedBrowseFiles ] "Browse files"
+                ]
 
         LoadingFiles ->
-            Html.p [] [ Html.text "Loading files\u{2026}" ]
+            Html.p [ Attr.class "text-gray-500" ] [ Html.text "Loading files\u{2026}" ]
 
         FileBrowser files ->
             Html.div []
-                [ Html.h2 [] [ Html.text "Choose a file" ]
-                , Html.ul []
+                [ Html.h2 [ Attr.class "text-lg font-semibold text-gray-800 mb-4" ]
+                    [ Html.text "Choose a file" ]
+                , Html.ul [ Attr.class "divide-y divide-gray-100 border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm" ]
                     (List.map
                         (\f ->
                             Html.li []
-                                [ Html.button [ Events.onClick (ClickedFile f) ]
+                                [ Html.button
+                                    [ Events.onClick (ClickedFile f)
+                                    , Attr.class "w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 hover:text-blue-600 transition-colors"
+                                    ]
                                     [ Html.text f.name ]
                                 ]
                         )
@@ -599,36 +647,52 @@ viewEditorState editorState =
                 ]
 
         LoadingFile meta ->
-            Html.p [] [ Html.text ("Loading " ++ meta.name ++ "\u{2026}") ]
+            Html.p [ Attr.class "text-gray-500" ]
+                [ Html.text ("Loading " ++ meta.name ++ "\u{2026}") ]
 
         Editing session ->
-            Html.div []
-                [ Html.h2 [] [ Html.text ("Editing: " ++ session.file.name) ]
+            Html.div [ Attr.class "flex flex-col gap-4" ]
+                [ Html.div [ Attr.class "flex items-center justify-between" ]
+                    [ Html.h2 [ Attr.class "text-lg font-semibold text-gray-800" ]
+                        [ Html.text ("Editing: " ++ session.file.name) ]
+                    ]
                 , case session.pendingDraft of
                     Just _ ->
-                        Html.div [ Attr.style "background" "#fff3cd", Attr.style "padding" "0.5em" ]
-                            [ Html.text "You have an unsaved draft. "
-                            , Html.button [ Events.onClick ResumedDraft ] [ Html.text "Resume draft" ]
-                            , Html.text " or "
-                            , Html.button [ Events.onClick DiscardedDraft ] [ Html.text "Discard" ]
+                        Html.div [ Attr.class "bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 flex items-center gap-3 text-sm" ]
+                            [ Html.span [ Attr.class "text-amber-800 flex-1" ]
+                                [ Html.text "You have an unsaved draft." ]
+                            , btnSecondary [ Events.onClick ResumedDraft ] "Resume draft"
+                            , Html.button
+                                [ Events.onClick DiscardedDraft
+                                , Attr.class "text-sm text-gray-500 hover:text-gray-700 underline"
+                                ]
+                                [ Html.text "Discard" ]
                             ]
 
                     Nothing ->
                         Html.text ""
                 , Html.div [ Attr.id "cm-editor" ] []
-                , Html.div [ Attr.style "margin-top" "1em" ]
+                , Html.div [ Attr.class "flex items-center gap-3 flex-wrap" ]
                     [ Html.input
                         [ Attr.type_ "text"
                         , Attr.value session.commitMessage
                         , Attr.placeholder "Commit message"
                         , Events.onInput CommitMessageChanged
-                        , Attr.style "width" "60%"
+                        , Attr.class "flex-1 min-w-0 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                         ]
                         []
-                    , Html.text " "
                     , Html.button
                         [ Events.onClick ClickedCommit
                         , Attr.disabled (session.commitState == Committing)
+                        , Attr.class
+                            ("inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium text-white transition-colors "
+                                ++ (if session.commitState == Committing then
+                                        "bg-blue-400 cursor-not-allowed"
+
+                                    else
+                                        "bg-blue-600 hover:bg-blue-700"
+                                   )
+                            )
                         ]
                         [ Html.text
                             (if session.commitState == Committing then
@@ -640,7 +704,8 @@ viewEditorState editorState =
                         ]
                     , case session.commitState of
                         CommitError err ->
-                            Html.p [ Attr.style "color" "red" ] [ Html.text ("Error: " ++ err) ]
+                            Html.p [ Attr.class "w-full text-sm text-red-600" ]
+                                [ Html.text ("Error: " ++ err) ]
 
                         _ ->
                             Html.text ""
@@ -665,7 +730,7 @@ viewBuildStatus status =
         BuildLive { pageUrl } ->
             Html.div [ Attr.class "build-status live" ]
                 [ Html.text "\u{2705} Live! "
-                , Html.a [ Attr.href pageUrl, Attr.target "_blank" ]
+                , Html.a [ Attr.href pageUrl, Attr.target "_blank", Attr.class "underline hover:no-underline" ]
                     [ Html.text "View updated page" ]
                 ]
 
@@ -676,6 +741,33 @@ viewBuildStatus status =
         BuildFailed reason ->
             Html.div [ Attr.class "build-status error" ]
                 [ Html.text ("\u{274C} Build failed: " ++ reason) ]
+
+
+-- ── Reusable UI helpers ────────────────────────────────────────────────────
+
+viewCard : List (Html.Attribute Msg) -> List (Html Msg) -> Html Msg
+viewCard attrs children =
+    Html.div
+        (Attr.class "bg-white border border-gray-200 rounded-xl shadow-sm p-6" :: attrs)
+        children
+
+
+btnPrimary : List (Html.Attribute Msg) -> String -> Html Msg
+btnPrimary attrs label =
+    Html.button
+        (Attr.class "inline-flex items-center justify-center px-4 py-2 rounded-lg text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            :: attrs
+        )
+        [ Html.text label ]
+
+
+btnSecondary : List (Html.Attribute Msg) -> String -> Html Msg
+btnSecondary attrs label =
+    Html.button
+        (Attr.class "inline-flex items-center justify-center px-4 py-2 rounded-lg text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 transition-colors"
+            :: attrs
+        )
+        [ Html.text label ]
 
 
 -- ── Port stubs ────────────────────────────────────────────────────────────────

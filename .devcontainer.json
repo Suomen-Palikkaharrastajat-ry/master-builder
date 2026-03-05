@@ -12,11 +12,8 @@
         "jnoortheen.nix-ide",
         "GitHub.copilot",
         "GitHub.copilot-chat",
-        "sbrink.elm"
-      ],
-      "settings": {
-        "remote.autoForwardPorts": false
-      }
+        "elmTooling.elm-ls-vscode"
+      ]
     }
   },
   "image": "ghcr.io/cachix/devenv/devcontainer:latest",
@@ -30,8 +27,7 @@
     "GPG_TTY": "/dev/pts/0"
   },
   "runArgs": [
-    "--userns=keep-id",
-    "--network=host"
+    "--userns=keep-id"
   ],
   "updateContentCommand": "devenv shell -- echo Ready."
 }

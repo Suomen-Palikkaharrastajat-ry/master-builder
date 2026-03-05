@@ -14,7 +14,7 @@
       "GitHub.copilot-chat"
       "mkhl.direnv"
       "vscodevim.vim"
-      "sbrink.elm"
+      "elmTooling.elm-ls-vscode"
     ];
   };
 }
