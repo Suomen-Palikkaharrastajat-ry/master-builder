@@ -251,8 +251,8 @@ update _ _ msg model =
                     , Effect.fromCmd
                         (listFiles
                             { token = token.value
-                            , owner = model.siteMeta.owner
-                            , repo = model.siteMeta.repo
+                            , owner = model.siteMeta.contentOwner
+                            , repo = model.siteMeta.contentRepo
                             , path = "content"
                             }
                         )
@@ -274,8 +274,8 @@ update _ _ msg model =
                     , Effect.fromCmd
                         (fetchFile
                             { token = token.value
-                            , owner = model.siteMeta.owner
-                            , repo = model.siteMeta.repo
+                            , owner = model.siteMeta.contentOwner
+                            , repo = model.siteMeta.contentRepo
                             , path = meta.path
                             }
                         )
@@ -366,8 +366,8 @@ update _ _ msg model =
                     , Effect.fromCmd
                         (commitFile
                             { token = token.value
-                            , owner = model.siteMeta.owner
-                            , repo = model.siteMeta.repo
+                            , owner = model.siteMeta.contentOwner
+                            , repo = model.siteMeta.contentRepo
                             , path = session.file.path
                             , content = session.content
                             , sha = session.originalSha

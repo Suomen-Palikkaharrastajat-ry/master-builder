@@ -12,6 +12,8 @@ type alias SiteMeta =
     , runId : String
     , owner : String
     , repo : String
+    , contentOwner : String
+    , contentRepo : String
     , oauthClientId : String
     , oauthProxyUrl : String
     , repoScope : String
@@ -27,6 +29,8 @@ decoder =
             , runId = runId
             , owner = owner
             , repo = repo
+            , contentOwner = owner
+            , contentRepo = repo
             , oauthClientId = oauthClientId
             , oauthProxyUrl = oauthProxyUrl
             , repoScope = "public_repo"
@@ -48,6 +52,40 @@ decoder =
                     |> Decode.maybe
                     |> Decode.map (Maybe.withDefault "public_repo")
                     |> Decode.map (\scope -> { meta | repoScope = scope })
+            )
+        |> Decode.andThen
+            (\meta ->
+                Decode.field "contentOwner" Decode.string
+                    |> Decode.maybe
+                    |> Decode.map (Maybe.withDefault "")
+                    |> Decode.map
+                        (\v ->
+                            { meta
+                                | contentOwner =
+                                    if String.isEmpty v then
+                                        meta.owner
+
+                                    else
+                                        v
+                            }
+                        )
+            )
+        |> Decode.andThen
+            (\meta ->
+                Decode.field "contentRepo" Decode.string
+                    |> Decode.maybe
+                    |> Decode.map (Maybe.withDefault "")
+                    |> Decode.map
+                        (\v ->
+                            { meta
+                                | contentRepo =
+                                    if String.isEmpty v then
+                                        meta.repo
+
+                                    else
+                                        v
+                            }
+                        )
             )
 
 
