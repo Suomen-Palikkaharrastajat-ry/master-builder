@@ -1,7 +1,7 @@
 // SECURITY: Never log `token` or `window.__gh*` variables.
 // Port implementations for the Admin route.
 
-import { mountEditor, setContent, destroyEditor } from '../src/admin/Editor.js';
+import { mountEditor, setContent } from '../src/admin/Editor.js';
 
 export function wireAdminPorts(app) {
   const STORAGE_KEY = 'gh_token';
@@ -140,11 +140,6 @@ export function wireAdminPorts(app) {
         }, 1000);
       });
     });
-  });
-
-  // ── destroyEditor ──────────────────────────────────────────────────────────
-  app.ports.destroyEditor.subscribe(() => {
-    destroyEditor();
   });
 
   // ── setEditorContent ───────────────────────────────────────────────────────

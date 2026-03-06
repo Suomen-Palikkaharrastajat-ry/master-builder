@@ -817,9 +817,6 @@ port editorContentChanged : (String -> msg) -> Sub msg
 port mountEditor : () -> Cmd msg
 
 
-port destroyEditor : () -> Cmd msg
-
-
 port saveDraft : { path : String, content : String } -> Cmd msg
 
 
