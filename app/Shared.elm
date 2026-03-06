@@ -105,7 +105,7 @@ view _ page _ _ pageView =
                             [ Html.img
                                 [ Attr.src "https://logo.suomenpalikkayhteiso.fi/logo/horizontal/svg/horizontal-full-dark.svg"
                                 , Attr.alt "Suomen Palikkaharrastajat ry"
-                                , Attr.class "h-9"
+                                , Attr.class "h-14"
                                 ]
                                 []
                             ]

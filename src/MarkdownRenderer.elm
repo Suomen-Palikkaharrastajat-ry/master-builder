@@ -399,7 +399,7 @@ buttonLinkClass : Maybe String -> String
 buttonLinkClass variant =
     let
         base =
-            "no-underline inline-flex items-center justify-center font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 px-4 py-2 text-sm [&_p]:text-inherit [&_p]:my-0"
+            "no-underline inline-flex items-center justify-center font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 px-4 py-2 text-sm mr-2 mb-2 [&_p]:text-inherit [&_p]:my-0"
     in
     base
         ++ " "

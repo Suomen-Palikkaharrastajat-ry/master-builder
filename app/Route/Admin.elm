@@ -521,7 +521,7 @@ viewNav model =
                 [ Html.img
                     [ Attr.src "https://logo.suomenpalikkayhteiso.fi/logo/horizontal/svg/horizontal-full-dark.svg"
                     , Attr.alt "Suomen Palikkaharrastajat ry"
-                    , Attr.class "h-[60px]"
+                    , Attr.class "h-14"
                     ]
                     []
                 ]
