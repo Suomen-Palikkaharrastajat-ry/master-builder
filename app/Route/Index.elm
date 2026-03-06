@@ -98,14 +98,27 @@ view :
 view app _ =
     { title = "Home"
     , body =
-        [ Html.h1 [] [ Html.text "Pages" ]
-        , Html.ul []
+        [ Html.h1 [ Attr.class "text-3xl font-bold text-gray-900 mb-2" ]
+            [ Html.text "Pages" ]
+        , Html.p [ Attr.class "text-gray-500 mb-8" ]
+            [ Html.text "All published content" ]
+        , Html.ul [ Attr.class "divide-y divide-gray-100 border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm" ]
             (List.map
                 (\page ->
                     Html.li []
                         [ Html.a
-                            [ Attr.href ("/" ++ page.slug) ]
-                            [ Html.text page.title ]
+                            [ Attr.href ("/" ++ page.slug)
+                            , Attr.class "flex flex-col px-5 py-4 hover:bg-gray-50 transition-colors"
+                            ]
+                            [ Html.span [ Attr.class "font-medium text-gray-900" ]
+                                [ Html.text page.title ]
+                            , if String.isEmpty page.description then
+                                Html.text ""
+
+                              else
+                                Html.span [ Attr.class "text-sm text-gray-500 mt-0.5" ]
+                                    [ Html.text page.description ]
+                            ]
                         ]
                 )
                 app.data.pages

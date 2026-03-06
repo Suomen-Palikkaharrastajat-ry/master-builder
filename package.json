@@ -22,6 +22,7 @@
     "@codemirror/theme-one-dark": "^6.1.3",
     "@codemirror/view": "^6.39.16",
     "@netlify/functions": "^3.0.0",
+    "@tailwindcss/typography": "^0.5.19",
     "@tailwindcss/vite": "^4.2.1",
     "tailwindcss": "^4.2.1"
   }

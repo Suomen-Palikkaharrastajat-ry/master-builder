@@ -97,7 +97,10 @@ view :
 view app _ =
     { title = app.data.frontmatter.title
     , body =
-        [ renderMarkdown app.data.body ]
+        [ Html.a [ Attr.href "/", Attr.class "inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-900 mb-6 transition-colors" ]
+            [ Html.text "← All pages" ]
+        , renderMarkdown app.data.body
+        ]
     }
 
 
@@ -110,7 +113,7 @@ renderMarkdown markdown =
             |> Result.andThen (Markdown.Renderer.render Markdown.Renderer.defaultHtmlRenderer)
     of
         Ok rendered ->
-            Html.div [ Attr.class "prose" ] rendered
+            Html.article [ Attr.class "prose prose-gray max-w-none" ] rendered
 
         Err err ->
-            Html.pre [] [ Html.text err ]
+            Html.pre [ Attr.class "text-red-600 text-sm" ] [ Html.text err ]

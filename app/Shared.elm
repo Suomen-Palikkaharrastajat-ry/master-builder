@@ -4,11 +4,11 @@ import BackendTask exposing (BackendTask)
 import Effect exposing (Effect)
 import FatalError exposing (FatalError)
 import Html exposing (Html)
-import Html.Events
+import Html.Attributes as Attr
 import Pages.Flags
 import Pages.PageUrl exposing (PageUrl)
 import UrlPath exposing (UrlPath)
-import Route exposing (Route)
+import Route exposing (Route(..))
 import SharedTemplate exposing (SharedTemplate)
 import View exposing (View)
 
@@ -91,30 +91,23 @@ view :
     -> (Msg -> msg)
     -> View msg
     -> { body : List (Html msg), title : String }
-view sharedData page model toMsg pageView =
-    { body =
-        [ Html.nav []
-            [ Html.button
-                [ Html.Events.onClick MenuClicked ]
-                [ Html.text
-                    (if model.showMenu then
-                        "Close Menu"
+view _ page _ _ pageView =
+    case page.route of
+        Just Admin ->
+            -- Admin has its own full-page layout; render body directly
+            { body = pageView.body, title = pageView.title }
 
-                     else
-                        "Open Menu"
-                    )
-                ]
-            , if model.showMenu then
-                Html.ul []
-                    [ Html.li [] [ Html.text "Menu item 1" ]
-                    , Html.li [] [ Html.text "Menu item 2" ]
+        _ ->
+            { body =
+                [ Html.nav [ Attr.class "bg-white border-b border-gray-200" ]
+                    [ Html.div [ Attr.class "max-w-5xl mx-auto px-6 py-4 flex items-center justify-between" ]
+                        [ Html.a [ Attr.href "/", Attr.class "text-lg font-semibold text-gray-900 hover:text-gray-700 transition-colors" ]
+                            [ Html.text "My Site" ]
+                        , Html.a [ Attr.href "/admin", Attr.class "text-sm text-gray-500 hover:text-gray-900 transition-colors" ]
+                            [ Html.text "Admin" ]
+                        ]
                     ]
-
-              else
-                Html.text ""
-            ]
-            |> Html.map toMsg
-        , Html.main_ [] pageView.body
-        ]
-    , title = pageView.title
-    }
+                , Html.main_ [ Attr.class "max-w-5xl mx-auto px-6 py-10 w-full" ] pageView.body
+                ]
+            , title = pageView.title
+            }
