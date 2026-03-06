@@ -72,13 +72,13 @@ variantClasses : Variant -> String
 variantClasses variant =
     case variant of
         Primary ->
-            "bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500"
+            "bg-brand-yellow text-brand hover:bg-brand hover:text-brand-yellow focus:ring-brand-yellow"
 
         Secondary ->
-            "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 focus:ring-blue-500"
+            "bg-white text-brand border border-brand/40 hover:bg-brand/5 focus:ring-brand"
 
         Ghost ->
-            "text-blue-600 hover:bg-blue-50 focus:ring-blue-500"
+            "text-brand hover:bg-brand/5 focus:ring-brand"
 
         Danger ->
             "bg-red-600 text-white hover:bg-red-700 focus:ring-red-500"

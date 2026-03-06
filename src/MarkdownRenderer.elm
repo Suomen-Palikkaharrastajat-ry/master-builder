@@ -98,7 +98,7 @@ viewLink : { title : Maybe String, destination : String } -> List (Html msg) -> 
 viewLink link children =
     Html.a
         [ Attr.href link.destination
-        , Attr.class "text-indigo-600 hover:text-indigo-800 underline underline-offset-2 transition-colors"
+        , Attr.class "text-brand font-medium underline underline-offset-2 hover:opacity-70 transition-opacity"
         ]
         children
 
@@ -230,7 +230,7 @@ htmlRenderer =
                     [ case icon of
                         Just ico ->
                             Html.div
-                                [ Attr.class "mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-600 text-white text-lg" ]
+                                [ Attr.class "mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-brand-yellow text-brand text-lg" ]
                                 [ Html.text ico ]
 
                         Nothing ->
@@ -405,11 +405,11 @@ buttonLinkClass variant =
         ++ " "
         ++ (case Maybe.withDefault "primary" variant of
                 "secondary" ->
-                    "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 focus:ring-blue-500"
+                    "bg-white text-brand border border-brand/40 hover:bg-brand/5 focus:ring-brand"
 
                 "ghost" ->
-                    "text-blue-600 hover:bg-blue-50 focus:ring-blue-500"
+                    "text-brand hover:bg-brand/5 focus:ring-brand"
 
                 _ ->
-                    "bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500"
+                    "bg-brand-yellow text-brand hover:bg-brand hover:text-brand-yellow focus:ring-brand-yellow"
            )
