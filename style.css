@@ -3,24 +3,86 @@
 
 @font-face {
   font-family: "Outfit";
-  src: url("https://logo.suomenpalikkayhteiso.fi/fonts/Outfit-VariableFont_wght.ttf") format("truetype");
+  src: url("https://logo.palikkaharrastajat.fi/fonts/Outfit-VariableFont_wght.ttf") format("truetype");
   font-weight: 100 900;
   font-style: normal;
   font-display: swap;
 }
 
 @theme {
-  --font-sans: "Outfit", sans-serif;
-  --color-brand: #05131D;
-  --color-brand-yellow: #F2CD37;
+  /* ── Font ─────────────────────────────────────────────────────────────── */
+  --font-sans: "Outfit", system-ui, sans-serif;
+  --font-mono: ui-monospace, monospace;
+
+  /* ── Brand palette ────────────────────────────────────────────────────── */
+  --color-brand:              #05131D;
+  --color-brand-yellow:       #F2CD37;
+  --color-brand-red:          #C91A09;
+  --color-brand-nougat-light: #F6D7B3;
+  --color-brand-nougat:       #D09168;
+  --color-brand-nougat-dark:  #AD6140;
+
+  /* ── Semantic text ────────────────────────────────────────────────────── */
+  --color-text-primary: #05131D;
+  --color-text-on-dark: #FFFFFF;
+  --color-text-muted:   #6B7280;
+  --color-text-subtle:  #9CA3AF;
+
+  /* ── Semantic backgrounds ─────────────────────────────────────────────── */
+  --color-bg-page:   #FFFFFF;
+  --color-bg-dark:   #05131D;
+  --color-bg-subtle: #F9FAFB;
+  --color-bg-accent: #F2CD37;
+
+  /* ── Semantic borders ─────────────────────────────────────────────────── */
+  --color-border-default: #E5E7EB;
+  --color-border-brand:   #05131D;
+
+  /* ── Typography scale (Outfit) ────────────────────────────────────────── */
+  --text-display:      3rem;      /* 48px / weight 700 – hero headlines     */
+  --text-heading-1:    1.875rem;  /* 30px / weight 700 – page headings      */
+  --text-heading-2:    1.5rem;    /* 24px / weight 700 – section headings   */
+  --text-heading-3:    1.25rem;   /* 20px / weight 600 – sub-section heads  */
+  --text-body:         1rem;      /* 16px / weight 400 – body copy          */
+  --text-body-small:   0.875rem;  /* 14px / weight 500 – labels, controls  */
+  --text-caption:      0.875rem;  /* 14px / weight 400 – captions, meta    */
+  --text-mono:         0.875rem;  /* 14px / weight 400 – code, hex values  */
+  --text-overline:     0.75rem;   /* 12px / weight 600 – category labels   */
+
+  /* ── Spacing scale (4px base) ─────────────────────────────────────────── */
+  --spacing-1:  0.25rem;  /* 4px  – icon padding, inline gaps     */
+  --spacing-2:  0.5rem;   /* 8px  – button padding, tag gaps      */
+  --spacing-3:  0.75rem;  /* 12px – input padding, list item gaps */
+  --spacing-4:  1rem;     /* 16px – card padding, form field gaps */
+  --spacing-6:  1.5rem;   /* 24px – section sub-divisions         */
+  --spacing-8:  2rem;     /* 32px – card body padding             */
+  --spacing-12: 3rem;     /* 48px – page section vertical margins */
+  --spacing-16: 4rem;     /* 64px – hero and feature block spacing */
+
+  /* ── Motion ───────────────────────────────────────────────────────────── */
+  --duration-fast: 150ms;
+  --duration-base: 300ms;
+  --duration-slow: 500ms;
+  --ease-standard:   cubic-bezier(0.4, 0.0, 0.2, 1.0);
+  --ease-decelerate: cubic-bezier(0.0, 0.0, 0.2, 1.0);
+  --ease-accelerate: cubic-bezier(0.4, 0.0, 1.0, 1.0);
 }
 
-/* CodeMirror editor container */
+/* ── Reduced-motion override ──────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ── CodeMirror editor container ──────────────────────────────────────────── */
 #cm-editor {
-  @apply border border-gray-300 rounded-lg overflow-hidden;
+  @apply border border-border-default rounded-lg overflow-hidden;
 }
 
-/* Build status banners */
+/* ── Build status banners ─────────────────────────────────────────────────── */
 .build-status {
   @apply px-4 py-3 rounded-lg mb-4 flex items-center gap-2 text-sm font-medium;
 }

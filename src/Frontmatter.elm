@@ -8,13 +8,15 @@ type alias Frontmatter =
     , description : String
     , slug : String
     , published : Bool
+    , nav : Bool
     }
 
 
 decoder : Decoder Frontmatter
 decoder =
-    Decode.map4 Frontmatter
+    Decode.map5 Frontmatter
         (Decode.field "title" Decode.string)
         (Decode.field "description" Decode.string)
         (Decode.field "slug" Decode.string)
         (Decode.field "published" Decode.bool)
+        (Decode.oneOf [ Decode.field "nav" Decode.bool, Decode.succeed False ])

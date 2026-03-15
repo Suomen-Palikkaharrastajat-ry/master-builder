@@ -23,13 +23,28 @@ devenv.local.yaml:
 install: ## Install npm dependencies
 	npm install
 
+# ── Content ──────────────────────────────────────────────────────────────────
+
+.PHONY: fetch-content
+fetch-content: ## Sync content/ from external repo (set CONTENT_OWNER, CONTENT_REPO, CONTENT_REF)
+	bash scripts/fetch-content.sh
+
+# ── Build ────────────────────────────────────────────────────────────────────
+
 .PHONY: dev
-dev: ## Start elm-pages dev server
+dev: ## Start elm-pages dev server (uses local template/)
 	npx elm-pages dev
 
+.PHONY: watch
+watch: ## Start dev server pointed at ./content (CONTENT_DIR=content)
+	CONTENT_DIR=content npx elm-pages dev
+
 .PHONY: build
-build: ## Build elm-pages site into dist/
+build: ## Build elm-pages site into dist/ (fetch content first when CONTENT_OWNER/CONTENT_REPO are set)
+	bash scripts/fetch-content.sh
 	npx elm-pages build
+
+# ── Deploy ───────────────────────────────────────────────────────────────────
 
 .PHONY: deploy
 deploy: ## Commit and push to trigger CI deploy (requires clean working tree)

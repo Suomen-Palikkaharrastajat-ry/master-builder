@@ -253,7 +253,7 @@ update _ _ msg model =
                             { token = token.value
                             , owner = model.siteMeta.contentOwner
                             , repo = model.siteMeta.contentRepo
-                            , path = "content"
+                            , path = "template"
                             }
                         )
                     )
@@ -390,7 +390,7 @@ update _ _ msg model =
                                 ++ model.siteMeta.repo
                                 ++ "/"
                                 ++ (session.file.path
-                                        |> String.replace "content/" ""
+                                        |> String.replace "template/" ""
                                         |> String.replace ".md" "/"
                                    )
                     in
@@ -487,7 +487,7 @@ view _ _ model =
 
 viewBody : Model -> Html Msg
 viewBody model =
-    Html.div [ Attr.class "min-h-screen bg-gray-50 flex flex-col" ]
+    Html.div [ Attr.class "min-h-screen bg-bg-subtle flex flex-col" ]
         [ viewNav model
         , viewBuildStatus model.buildStatus
         , Html.main_ [ Attr.class "flex-1 max-w-5xl mx-auto w-full px-6 py-8" ]
@@ -519,7 +519,7 @@ viewNav model =
         [ Html.div [ Attr.class "max-w-5xl mx-auto px-6 py-3 flex items-center justify-between" ]
             [ Html.a [ Attr.href "/" ]
                 [ Html.img
-                    [ Attr.src "https://logo.suomenpalikkayhteiso.fi/logo/horizontal/svg/horizontal-full-dark.svg"
+                    [ Attr.src "https://logo.palikkaharrastajat.fi/logo/horizontal/svg/horizontal-full-dark.svg"
                     , Attr.alt "Suomen Palikkaharrastajat ry"
                     , Attr.class "h-14"
                     ]
@@ -554,9 +554,9 @@ viewNav model =
 viewPATEntry : String -> Html Msg
 viewPATEntry draft =
     viewCard [ Attr.class "max-w-md mx-auto" ]
-        [ Html.h2 [ Attr.class "text-xl font-semibold text-gray-800 mb-2" ]
+        [ Html.h2 [ Attr.class "text-xl font-semibold text-text-primary mb-2" ]
             [ Html.text "Personal Access Token" ]
-        , Html.p [ Attr.class "text-sm text-gray-500 mb-4" ]
+        , Html.p [ Attr.class "text-sm text-text-muted mb-4" ]
             [ Html.text "Paste a GitHub Personal Access Token with repo scope." ]
         , Html.div [ Attr.class "flex gap-2" ]
             [ Html.input
@@ -564,7 +564,7 @@ viewPATEntry draft =
                 , Attr.value draft
                 , Attr.placeholder "ghp_..."
                 , Events.onInput PATChanged
-                , Attr.class "flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-yellow"
+                , Attr.class "flex-1 border border-border-default rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-yellow"
                 ]
                 []
             , btnPrimary [ Events.onClick PATSubmitted ] "Save"
@@ -577,25 +577,25 @@ viewEditorState editorState =
     case editorState of
         NoBrowserOpen ->
             viewCard [ Attr.class "max-w-sm mx-auto text-center" ]
-                [ Html.p [ Attr.class "text-gray-500 mb-4" ]
+                [ Html.p [ Attr.class "text-text-muted mb-4" ]
                     [ Html.text "Browse the content directory to pick a file to edit." ]
                 , btnPrimary [ Events.onClick ClickedBrowseFiles ] "Browse files"
                 ]
 
         LoadingFiles ->
-            Html.p [ Attr.class "text-gray-500" ] [ Html.text "Loading files\u{2026}" ]
+            Html.p [ Attr.class "text-text-muted" ] [ Html.text "Loading files\u{2026}" ]
 
         FileBrowser files ->
             Html.div []
-                [ Html.h2 [ Attr.class "text-lg font-semibold text-gray-800 mb-4" ]
+                [ Html.h2 [ Attr.class "text-lg font-semibold text-text-primary mb-4" ]
                     [ Html.text "Choose a file" ]
-                , Html.ul [ Attr.class "divide-y divide-gray-100 border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm" ]
+                , Html.ul [ Attr.class "divide-y divide-border-default border border-border-default rounded-lg overflow-hidden bg-bg-page shadow-sm" ]
                     (List.map
                         (\f ->
                             Html.li []
                                 [ Html.button
                                     [ Events.onClick (ClickedFile f)
-                                    , Attr.class "w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 hover:text-blue-600 transition-colors"
+                                    , Attr.class "w-full text-left px-4 py-3 text-sm text-text-primary hover:bg-bg-subtle hover:text-brand transition-colors"
                                     ]
                                     [ Html.text f.name ]
                                 ]
@@ -605,13 +605,13 @@ viewEditorState editorState =
                 ]
 
         LoadingFile meta ->
-            Html.p [ Attr.class "text-gray-500" ]
+            Html.p [ Attr.class "text-text-muted" ]
                 [ Html.text ("Loading " ++ meta.name ++ "\u{2026}") ]
 
         Editing session ->
             Html.div [ Attr.class "flex flex-col gap-4" ]
                 [ Html.div [ Attr.class "flex items-center justify-between" ]
-                    [ Html.h2 [ Attr.class "text-lg font-semibold text-gray-800" ]
+                    [ Html.h2 [ Attr.class "text-lg font-semibold text-text-primary" ]
                         [ Html.text ("Editing: " ++ session.file.name) ]
                     ]
                 , case session.pendingDraft of
@@ -622,7 +622,7 @@ viewEditorState editorState =
                             , btnSecondary [ Events.onClick ResumedDraft ] "Resume draft"
                             , Html.button
                                 [ Events.onClick DiscardedDraft
-                                , Attr.class "text-sm text-gray-500 hover:text-gray-700 underline"
+                                , Attr.class "text-sm text-text-muted hover:text-text-primary underline"
                                 ]
                                 [ Html.text "Discard" ]
                             ]
@@ -636,7 +636,7 @@ viewEditorState editorState =
                         , Attr.value session.commitMessage
                         , Attr.placeholder "Commit message"
                         , Events.onInput CommitMessageChanged
-                        , Attr.class "flex-1 min-w-0 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-yellow"
+                        , Attr.class "flex-1 min-w-0 border border-border-default rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-yellow"
                         ]
                         []
                     , Html.button
@@ -706,7 +706,7 @@ viewBuildStatus status =
 viewCard : List (Html.Attribute Msg) -> List (Html Msg) -> Html Msg
 viewCard attrs children =
     Html.div
-        (Attr.class "bg-white border border-gray-200 rounded-xl shadow-sm p-6" :: attrs)
+        (Attr.class "bg-bg-page border border-border-default rounded-xl shadow-sm p-6" :: attrs)
         children
 
 

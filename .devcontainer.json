@@ -6,8 +6,7 @@
   "customizations": {
     "vscode": {
       "extensions": [
-        "mkhl.direnv",
-        "bbenoist.Nix",
+        "datakurre.devenv",
         "anthropic.claude-code",
         "jnoortheen.nix-ide",
         "GitHub.copilot",
@@ -21,7 +20,6 @@
     "source=${localEnv:XDG_RUNTIME_DIR}/gnupg/S.gpg-agent,target=/run/host-gpg-agent,type=bind,readonly"
   ],
   "overrideCommand": false,
-  "postCreateCommand": "direnv allow",
   "postStartCommand": "mkdir -p /home/vscode/.gnupg && rm -f /home/vscode/.gnupg/S.gpg-agent && ln -s /run/host-gpg-agent /home/vscode/.gnupg/S.gpg-agent",
   "remoteEnv": {
     "GPG_TTY": "/dev/pts/0"

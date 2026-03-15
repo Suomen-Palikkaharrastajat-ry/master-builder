@@ -1,18 +1,17 @@
 {
   profiles.devcontainer.module = {
     devcontainer.enable = true;
-    devcontainer.networkMode = "host";
     devcontainer.tweaks = [
       "gpg-agent"
       "podman"
       "vscode"
     ];
     devcontainer.settings.customizations.vscode.extensions = [
+      "datakurre.devenv"
       "anthropic.claude-code"
       "jnoortheen.nix-ide"
       "GitHub.copilot"
       "GitHub.copilot-chat"
-      "mkhl.direnv"
       "vscodevim.vim"
       "elmTooling.elm-ls-vscode"
     ];

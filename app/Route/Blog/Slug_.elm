@@ -3,6 +3,7 @@ module Route.Blog.Slug_ exposing (ActionData, Data, Model, Msg, route)
 import BackendTask exposing (BackendTask)
 import BackendTask.File as File
 import BackendTask.Glob as Glob
+import ContentDir
 import FatalError exposing (FatalError)
 import Frontmatter exposing (Frontmatter)
 import Head
@@ -52,22 +53,30 @@ route =
 
 pages : BackendTask FatalError (List RouteParams)
 pages =
-    Glob.succeed (\slug -> { slug = slug })
-        |> Glob.match (Glob.literal "content/blog/")
-        |> Glob.capture Glob.wildcard
-        |> Glob.match (Glob.literal ".md")
-        |> Glob.toBackendTask
+    ContentDir.backendTask
+        |> BackendTask.andThen
+            (\dir ->
+                Glob.succeed (\slug -> { slug = slug })
+                    |> Glob.match (Glob.literal (dir ++ "/blog/"))
+                    |> Glob.capture Glob.wildcard
+                    |> Glob.match (Glob.literal ".md")
+                    |> Glob.toBackendTask
+            )
 
 
 data : RouteParams -> BackendTask FatalError Data
 data routeParams =
-    File.bodyWithFrontmatter
-        (\body ->
-            Frontmatter.decoder
-                |> Decode.map (\fm -> { frontmatter = fm, body = body })
-        )
-        ("content/blog/" ++ routeParams.slug ++ ".md")
-        |> BackendTask.allowFatal
+    ContentDir.backendTask
+        |> BackendTask.andThen
+            (\dir ->
+                File.bodyWithFrontmatter
+                    (\body ->
+                        Frontmatter.decoder
+                            |> Decode.map (\fm -> { frontmatter = fm, body = body })
+                    )
+                    (dir ++ "/blog/" ++ routeParams.slug ++ ".md")
+                    |> BackendTask.allowFatal
+            )
 
 
 head : App Data ActionData RouteParams -> List Head.Tag
@@ -97,9 +106,9 @@ view app _ =
     , body =
         [ Html.a
             [ Attr.href "/"
-            , Attr.class "inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-900 mb-6 transition-colors"
+            , Attr.class "inline-flex items-center gap-1 text-sm text-text-muted hover:text-text-primary mb-6 transition-colors"
             ]
-            [ Html.text "← All pages" ]
+            [ Html.text "← Etusivulle" ]
         , MarkdownRenderer.renderMarkdown app.data.body
         ]
     }
