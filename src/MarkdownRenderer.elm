@@ -349,6 +349,34 @@ htmlRenderer =
             )
             |> Markdown.Html.withAttribute "date"
             |> Markdown.Html.withAttribute "title"
+
+        , -- <with-image src="…" alt="…" side="left|right">…</with-image>
+          Markdown.Html.tag "with-image"
+            (\src alt side children ->
+                let
+                    imgEl =
+                        Html.img
+                            [ Attr.src src
+                            , Attr.alt (Maybe.withDefault "" alt)
+                            , Attr.class "w-full rounded-lg"
+                            ]
+                            []
+
+                    isRight =
+                        Maybe.withDefault "right" side == "right"
+                in
+                Html.div
+                    [ Attr.class "not-prose grid grid-cols-1 md:grid-cols-2 gap-8 items-center my-8" ]
+                    (if isRight then
+                        [ Html.div [] children, Html.div [] [ imgEl ] ]
+
+                     else
+                        [ Html.div [] [ imgEl ], Html.div [] children ]
+                    )
+            )
+            |> Markdown.Html.withAttribute "src"
+            |> Markdown.Html.withOptionalAttribute "alt"
+            |> Markdown.Html.withOptionalAttribute "side"
         ]
 
 
