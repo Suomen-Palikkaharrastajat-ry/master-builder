@@ -4,6 +4,8 @@ on:
   push:
     branches: [main]
   workflow_dispatch:          # allow manual re-runs from the Actions UI
+  repository_dispatch:        # triggered by the content repo on push
+    types: [content-updated]
 
 permissions:
   contents: read
