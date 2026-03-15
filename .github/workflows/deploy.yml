@@ -1,18 +1,19 @@
-name: Build and Deploy
+name: Build and Deploy (engine self-test)
+
+# Builds the engine using its own template/ example content and deploys to
+# this repo's GitHub Pages as a demo / staging environment.
+# The real site lives in the content repo, which uses this engine as a tool.
 
 on:
   push:
     branches: [main]
-  workflow_dispatch:          # allow manual re-runs from the Actions UI
-  repository_dispatch:        # triggered by the content repo on push
-    types: [content-updated]
+  workflow_dispatch:
 
 permissions:
   contents: read
   pages: write
   id-token: write
 
-# Only one Pages deployment at a time; don't cancel in-progress deploys.
 concurrency:
   group: pages
   cancel-in-progress: false
@@ -29,47 +30,29 @@ jobs:
         with:
           node-version: '20'
 
-      # ── Cache: npm dependencies ────────────────────────────────────────────
       - name: Cache node_modules
         uses: actions/cache@v4
         with:
           path: node_modules
           key: npm-${{ hashFiles('package-lock.json') }}
-          restore-keys: |
-            npm-
+          restore-keys: npm-
 
-      # ── Cache: Elm package downloads ──────────────────────────────────────
       - name: Cache Elm packages
         uses: actions/cache@v4
         with:
           path: ~/.elm
           key: elm-${{ hashFiles('elm.json') }}
-          restore-keys: |
-            elm-
+          restore-keys: elm-
 
-      # ── Cache: elm-pages generated code ───────────────────────────────────
       - name: Cache elm-pages codegen
         uses: actions/cache@v4
         with:
           path: .elm-pages
           key: elm-pages-${{ hashFiles('elm.json', 'package.json') }}
-          restore-keys: |
-            elm-pages-
+          restore-keys: elm-pages-
 
       - name: Install npm dependencies
         run: npm ci
-
-      # ── Fetch content from external repo ──────────────────────────────────
-      # Set CONTENT_OWNER and CONTENT_REPO repository variables to pull content
-      # from a separate repo. Set CONTENT_PAT secret for private content repos.
-      # Leave all three unset to use the content/ directory in this repo.
-      - name: Fetch content
-        run: bash scripts/fetch-content.sh
-        env:
-          CONTENT_OWNER: ${{ vars.CONTENT_OWNER }}
-          CONTENT_REPO: ${{ vars.CONTENT_REPO }}
-          CONTENT_REF: ${{ vars.CONTENT_REF || 'main' }}
-          CONTENT_PAT: ${{ secrets.CONTENT_PAT }}
 
       - name: Inject build metadata
         run: bash scripts/inject-build-meta.sh
@@ -78,9 +61,8 @@ jobs:
           GITHUB_RUN_ID: ${{ github.run_id }}
           GITHUB_REPOSITORY: ${{ github.repository }}
           OAUTH_CLIENT_ID: ${{ vars.OAUTH_CLIENT_ID }}
-          CONTENT_OWNER: ${{ vars.CONTENT_OWNER }}
-          CONTENT_REPO: ${{ vars.CONTENT_REPO }}
 
+      # CONTENT_DIR defaults to template/ — no fetch needed for self-test
       - name: Build elm-pages site
         run: npx elm-pages build
 
