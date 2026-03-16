@@ -27,3 +27,6 @@ node_modules/
 
 # OS artefacts
 .DS_Store
+
+# Content
+content/
