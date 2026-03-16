@@ -11,10 +11,10 @@ export default {
     return `
 <link rel="stylesheet" href="/style.css" />
 <meta name="generator" content="elm-pages v${context.cliVersion}" />
-<link rel="icon" href="https://logo.suomenpalikkayhteiso.fi/favicon/favicon.ico" type="image/x-icon" />
-<link rel="icon" href="https://logo.suomenpalikkayhteiso.fi/favicon/favicon-32.png" sizes="32x32" type="image/png" />
-<link rel="icon" href="https://logo.suomenpalikkayhteiso.fi/favicon/favicon-16.png" sizes="16x16" type="image/png" />
-<link rel="apple-touch-icon" href="https://logo.suomenpalikkayhteiso.fi/favicon/apple-touch-icon.png" />
+<link rel="icon" href="https://logo.palikkaharrastajat.fi/favicon/favicon.ico" type="image/x-icon" />
+<link rel="icon" href="https://logo.palikkaharrastajat.fi/favicon/favicon-32.png" sizes="32x32" type="image/png" />
+<link rel="icon" href="https://logo.palikkaharrastajat.fi/favicon/favicon-16.png" sizes="16x16" type="image/png" />
+<link rel="apple-touch-icon" href="https://logo.palikkaharrastajat.fi/favicon/apple-touch-icon.png" />
 `;
   },
   preloadTagForFile(file) {

@@ -480,7 +480,7 @@ view :
     -> Model
     -> View (PagesMsg Msg)
 view _ _ model =
-    { title = "Login"
+    { title = "Login \u{2014} Suomen Palikkaharrastajat ry"
     , body = [ Html.map PagesMsg.fromMsg (viewBody model) ]
     }
 

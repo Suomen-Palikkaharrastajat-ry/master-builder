@@ -1,6 +1,10 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
+html {
+  font-size: 18px;
+}
+
 @font-face {
   font-family: "Outfit";
   src: url("https://logo.palikkaharrastajat.fi/fonts/Outfit-VariableFont_wght.ttf") format("truetype");

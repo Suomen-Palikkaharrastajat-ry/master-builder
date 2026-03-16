@@ -50,3 +50,15 @@ rm -rf "$DEST"
 cp -r "$SRC" "$DEST"
 
 echo "fetch-content: done. $(find "$DEST" -type f | wc -l | tr -d ' ') files synced."
+
+# Copy non-markdown assets (images, PDFs, etc.) to public/ so elm-pages includes them in the build.
+PUBLIC_DIR="$(dirname "$0")/../public"
+PUBLIC_DIR="$(realpath "$PUBLIC_DIR")"
+echo "fetch-content: copying non-markdown assets to ${PUBLIC_DIR}/ ..."
+find "$DEST" -type f -not -name "*.md" | while IFS= read -r f; do
+  rel="${f#$DEST/}"
+  destfile="$PUBLIC_DIR/$rel"
+  mkdir -p "$(dirname "$destfile")"
+  cp "$f" "$destfile"
+done
+echo "fetch-content: assets copied."

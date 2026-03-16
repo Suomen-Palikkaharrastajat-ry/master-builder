@@ -82,6 +82,16 @@ Minimum clear space: 25% of logo width on all sides. Minimum digital width: 80px
 - Mobile-first: base styles for mobile, `sm:` / `md:` / `lg:` for overrides
 - Minimum touch target: 44×44px
 
+### Running Elm commands
+
+Always prefix Elm CLI commands with `devenv shell --`:
+
+```
+devenv shell -- elm make ...
+devenv shell -- elm-pages build
+devenv shell -- elm-json install <package>
+```
+
 ### Components
 
 The design guide defines 24 reusable components (`src/Component/`). Prefer these patterns:

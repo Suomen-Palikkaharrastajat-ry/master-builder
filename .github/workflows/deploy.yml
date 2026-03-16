@@ -62,6 +62,18 @@ jobs:
           GITHUB_REPOSITORY: ${{ github.repository }}
           OAUTH_CLIENT_ID: ${{ vars.OAUTH_CLIENT_ID }}
 
+      # Copy non-markdown assets (images, PDFs, etc.) from content dir to public/
+      # so elm-pages includes them in the build output.
+      - name: Copy content assets to public
+        run: |
+          CDIR="${CONTENT_DIR:-template}"
+          find "$CDIR" -type f -not -name "*.md" | while IFS= read -r f; do
+            rel="${f#$CDIR/}"
+            dest="public/$rel"
+            mkdir -p "$(dirname "$dest")"
+            cp "$f" "$dest"
+          done
+
       # CONTENT_DIR defaults to template/ — no fetch needed for self-test
       - name: Build elm-pages site
         run: npx elm-pages build

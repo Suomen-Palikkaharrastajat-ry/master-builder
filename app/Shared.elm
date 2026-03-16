@@ -9,6 +9,7 @@ import FatalError exposing (FatalError)
 import Frontmatter
 import Html exposing (Html)
 import Html.Attributes as Attr
+import Html.Events as Events
 import Json.Decode as Decode
 import Pages.Flags
 import Pages.PageUrl exposing (PageUrl)
@@ -127,7 +128,7 @@ view :
     -> (Msg -> msg)
     -> View msg
     -> { body : List (Html msg), title : String }
-view navItems page _ _ pageView =
+view navItems page model toMsg pageView =
     case page.route of
         Just Admin ->
             { body = pageView.body, title = pageView.title }
@@ -135,18 +136,42 @@ view navItems page _ _ pageView =
         _ ->
             { body =
                 [ Html.nav [ Attr.class "bg-brand shadow-sm" ]
-                    [ Html.div [ Attr.class "max-w-5xl mx-auto px-6 py-3 flex items-center gap-16" ]
-                        [ Html.a [ Attr.href "/" ]
+                    [ Html.div [ Attr.class "max-w-5xl mx-auto px-6 py-3 flex items-center" ]
+                        [ Html.a [ Attr.href "/", Attr.class "shrink-0" ]
                             [ Html.img
+                                [ Attr.src "https://logo.palikkaharrastajat.fi/logo/square/svg/square-smile.svg"
+                                , Attr.alt "Suomen Palikkaharrastajat ry"
+                                , Attr.class "h-14 lg:hidden"
+                                ]
+                                []
+                            , Html.img
                                 [ Attr.src "https://logo.palikkaharrastajat.fi/logo/horizontal/svg/horizontal-full-dark.svg"
                                 , Attr.alt "Suomen Palikkaharrastajat ry"
-                                , Attr.class "h-14"
+                                , Attr.class "h-14 max-lg:hidden"
                                 ]
                                 []
                             ]
-                        , Html.div [ Attr.class "flex items-center gap-6" ]
+                        , Html.div [ Attr.class "flex-1" ] []
+                        , Html.div [ Attr.class "max-lg:hidden flex items-center gap-6" ]
                             (List.map navLink navItems)
+                        , Html.button
+                            [ Attr.class "lg:hidden text-white/80 hover:text-white transition-colors p-1 -mr-1 cursor-pointer"
+                            , Attr.attribute "aria-label" "Avaa valikko"
+                            , Events.onClick (toMsg MenuClicked)
+                            ]
+                            [ if model.showMenu then
+                                Html.span [ Attr.class "text-2xl leading-none select-none" ] [ Html.text "✕" ]
+
+                              else
+                                Html.span [ Attr.class "text-2xl leading-none select-none" ] [ Html.text "☰" ]
+                            ]
                         ]
+                    , if model.showMenu then
+                        Html.div [ Attr.class "lg:hidden border-t border-white/10 px-6 py-3 flex flex-col items-end gap-1" ]
+                            (List.map (navLinkMobile (toMsg MenuClicked)) navItems)
+
+                      else
+                        Html.text ""
                     ]
                 , Html.main_ [ Attr.class "max-w-5xl mx-auto px-6 py-10 w-full" ] pageView.body
                 ]
@@ -159,5 +184,15 @@ navLink item =
     Html.a
         [ Attr.href ("/" ++ item.slug)
         , Attr.class "text-sm text-white/80 hover:text-white transition-colors"
+        ]
+        [ Html.text item.title ]
+
+
+navLinkMobile : msg -> NavItem -> Html msg
+navLinkMobile onClose item =
+    Html.a
+        [ Attr.href ("/" ++ item.slug)
+        , Attr.class "block py-2 text-sm text-white/80 hover:text-white transition-colors"
+        , Events.onClick onClose
         ]
         [ Html.text item.title ]

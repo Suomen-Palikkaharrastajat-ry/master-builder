@@ -1,5 +1,7 @@
 .PHONY:
 
+CONTENT_DIR ?= template
+
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
@@ -29,20 +31,32 @@ install: ## Install npm dependencies
 fetch-content: ## Sync content/ from external repo (set CONTENT_OWNER, CONTENT_REPO, CONTENT_REF)
 	bash scripts/fetch-content.sh
 
+.PHONY: sync-assets
+sync-assets: ## Copy non-markdown assets from $(CONTENT_DIR) to public/
+	@find "$(CONTENT_DIR)" -type f -not -name "*.md" -not -path "*/.git/*" | while IFS= read -r f; do \
+		rel="$${f#$(CONTENT_DIR)/}"; \
+		dest="public/$$rel"; \
+		mkdir -p "$$(dirname "$$dest")"; \
+		cp "$$f" "$$dest"; \
+	done
+
 # ── Build ────────────────────────────────────────────────────────────────────
 
 .PHONY: dev
 dev: ## Start elm-pages dev server (uses local template/)
-	npx elm-pages dev
+	$(MAKE) sync-assets
+	elm-pages dev
 
 .PHONY: watch
 watch: ## Start dev server pointed at ./content (CONTENT_DIR=content)
-	CONTENT_DIR=content npx elm-pages dev
+	$(MAKE) CONTENT_DIR=content sync-assets
+	CONTENT_DIR=content elm-pages dev
 
 .PHONY: build
 build: ## Build elm-pages site into dist/ (fetch content first when CONTENT_OWNER/CONTENT_REPO are set)
 	bash scripts/fetch-content.sh
-	npx elm-pages build
+	$(MAKE) sync-assets
+	elm-pages build
 
 # ── Deploy ───────────────────────────────────────────────────────────────────
 

@@ -6,6 +6,7 @@ import Components.Card as Card
 import Components.Hero as Hero
 import Components.Stats as Stats
 import Components.Timeline as Timeline
+import FeatherIcons
 import Html exposing (Html)
 import Html.Attributes as Attr
 import Markdown.Block as Block
@@ -103,11 +104,20 @@ viewLink link children =
         children
 
 
+normalizeSrc : String -> String
+normalizeSrc src =
+    if String.startsWith "./" src then
+        String.dropLeft 1 src
+
+    else
+        src
+
+
 viewImage : { alt : String, src : String, title : Maybe String } -> Html msg
 viewImage img =
     Html.figure [ Attr.class "my-8" ]
         [ Html.img
-            [ Attr.src img.src
+            [ Attr.src (normalizeSrc img.src)
             , Attr.alt img.alt
             , Attr.class "rounded-lg w-full"
             ]
@@ -342,13 +352,14 @@ htmlRenderer =
           Markdown.Html.tag "timeline"
             (\children -> Timeline.view children)
 
-        , -- <timeline-item date="…" title="…">…</timeline-item>
+        , -- <timeline-item date="…" title="…" icon="…">…</timeline-item>
           Markdown.Html.tag "timeline-item"
-            (\date title children ->
-                Timeline.viewItem { date = date, title = title, children = children }
+            (\date title icon children ->
+                Timeline.viewItem { date = date, title = title, icon = Maybe.map resolveIcon icon, children = children }
             )
             |> Markdown.Html.withAttribute "date"
             |> Markdown.Html.withAttribute "title"
+            |> Markdown.Html.withOptionalAttribute "icon"
 
         , -- <with-image src="…" alt="…" side="left|right">…</with-image>
           Markdown.Html.tag "with-image"
@@ -356,7 +367,7 @@ htmlRenderer =
                 let
                     imgEl =
                         Html.img
-                            [ Attr.src src
+                            [ Attr.src (normalizeSrc src)
                             , Attr.alt (Maybe.withDefault "" alt)
                             , Attr.class "w-full rounded-lg"
                             ]
@@ -441,3 +452,19 @@ buttonLinkClass variant =
                 _ ->
                     "bg-brand-yellow text-brand hover:bg-brand hover:text-brand-yellow focus:ring-brand-yellow"
            )
+
+
+resolveIcon : String -> FeatherIcons.Icon
+resolveIcon name =
+    case name of
+        "calendar" -> FeatherIcons.calendar
+        "check" -> FeatherIcons.check
+        "check-circle" -> FeatherIcons.checkCircle
+        "circle" -> FeatherIcons.circle
+        "clock" -> FeatherIcons.clock
+        "flag" -> FeatherIcons.flag
+        "map-pin" -> FeatherIcons.mapPin
+        "star" -> FeatherIcons.star
+        "users" -> FeatherIcons.users
+        "zap" -> FeatherIcons.zap
+        _ -> FeatherIcons.circle
