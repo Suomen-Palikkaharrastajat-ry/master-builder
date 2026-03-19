@@ -135,7 +135,12 @@ view navItems page model toMsg pageView =
 
         _ ->
             { body =
-                [ Html.nav [ Attr.class "bg-brand shadow-sm" ]
+                [ Html.a
+                    [ Attr.href "#main-content"
+                    , Attr.class "sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:px-4 focus:py-2 focus:bg-brand-yellow focus:text-brand focus:font-semibold focus:rounded focus:ring-2 focus:ring-brand"
+                    ]
+                    [ Html.text "Siirry pääsisältöön" ]
+                , Html.nav [ Attr.class "bg-brand shadow-sm" ]
                     [ Html.div [ Attr.class "max-w-5xl mx-auto px-6 py-3 flex items-center" ]
                         [ Html.a [ Attr.href "/", Attr.class "shrink-0" ]
                             [ Html.img
@@ -155,8 +160,15 @@ view navItems page model toMsg pageView =
                         , Html.div [ Attr.class "max-lg:hidden flex items-center gap-6" ]
                             (List.map navLink navItems)
                         , Html.button
-                            [ Attr.class "lg:hidden text-white/80 hover:text-white transition-colors p-1 -mr-1 cursor-pointer"
+                            [ Attr.class "lg:hidden text-white/80 hover:text-white transition-colors p-1 -mr-1 cursor-pointer focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-brand rounded"
                             , Attr.attribute "aria-label" "Avaa valikko"
+                            , Attr.attribute "aria-expanded"
+                                (if model.showMenu then
+                                    "true"
+
+                                 else
+                                    "false"
+                                )
                             , Events.onClick (toMsg MenuClicked)
                             ]
                             [ if model.showMenu then
@@ -173,7 +185,7 @@ view navItems page model toMsg pageView =
                       else
                         Html.text ""
                     ]
-                , Html.main_ [ Attr.class "max-w-5xl mx-auto px-6 py-10 w-full" ] pageView.body
+                , Html.main_ [ Attr.id "main-content", Attr.class "max-w-5xl mx-auto px-6 py-10 w-full" ] pageView.body
                 ]
             , title = pageView.title
             }
@@ -183,7 +195,7 @@ navLink : NavItem -> Html msg
 navLink item =
     Html.a
         [ Attr.href ("/" ++ item.slug)
-        , Attr.class "text-sm text-white/80 hover:text-white transition-colors"
+        , Attr.class "text-sm text-white/80 hover:text-white transition-colors focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-brand rounded"
         ]
         [ Html.text item.title ]
 
@@ -192,7 +204,7 @@ navLinkMobile : msg -> NavItem -> Html msg
 navLinkMobile onClose item =
     Html.a
         [ Attr.href ("/" ++ item.slug)
-        , Attr.class "block py-2 text-sm text-white/80 hover:text-white transition-colors"
+        , Attr.class "block py-2 text-sm text-white/80 hover:text-white transition-colors focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-brand rounded"
         , Events.onClick onClose
         ]
         [ Html.text item.title ]

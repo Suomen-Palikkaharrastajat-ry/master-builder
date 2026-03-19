@@ -20,7 +20,7 @@ html {
 
   /* ── Brand palette ────────────────────────────────────────────────────── */
   --color-brand:              #05131D;
-  --color-brand-yellow:       #F2CD37;
+  --color-brand-yellow:       #FAC80A;
   --color-brand-red:          #C91A09;
   --color-brand-nougat-light: #F6D7B3;
   --color-brand-nougat:       #D09168;
@@ -36,7 +36,7 @@ html {
   --color-bg-page:   #FFFFFF;
   --color-bg-dark:   #05131D;
   --color-bg-subtle: #F9FAFB;
-  --color-bg-accent: #F2CD37;
+  --color-bg-accent: #FAC80A;
 
   /* ── Semantic borders ─────────────────────────────────────────────────── */
   --color-border-default: #E5E7EB;

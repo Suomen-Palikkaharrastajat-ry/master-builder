@@ -1,4 +1,4 @@
-module Components.Pricing exposing (Tier, view)
+module Component.Pricing exposing (Tier, view)
 
 import Html exposing (Html)
 import Html.Attributes as Attr

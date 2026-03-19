@@ -1,4 +1,4 @@
-module Components.FeatureGrid exposing (Feature, view)
+module Component.FeatureGrid exposing (Feature, view)
 
 import Html exposing (Html)
 import Html.Attributes as Attr

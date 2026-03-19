@@ -1,4 +1,4 @@
-module Components.Timeline exposing (view, viewItem)
+module Component.Timeline exposing (view, viewItem)
 
 import FeatherIcons
 import Html exposing (Html)

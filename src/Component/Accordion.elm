@@ -1,4 +1,4 @@
-module Components.Accordion exposing (view, viewItem)
+module Component.Accordion exposing (view, viewItem)
 
 import Html exposing (Html)
 import Html.Attributes as Attr

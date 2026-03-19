@@ -1,4 +1,4 @@
-module Components.Badge exposing (Color(..), view)
+module Component.Badge exposing (Color(..), view)
 
 import Html exposing (Html)
 import Html.Attributes as Attr

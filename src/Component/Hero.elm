@@ -1,4 +1,4 @@
-module Components.Hero exposing (view)
+module Component.Hero exposing (view)
 
 import Html exposing (Html)
 import Html.Attributes as Attr

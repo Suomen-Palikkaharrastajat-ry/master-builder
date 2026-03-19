@@ -1,4 +1,4 @@
-module Components.Stats exposing (view, viewItem)
+module Component.Stats exposing (view, viewItem)
 
 import Html exposing (Html)
 import Html.Attributes as Attr

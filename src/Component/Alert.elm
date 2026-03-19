@@ -1,4 +1,4 @@
-module Components.Alert exposing (AlertType(..), view)
+module Component.Alert exposing (AlertType(..), view)
 
 import Html exposing (Html)
 import Html.Attributes as Attr

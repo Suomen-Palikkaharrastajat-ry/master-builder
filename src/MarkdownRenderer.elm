@@ -1,11 +1,11 @@
 module MarkdownRenderer exposing (renderMarkdown)
 
-import Components.Accordion as Accordion
-import Components.Alert as Alert
-import Components.Card as Card
-import Components.Hero as Hero
-import Components.Stats as Stats
-import Components.Timeline as Timeline
+import Component.Accordion as Accordion
+import Component.Alert as Alert
+import Component.Card as Card
+import Component.Hero as Hero
+import Component.Stats as Stats
+import Component.Timeline as Timeline
 import FeatherIcons
 import Html exposing (Html)
 import Html.Attributes as Attr

@@ -1,4 +1,4 @@
-module Components.Navbar exposing (NavLink, view)
+module Component.Navbar exposing (NavLink, view)
 
 import Html exposing (Html)
 import Html.Attributes as Attr

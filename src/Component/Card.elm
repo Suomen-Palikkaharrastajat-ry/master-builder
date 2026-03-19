@@ -1,4 +1,4 @@
-module Components.Card exposing (Config, Shadow(..), view, viewSimple)
+module Component.Card exposing (Config, Shadow(..), view, viewSimple)
 
 import Html exposing (Html)
 import Html.Attributes as Attr

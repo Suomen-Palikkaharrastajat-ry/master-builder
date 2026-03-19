@@ -1,4 +1,4 @@
-module Components.Footer exposing (LinkGroup, view)
+module Component.Footer exposing (LinkGroup, view)
 
 import Html exposing (Html)
 import Html.Attributes as Attr
