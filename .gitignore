@@ -1,32 +1,39 @@
-# Devenv
+# --- Environment / local ---
+# Local devenv and container overrides
 .devenv*
+.claude/
 devenv.local.nix
 devenv.local.yaml
+.devcontainer.json
 
-# direnv
+# Local env and direnv
+.env
+.env.*.local
 .direnv
 
-# pre-commit
-.pre-commit-config.yaml
-
-# Agents
-TODO.md
-.claude
-
-# elm-pages generated code
-.elm-pages/
-
-# Elm compiler cache
-elm-stuff/
-
-# Build output
-dist/
-
-# Node
+# --- Dependencies ---
 node_modules/
 
-# OS artefacts
-.DS_Store
+# --- Build / generated ---
+elm-stuff/
+.elm-pages/
+gen/
+dist/
+build/
 
-# Content
-content/
+# --- Editor & OS ---
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# --- Logs & temp ---
+*.log
+logs/
+tmp/
+*.tmp
+
+# --- Coverage ---
+coverage/
+
+# Note: keep content/ and public/ in repo (site sources), remove above entries only if generated.

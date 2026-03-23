@@ -1,5 +1,3 @@
-{ ... }:
-
 let shell = { pkgs, ...}: {
   # https://devenv.sh/languages/
   languages = {

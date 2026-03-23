@@ -143,16 +143,11 @@ view navItems page model toMsg pageView =
                 , Html.nav [ Attr.class "bg-brand shadow-sm" ]
                     [ Html.div [ Attr.class "max-w-5xl mx-auto px-6 py-3 flex items-center" ]
                         [ Html.a [ Attr.href "/", Attr.class "shrink-0" ]
-                            [ Html.img
-                                [ Attr.src "https://logo.palikkaharrastajat.fi/logo/square/svg/square-smile.svg"
-                                , Attr.alt "Suomen Palikkaharrastajat ry"
-                                , Attr.class "h-14 lg:hidden"
-                                ]
-                                []
-                            , Html.img
+                            [ 
+                             Html.img
                                 [ Attr.src "https://logo.palikkaharrastajat.fi/logo/horizontal/svg/horizontal-full-dark.svg"
                                 , Attr.alt "Suomen Palikkaharrastajat ry"
-                                , Attr.class "h-14 max-lg:hidden"
+                                , Attr.class "h-14"
                                 ]
                                 []
                             ]
