@@ -16,7 +16,9 @@ import UrlPath exposing (UrlPath)
 import View exposing (View)
 
 
+
 -- ── Route wiring ─────────────────────────────────────────────────────────────
+
 
 type alias RouteParams =
     {}
@@ -55,7 +57,9 @@ head _ =
     [ Head.metaName "robots" (Head.raw "noindex, nofollow") ]
 
 
+
 -- ── Model ─────────────────────────────────────────────────────────────────────
+
 
 type AuthState
     = NotLoggedIn
@@ -128,7 +132,9 @@ type alias Model =
     }
 
 
+
 -- ── Init ──────────────────────────────────────────────────────────────────────
+
 
 init :
     App Data ActionData RouteParams
@@ -144,7 +150,9 @@ init app _ =
     )
 
 
+
 -- ── Msg ───────────────────────────────────────────────────────────────────────
+
 
 type Msg
     = ClickedLoginWithGitHub
@@ -178,7 +186,9 @@ type BuildStatusEvent
     | PollTimedOut
 
 
+
 -- ── Update ────────────────────────────────────────────────────────────────────
+
 
 update :
     App Data ActionData RouteParams
@@ -209,6 +219,7 @@ update _ _ msg model =
                 PATEntry v ->
                     if String.isEmpty (String.trim v) then
                         ( model, Effect.none )
+
                     else
                         ( { model | auth = LoggedIn { value = v, login = "pat-user" } }
                         , Effect.fromCmd (storeToken v)
@@ -450,7 +461,9 @@ update _ _ msg model =
             ( { model | buildStatus = next }, Effect.none )
 
 
+
 -- ── Subscriptions ─────────────────────────────────────────────────────────────
+
 
 subscriptions :
     RouteParams
@@ -472,7 +485,9 @@ subscriptions _ _ _ _ =
         ]
 
 
+
 -- ── View ──────────────────────────────────────────────────────────────────────
+
 
 view :
     App Data ActionData RouteParams
@@ -480,7 +495,7 @@ view :
     -> Model
     -> View (PagesMsg Msg)
 view _ _ model =
-    { title = "Login \u{2014} Suomen Palikkaharrastajat ry"
+    { title = "Login — Suomen Palikkaharrastajat ry"
     , body = [ Html.map PagesMsg.fromMsg (viewBody model) ]
     }
 
@@ -550,7 +565,6 @@ viewNav model =
         ]
 
 
-
 viewPATEntry : String -> Html Msg
 viewPATEntry draft =
     viewCard [ Attr.class "max-w-md mx-auto" ]
@@ -583,7 +597,7 @@ viewEditorState editorState =
                 ]
 
         LoadingFiles ->
-            Html.p [ Attr.class "text-text-muted" ] [ Html.text "Loading files\u{2026}" ]
+            Html.p [ Attr.class "text-text-muted" ] [ Html.text "Loading files…" ]
 
         FileBrowser files ->
             Html.div []
@@ -606,7 +620,7 @@ viewEditorState editorState =
 
         LoadingFile meta ->
             Html.p [ Attr.class "text-text-muted" ]
-                [ Html.text ("Loading " ++ meta.name ++ "\u{2026}") ]
+                [ Html.text ("Loading " ++ meta.name ++ "…") ]
 
         Editing session ->
             Html.div [ Attr.class "flex flex-col gap-4" ]
@@ -654,7 +668,7 @@ viewEditorState editorState =
                         ]
                         [ Html.text
                             (if session.commitState == Committing then
-                                "Committing\u{2026}"
+                                "Committing…"
 
                              else
                                 "Commit & Push"
@@ -679,29 +693,31 @@ viewBuildStatus status =
 
         PollingActions _ ->
             Html.div [ Attr.class "build-status polling" ]
-                [ Html.text "\u{23F3} Build queued / running\u{2026}" ]
+                [ Html.text "⏳ Build queued / running…" ]
 
         PollingPage _ ->
             Html.div [ Attr.class "build-status polling" ]
-                [ Html.text "\u{1F680} Build complete, waiting for deploy\u{2026}" ]
+                [ Html.text "🚀 Build complete, waiting for deploy…" ]
 
         BuildLive { pageUrl } ->
             Html.div [ Attr.class "build-status live" ]
-                [ Html.text "\u{2705} Live! "
+                [ Html.text "✅ Live! "
                 , Html.a [ Attr.href pageUrl, Attr.target "_blank", Attr.class "underline hover:no-underline" ]
                     [ Html.text "View updated page" ]
                 ]
 
         BuildTimedOut ->
             Html.div [ Attr.class "build-status error" ]
-                [ Html.text "\u{26A0}\u{FE0F} Deploy timed out. Check GitHub Actions." ]
+                [ Html.text "⚠️ Deploy timed out. Check GitHub Actions." ]
 
         BuildFailed reason ->
             Html.div [ Attr.class "build-status error" ]
-                [ Html.text ("\u{274C} Build failed: " ++ reason) ]
+                [ Html.text ("❌ Build failed: " ++ reason) ]
+
 
 
 -- ── Reusable UI helpers ────────────────────────────────────────────────────
+
 
 viewCard : List (Html.Attribute Msg) -> List (Html Msg) -> Html Msg
 viewCard attrs children =
@@ -728,7 +744,9 @@ btnSecondary attrs label =
         [ Html.text label ]
 
 
+
 -- ── Port stubs ────────────────────────────────────────────────────────────────
+
 
 port requestDeviceCode : { clientId : String, proxyUrl : String } -> Cmd msg
 
@@ -818,7 +836,9 @@ port startBuildPolling :
 port buildStatusUpdate : (Decode.Value -> msg) -> Sub msg
 
 
+
 -- ── Helpers ───────────────────────────────────────────────────────────────────
+
 
 decodeDeviceCode : Decode.Value -> Result String DeviceCodeState
 decodeDeviceCode =

@@ -94,7 +94,7 @@ head app =
             }
         , description = app.data.frontmatter.description
         , locale = Nothing
-        , title = app.data.frontmatter.title ++ " \u{2014} Suomen Palikkaharrastajat ry"
+        , title = app.data.frontmatter.title ++ " — Suomen Palikkaharrastajat ry"
         }
         |> Seo.website
 
@@ -104,7 +104,7 @@ view :
     -> Shared.Model
     -> View (PagesMsg Msg)
 view app _ =
-    { title = app.data.frontmatter.title ++ " \u{2014} Suomen Palikkaharrastajat ry"
+    { title = app.data.frontmatter.title ++ " — Suomen Palikkaharrastajat ry"
     , body =
         [ Html.a [ Attr.href "/", Attr.class "inline-flex items-center gap-1 text-sm text-text-muted hover:text-text-primary mb-6 transition-colors" ]
             [ Html.text "← Etusivulle" ]

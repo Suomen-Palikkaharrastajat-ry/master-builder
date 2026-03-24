@@ -1,4 +1,4 @@
-module Component.Placeholder exposing (view, viewLine, viewBlock)
+module Component.Placeholder exposing (view, viewBlock, viewLine)
 
 import Html exposing (Html)
 import Html.Attributes as Attr

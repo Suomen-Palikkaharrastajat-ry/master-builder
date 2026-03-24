@@ -92,7 +92,7 @@ head app =
             }
         , description = app.data.frontmatter.description
         , locale = Nothing
-        , title = app.data.frontmatter.title ++ " \u{2014} Suomen Palikkaharrastajat ry"
+        , title = app.data.frontmatter.title ++ " — Suomen Palikkaharrastajat ry"
         }
         |> Seo.website
 
@@ -102,7 +102,7 @@ view :
     -> Shared.Model
     -> View (PagesMsg Msg)
 view app _ =
-    { title = app.data.frontmatter.title ++ " \u{2014} Suomen Palikkaharrastajat ry"
+    { title = app.data.frontmatter.title ++ " — Suomen Palikkaharrastajat ry"
     , body =
         [ Html.a
             [ Attr.href "/"

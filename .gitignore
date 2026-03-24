@@ -1,15 +1,11 @@
 # --- Environment / local ---
-# Local devenv and container overrides
+.devcontainer.json
 .devenv*
-.claude/
 devenv.local.nix
 devenv.local.yaml
-.devcontainer.json
-
-# Local env and direnv
+.direnv
 .env
 .env.*.local
-.direnv
 
 # --- Dependencies ---
 node_modules/
@@ -20,20 +16,17 @@ elm-stuff/
 gen/
 dist/
 build/
+content/
+public/
 
 # --- Editor & OS ---
 .vscode/
 .idea/
 .DS_Store
 Thumbs.db
+*.swp
+*.swo
 
-# --- Logs & temp ---
-*.log
-logs/
-tmp/
-*.tmp
-
-# --- Coverage ---
-coverage/
-
-# Note: keep content/ and public/ in repo (site sources), remove above entries only if generated.
+# --- Misc / local ---
+.claude/
+TODO*
