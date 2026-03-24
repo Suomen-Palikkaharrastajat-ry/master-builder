@@ -64,6 +64,14 @@ build: ## Build elm-pages site into dist/ (fetch content first when CONTENT_OWNE
 deploy: ## Commit and push to trigger CI deploy (requires clean working tree)
 	git push origin main
 
+.PHONY: check
+check: ## Check Elm formatting (no changes)
+	elm-format --validate app/ src/
+
+.PHONY: format
+format: ## Auto-format Elm source files
+	elm-format --yes app/ src/
+
 .PHONY: test
 test: ## Run smoke test against SITE_URL
 	bash scripts/smoke-test.sh

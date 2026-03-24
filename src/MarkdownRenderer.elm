@@ -192,7 +192,6 @@ htmlRenderer =
                     }
             )
             |> Markdown.Html.withAttribute "type"
-
         , -- <hero title="…" subtitle="…">…</hero>
           Markdown.Html.tag "hero"
             (\title subtitle children ->
@@ -204,7 +203,6 @@ htmlRenderer =
             )
             |> Markdown.Html.withAttribute "title"
             |> Markdown.Html.withOptionalAttribute "subtitle"
-
         , -- <feature-grid columns="2|3">…</feature-grid>
           Markdown.Html.tag "feature-grid"
             (\columns children ->
@@ -232,7 +230,6 @@ htmlRenderer =
                     children
             )
             |> Markdown.Html.withOptionalAttribute "columns"
-
         , -- <feature title="…" icon="…">…</feature>
           Markdown.Html.tag "feature"
             (\title icon children ->
@@ -252,7 +249,6 @@ htmlRenderer =
             )
             |> Markdown.Html.withAttribute "title"
             |> Markdown.Html.withOptionalAttribute "icon"
-
         , -- <pricing-table highlighted="Tier Name">…</pricing-table>
           Markdown.Html.tag "pricing-table"
             (\_ children ->
@@ -261,7 +257,6 @@ htmlRenderer =
                     children
             )
             |> Markdown.Html.withOptionalAttribute "highlighted"
-
         , -- <pricing-tier name="…" price="…" period="…">…</pricing-tier>
           Markdown.Html.tag "pricing-tier"
             (\name price period children ->
@@ -291,7 +286,6 @@ htmlRenderer =
             |> Markdown.Html.withAttribute "name"
             |> Markdown.Html.withAttribute "price"
             |> Markdown.Html.withOptionalAttribute "period"
-
         , -- <button-link href="…" variant="primary|secondary|ghost">label</button-link>
           Markdown.Html.tag "button-link"
             (\href variant children ->
@@ -303,7 +297,6 @@ htmlRenderer =
             )
             |> Markdown.Html.withAttribute "href"
             |> Markdown.Html.withOptionalAttribute "variant"
-
         , -- <card title="…">body</card>
           Markdown.Html.tag "card"
             (\title children ->
@@ -316,29 +309,24 @@ htmlRenderer =
                     }
             )
             |> Markdown.Html.withOptionalAttribute "title"
-
         , -- <badge color="gray|blue|green|yellow|red|purple|indigo">label</badge>
           Markdown.Html.tag "badge"
             (\color children ->
                 Html.span [ Attr.class (badgeClass color) ] children
             )
             |> Markdown.Html.withOptionalAttribute "color"
-
         , -- <accordion><accordion-item summary="…">…</accordion-item></accordion>
           Markdown.Html.tag "accordion"
             (\children -> Accordion.view children)
-
         , -- <accordion-item summary="…">…</accordion-item>
           Markdown.Html.tag "accordion-item"
             (\summary children ->
                 Accordion.viewItem { summary = summary, children = children }
             )
             |> Markdown.Html.withAttribute "summary"
-
         , -- <stat-grid><stat label="…" value="…" change="…"></stat></stat-grid>
           Markdown.Html.tag "stat-grid"
             (\children -> Stats.view children)
-
         , -- <stat label="…" value="…" change="…"></stat>
           Markdown.Html.tag "stat"
             (\label value change _ ->
@@ -347,11 +335,9 @@ htmlRenderer =
             |> Markdown.Html.withAttribute "label"
             |> Markdown.Html.withAttribute "value"
             |> Markdown.Html.withOptionalAttribute "change"
-
         , -- <timeline><timeline-item date="…" title="…">…</timeline-item></timeline>
           Markdown.Html.tag "timeline"
             (\children -> Timeline.view children)
-
         , -- <timeline-item date="…" title="…" icon="…">…</timeline-item>
           Markdown.Html.tag "timeline-item"
             (\date title icon children ->
@@ -360,7 +346,6 @@ htmlRenderer =
             |> Markdown.Html.withAttribute "date"
             |> Markdown.Html.withAttribute "title"
             |> Markdown.Html.withOptionalAttribute "icon"
-
         , -- <with-image src="…" alt="…" side="left|right">…</with-image>
           Markdown.Html.tag "with-image"
             (\src alt side children ->
@@ -457,14 +442,35 @@ buttonLinkClass variant =
 resolveIcon : String -> FeatherIcons.Icon
 resolveIcon name =
     case name of
-        "calendar" -> FeatherIcons.calendar
-        "check" -> FeatherIcons.check
-        "check-circle" -> FeatherIcons.checkCircle
-        "circle" -> FeatherIcons.circle
-        "clock" -> FeatherIcons.clock
-        "flag" -> FeatherIcons.flag
-        "map-pin" -> FeatherIcons.mapPin
-        "star" -> FeatherIcons.star
-        "users" -> FeatherIcons.users
-        "zap" -> FeatherIcons.zap
-        _ -> FeatherIcons.circle
+        "calendar" ->
+            FeatherIcons.calendar
+
+        "check" ->
+            FeatherIcons.check
+
+        "check-circle" ->
+            FeatherIcons.checkCircle
+
+        "circle" ->
+            FeatherIcons.circle
+
+        "clock" ->
+            FeatherIcons.clock
+
+        "flag" ->
+            FeatherIcons.flag
+
+        "map-pin" ->
+            FeatherIcons.mapPin
+
+        "star" ->
+            FeatherIcons.star
+
+        "users" ->
+            FeatherIcons.users
+
+        "zap" ->
+            FeatherIcons.zap
+
+        _ ->
+            FeatherIcons.circle
