@@ -5,6 +5,12 @@ const config = {
     load: async function (elmLoaded) {
         const app = await elmLoaded;
         wireAdminPorts(app);
+        app.ports.focusMobileNav.subscribe(function () {
+            requestAnimationFrame(function () {
+                const el = document.querySelector('#pages-mobile-nav a');
+                if (el) el.focus();
+            });
+        });
 
         // Expose site config values for the polling closure
         fetch('/site-config.json')

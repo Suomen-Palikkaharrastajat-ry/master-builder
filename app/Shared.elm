@@ -12,6 +12,7 @@ import Html.Attributes as Attr
 import Html.Events as Events
 import Json.Decode as Decode
 import Pages.Flags
+import Ports
 import Pages.PageUrl exposing (PageUrl)
 import Route exposing (Route(..))
 import SharedTemplate exposing (SharedTemplate)
@@ -80,7 +81,11 @@ update msg model =
             ( model, Effect.none )
 
         MenuClicked ->
-            ( { model | showMenu = not model.showMenu }, Effect.none )
+            if model.showMenu then
+                ( { model | showMenu = False }, Effect.none )
+
+            else
+                ( { model | showMenu = True }, Effect.fromCmd (Ports.focusMobileNav ()) )
 
 
 subscriptions : UrlPath -> Model -> Sub Msg
@@ -173,7 +178,7 @@ view navItems page model toMsg pageView =
                             ]
                         ]
                     , if model.showMenu then
-                        Html.div [ Attr.class "lg:hidden border-t border-white/10 px-6 py-3 flex flex-col items-end gap-1" ]
+                        Html.div [ Attr.id "pages-mobile-nav", Attr.class "lg:hidden border-t border-white/10 px-6 py-3 flex flex-col items-end gap-1" ]
                             (List.map (navLinkMobile (toMsg MenuClicked)) navItems)
 
                       else
