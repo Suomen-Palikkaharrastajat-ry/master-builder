@@ -2,9 +2,12 @@
 
 ## Design System
 
-All design and component work must follow the official Suomen Palikkaharrastajat ry design guide:
+All design and component work must follow the official Suomen Palikkaharrastajat ry design guide.
 
-**Source:** https://logo.palikkaharrastajat.fi/design-guide/index.jsonld
+**Agent CSS reference:** Fetch `https://logo.palikkaharrastajat.fi/brand.css` for the latest canonical `@theme`, `@utility type-*`, `@font-face`, reduced-motion rule, and component classes. Tailwind v4 requires `@theme` in the locally-processed file — copy the content into `style.css`.
+
+**Human-readable:** https://logo.palikkaharrastajat.fi/
+**Machine-readable (JSON-LD):** https://logo.palikkaharrastajat.fi/design-guide/index.jsonld
 
 ### Color Tokens
 
@@ -18,7 +21,7 @@ Use the semantic Tailwind classes defined in `style.css` — never hardcode hex 
 | `text-text-subtle` | `#9CA3AF` | Placeholder, captions |
 | `bg-bg-page` | `#FFFFFF` | Page background |
 | `bg-bg-subtle` | `#F9FAFB` | Card/panel backgrounds |
-| `bg-bg-accent` / `bg-brand-yellow` | `#F2CD37` | Accent/CTA backgrounds |
+| `bg-bg-accent` / `bg-brand-yellow` | `#FAC80A` | Accent/CTA backgrounds |
 | `border-border-default` | `#E5E7EB` | Default borders, dividers |
 | `border-border-brand` | `#05131D` | Brand-coloured borders |
 | `text-brand-red` | `#C91A09` | Error/danger states |
@@ -30,19 +33,22 @@ All colour usage must pass WCAG AA contrast at minimum.
 
 ### Typography
 
-Font: **Outfit variable** (weights 100–900), loaded from `logo.palikkaharrastajat.fi`. Never substitute.
+Font: **Outfit variable** (weights 100–900), self-hosted from `public/fonts/`. Never substitute.
 
-| Role | Size | Weight | Tailwind |
+Use the named `type-*` utility classes defined in `style.css`. Never use raw Tailwind size/weight combinations.
+
+| Class | Size | Weight | Notes |
 |---|---|---|---|
-| Display | 48px | 700 | `text-5xl font-bold` |
-| Heading 1 | 30px | 700 | `text-3xl font-bold` |
-| Heading 2 | 24px | 700 | `text-2xl font-bold` |
-| Heading 3 | 20px | 600 | `text-xl font-semibold` |
-| Body | 16px | 400 | `text-base` |
-| Body Small | 14px | 500 | `text-sm font-medium` |
-| Caption | 14px | 400 | `text-sm` |
-| Mono | 14px | 400 | `font-mono text-sm` |
-| Overline | 12px | 600 | `text-xs font-semibold uppercase` |
+| `type-display` | 3rem | 700 | Hero headlines only |
+| `type-h1` | 1.875rem | 700 | One per page |
+| `type-h2` | 1.5rem | 700 | Section headings |
+| `type-h3` | 1.25rem | 600 | Sub-section headings |
+| `type-h4` | 1.125rem | 600 | Card / widget headings |
+| `type-body` | 1rem | 400 | Default body copy |
+| `type-body-small` | 0.875rem | 500 | UI controls, labels |
+| `type-caption` | 0.875rem | 400 | Metadata, footnotes |
+| `type-mono` | 0.875rem | 400 | Code snippets (monospace) |
+| `type-overline` | 0.75rem | 600 uppercase | Category labels |
 
 ### Spacing
 
@@ -63,7 +69,7 @@ Always wrap animations with `prefers-reduced-motion` support (already in `style.
 
 ### Logos
 
-Serve from `logo.palikkaharrastajat.fi`. Use SVG first; WebP with PNG fallback for raster contexts.
+Self-hosted — serve logo files from `public/` (already copied). Use SVG first; WebP with PNG fallback for raster contexts.
 
 - **On dark background** (e.g. brand nav): `horizontal-full-dark`
   `https://logo.palikkaharrastajat.fi/logo/horizontal/svg/horizontal-full-dark.svg`
@@ -94,9 +100,23 @@ devenv shell -- elm-json install <package>
 
 ### Components
 
-The design guide defines 24 reusable components (`src/Component/`). Prefer these patterns:
+All 32 UI components come from the **design-guide** repository, available as a git submodule at `vendor/design-guide/`. The `vendor/design-guide/src` path is already in `elm.json` source-directories, so components are imported directly as `Component.*`:
 
-- **Button primary**: `bg-brand-yellow text-brand hover:bg-brand hover:text-brand-yellow`
-- **Button secondary**: `bg-bg-page border border-brand/40 hover:bg-brand/5 text-brand`
-- **Card**: `bg-bg-page border border-border-default rounded-xl shadow-sm p-6`
-- **Input**: `border border-border-default rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand-yellow`
+```elm
+import Component.Button as Button
+import Component.Card as Card
+import Component.Alert as Alert
+```
+
+**Submodule management:**
+```bash
+# After cloning pages:
+git submodule update --init
+
+# To pull latest design-guide changes:
+git submodule update --remote vendor/design-guide
+```
+
+**Focus ring convention:** Use `focus-visible:ring-2 focus-visible:ring-brand` on all interactive elements (keyboard-only; no ring on mouse click). Do NOT use `focus:ring-*`.
+
+**All 32 components available:** Alert, Accordion, Badge, Breadcrumb, Button, ButtonGroup, Card, CloseButton, Collapse, ColorSwatch, Dialog, DownloadButton, Dropdown, FeatureGrid, Footer, Hero, ListGroup, LogoCard, Navbar, Pagination, Placeholder, Pricing, Progress, SectionHeader, Spinner, Stats, Tabs, Tag, Timeline, Toast, Toggle, Tooltip.

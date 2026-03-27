@@ -1,6 +1,7 @@
 {
     "type": "application",
     "source-directories": [
+        "vendor/design-guide/src",
         "src",
         "app",
         ".elm-pages"
