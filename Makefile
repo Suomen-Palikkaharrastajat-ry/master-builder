@@ -46,15 +46,24 @@ sync-assets: ## Copy non-markdown assets from $(CONTENT_DIR) to public/
 clean: ## Remove build artifacts (dist/, elm-stuff/, .elm-pages/, gen/)
 	rm -rf dist elm-stuff .elm-pages gen
 
+# ── Vendor / submodules ──────────────────────────────────────────────────────
+
+.PHONY: vendor
+vendor: ## Init and update all git submodules to their pinned commits
+	@# In CI environments (GitHub Actions, Netlify) SSH access is unavailable;
+	@# rewrite git@github.com: to https://github.com/ so submodules clone via HTTPS.
+	@[ -z "$$CI" ] || git config --global url."https://github.com/".insteadOf "git@github.com:"
+	git submodule update --init --recursive
+
 # ── Build ────────────────────────────────────────────────────────────────────
 
 .PHONY: dev
-dev: ## Start elm-pages dev server (uses local template/)
+dev: vendor ## Start elm-pages dev server (uses local template/)
 	$(MAKE) sync-assets
 	elm-pages dev
 
 .PHONY: watch
-watch: ## Start dev server pointed at ./content (CONTENT_DIR=content)
+watch: vendor ## Start dev server pointed at ./content (CONTENT_DIR=content)
 	$(MAKE) CONTENT_DIR=content sync-assets
 	CONTENT_DIR=content elm-pages dev
 
@@ -67,19 +76,11 @@ build-admin: ## Build standalone admin app into public/admin/
 	cp admin-app/index.html public/admin/index.html
 
 .PHONY: build
-build: ## Build elm-pages site into dist/ (fetch content first when CONTENT_OWNER/CONTENT_REPO are set)
+build: vendor ## Build elm-pages site into dist/ (fetch content first when CONTENT_OWNER/CONTENT_REPO are set)
 	bash scripts/fetch-content.sh
 	$(MAKE) sync-assets
 	$(MAKE) build-admin
 	elm-pages build
-
-# ── Design guide vendor sync ─────────────────────────────────────────────────
-
-DESIGN_GUIDE_SRC ?= ../logo/src/Component
-
-.PHONY: update-submodules
-update-submodules: ## Sync design-guide Component library from ../logo/src/Component/ into vendor/
-	rsync -av --delete $(DESIGN_GUIDE_SRC)/ vendor/design-guide/src/Component/
 
 # ── Deploy ───────────────────────────────────────────────────────────────────
 
