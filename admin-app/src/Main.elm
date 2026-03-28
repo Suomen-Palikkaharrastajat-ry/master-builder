@@ -1,60 +1,126 @@
-port module Route.Admin exposing (ActionData, Data, Model, Msg, route)
+port module Main exposing (main)
 
-import BackendTask exposing (BackendTask)
-import Effect exposing (Effect)
-import FatalError exposing (FatalError)
-import Head
+import Browser
 import Html exposing (Html)
 import Html.Attributes as Attr
 import Html.Events as Events
-import Json.Decode as Decode
-import PagesMsg exposing (PagesMsg)
-import RouteBuilder exposing (App, StatefulRoute)
-import Shared
-import SiteMeta exposing (SiteMeta)
-import UrlPath exposing (UrlPath)
-import View exposing (View)
+import Json.Decode as Decode exposing (Decoder)
 
 
 
--- ── Route wiring ─────────────────────────────────────────────────────────────
+-- ── Main ──────────────────────────────────────────────────────────────────────
 
 
-type alias RouteParams =
-    {}
-
-
-type alias Data =
-    { siteMeta : SiteMeta }
-
-
-type alias ActionData =
-    {}
-
-
-route : StatefulRoute RouteParams Data ActionData Model Msg
-route =
-    RouteBuilder.single
-        { head = head
-        , data = data
+main : Program Decode.Value Model Msg
+main =
+    Browser.element
+        { init = init
+        , update = update
+        , view = view
+        , subscriptions = subscriptions
         }
-        |> RouteBuilder.buildWithLocalState
-            { init = init
-            , update = update
-            , view = view
-            , subscriptions = subscriptions
+
+
+
+-- ── SiteMeta ──────────────────────────────────────────────────────────────────
+
+
+type alias SiteMeta =
+    { buildSha : String
+    , buildTimestamp : String
+    , runId : String
+    , owner : String
+    , repo : String
+    , contentOwner : String
+    , contentRepo : String
+    , oauthClientId : String
+    , oauthProxyUrl : String
+    , repoScope : String
+    }
+
+
+siteMetaDecoder : Decoder SiteMeta
+siteMetaDecoder =
+    Decode.map7
+        (\buildSha buildTimestamp runId owner repo oauthClientId oauthProxyUrl ->
+            { buildSha = buildSha
+            , buildTimestamp = buildTimestamp
+            , runId = runId
+            , owner = owner
+            , repo = repo
+            , contentOwner = owner
+            , contentRepo = repo
+            , oauthClientId = oauthClientId
+            , oauthProxyUrl = oauthProxyUrl
+            , repoScope = "public_repo"
             }
+        )
+        (Decode.field "buildSha" Decode.string)
+        (Decode.field "buildTimestamp" Decode.string)
+        (Decode.field "runId" Decode.string)
+        (Decode.field "owner" Decode.string)
+        (Decode.field "repo" Decode.string)
+        (Decode.field "oauthClientId" Decode.string)
+        (Decode.field "oauthProxyUrl" Decode.string
+            |> Decode.maybe
+            |> Decode.map (Maybe.withDefault "")
+        )
+        |> Decode.andThen
+            (\meta ->
+                Decode.field "repoScope" Decode.string
+                    |> Decode.maybe
+                    |> Decode.map (Maybe.withDefault "public_repo")
+                    |> Decode.map (\scope -> { meta | repoScope = scope })
+            )
+        |> Decode.andThen
+            (\meta ->
+                Decode.field "contentOwner" Decode.string
+                    |> Decode.maybe
+                    |> Decode.map (Maybe.withDefault "")
+                    |> Decode.map
+                        (\v ->
+                            { meta
+                                | contentOwner =
+                                    if String.isEmpty v then
+                                        meta.owner
+
+                                    else
+                                        v
+                            }
+                        )
+            )
+        |> Decode.andThen
+            (\meta ->
+                Decode.field "contentRepo" Decode.string
+                    |> Decode.maybe
+                    |> Decode.map (Maybe.withDefault "")
+                    |> Decode.map
+                        (\v ->
+                            { meta
+                                | contentRepo =
+                                    if String.isEmpty v then
+                                        meta.repo
+
+                                    else
+                                        v
+                            }
+                        )
+            )
 
 
-data : BackendTask FatalError Data
-data =
-    SiteMeta.task
-        |> BackendTask.map (\meta -> { siteMeta = meta })
-
-
-head : App Data ActionData RouteParams -> List Head.Tag
-head _ =
-    [ Head.metaName "robots" (Head.raw "noindex, nofollow") ]
+defaultSiteMeta : SiteMeta
+defaultSiteMeta =
+    { buildSha = ""
+    , buildTimestamp = ""
+    , runId = ""
+    , owner = ""
+    , repo = ""
+    , contentOwner = ""
+    , contentRepo = ""
+    , oauthClientId = ""
+    , oauthProxyUrl = ""
+    , repoScope = "public_repo"
+    }
 
 
 
@@ -136,17 +202,23 @@ type alias Model =
 -- ── Init ──────────────────────────────────────────────────────────────────────
 
 
-init :
-    App Data ActionData RouteParams
-    -> Shared.Model
-    -> ( Model, Effect Msg )
-init app _ =
+init : Decode.Value -> ( Model, Cmd Msg )
+init flags =
+    let
+        siteMeta =
+            case Decode.decodeValue siteMetaDecoder flags of
+                Ok meta ->
+                    meta
+
+                Err _ ->
+                    defaultSiteMeta
+    in
     ( { auth = PATEntry ""
-      , siteMeta = app.data.siteMeta
+      , siteMeta = siteMeta
       , editorState = NoBrowserOpen
       , buildStatus = BuildIdle
       }
-    , Effect.fromCmd (loadTokenFromStorage ())
+    , loadTokenFromStorage ()
     )
 
 
@@ -190,110 +262,99 @@ type BuildStatusEvent
 -- ── Update ────────────────────────────────────────────────────────────────────
 
 
-update :
-    App Data ActionData RouteParams
-    -> Shared.Model
-    -> Msg
-    -> Model
-    -> ( Model, Effect Msg )
-update _ _ msg model =
+update : Msg -> Model -> ( Model, Cmd Msg )
+update msg model =
     case msg of
         ClickedLoginWithGitHub ->
             ( { model | auth = RequestingDeviceCode }
-            , Effect.fromCmd
-                (requestDeviceCode
-                    { clientId = model.siteMeta.oauthClientId
-                    , proxyUrl = model.siteMeta.oauthProxyUrl
-                    }
-                )
+            , requestDeviceCode
+                { clientId = model.siteMeta.oauthClientId
+                , proxyUrl = model.siteMeta.oauthProxyUrl
+                }
             )
 
         ClickedUsePAT ->
-            ( { model | auth = PATEntry "" }, Effect.none )
+            ( { model | auth = PATEntry "" }, Cmd.none )
 
         PATChanged v ->
-            ( { model | auth = PATEntry v }, Effect.none )
+            ( { model | auth = PATEntry v }, Cmd.none )
 
         PATSubmitted ->
             case model.auth of
                 PATEntry v ->
                     if String.isEmpty (String.trim v) then
-                        ( model, Effect.none )
+                        ( model, Cmd.none )
 
                     else
                         ( { model | auth = LoggedIn { value = v, login = "pat-user" } }
-                        , Effect.fromCmd (storeToken v)
+                        , storeToken v
                         )
 
                 _ ->
-                    ( model, Effect.none )
+                    ( model, Cmd.none )
 
         DeviceCodeReceived (Ok state) ->
             ( { model | auth = AwaitingUserAuth state }
-            , Effect.fromCmd (startPolling state)
+            , startPolling state
             )
 
         DeviceCodeReceived (Err err) ->
-            ( { model | auth = AuthError err }, Effect.none )
+            ( { model | auth = AuthError err }, Cmd.none )
 
         TokenReceived (Ok token) ->
             ( { model | auth = LoggedIn { value = token, login = "" } }
-            , Effect.fromCmd (storeToken token)
+            , storeToken token
             )
 
         TokenReceived (Err err) ->
-            ( { model | auth = AuthError err }, Effect.none )
+            ( { model | auth = AuthError err }, Cmd.none )
 
         TokenLoadedFromStorage (Just token) ->
-            ( { model | auth = LoggedIn { value = token, login = "" } }, Effect.none )
+            ( { model | auth = LoggedIn { value = token, login = "" } }, Cmd.none )
 
         TokenLoadedFromStorage Nothing ->
-            ( model, Effect.none )
+            ( model, Cmd.none )
 
         ClickedLogout ->
             ( { model | auth = PATEntry "" }
-            , Effect.fromCmd (clearToken ())
+            , clearToken ()
             )
 
         ClickedBrowseFiles ->
             case model.auth of
                 LoggedIn token ->
                     ( { model | editorState = LoadingFiles }
-                    , Effect.fromCmd
-                        (listFiles
-                            { token = token.value
-                            , owner = model.siteMeta.contentOwner
-                            , repo = model.siteMeta.contentRepo
-                            , path = "template"
-                            }
-                        )
+                    , listFiles
+                        { token = token.value
+                        , owner = model.siteMeta.contentOwner
+                        , repo = model.siteMeta.contentRepo
+                        , path = "template"
+                        }
                     )
 
                 _ ->
-                    ( model, Effect.none )
+                    ( model, Cmd.none )
 
         FilesListed (Ok files) ->
-            ( { model | editorState = FileBrowser files }, Effect.none )
+            ( { model | editorState = FileBrowser files }, Cmd.none )
 
         FilesListed (Err _) ->
-            ( { model | editorState = NoBrowserOpen }, Effect.none )
+            ( { model | editorState = NoBrowserOpen }, Cmd.none )
 
         ClickedFile meta ->
             case model.auth of
                 LoggedIn token ->
                     ( { model | editorState = LoadingFile meta }
-                    , Effect.fromCmd
-                        (fetchFile
-                            { token = token.value
-                            , owner = model.siteMeta.contentOwner
-                            , repo = model.siteMeta.contentRepo
-                            , path = meta.path
-                            }
-                        )
+                    , fetchFile
+                        { token = token.value
+                        , owner = model.siteMeta.contentOwner
+                        , repo = model.siteMeta.contentRepo
+                        , path = meta.path
+                        }
                     )
 
                 _ ->
-                    ( model, Effect.none )
+                    ( model, Cmd.none )
 
         FileLoaded (Ok { meta, content }) ->
             let
@@ -307,35 +368,35 @@ update _ _ msg model =
                     }
             in
             ( { model | editorState = Editing session }
-            , Effect.batch
-                [ Effect.fromCmd (mountEditor ())
-                , Effect.fromCmd (setEditorContent content)
-                , Effect.fromCmd (loadDraft meta.path)
+            , Cmd.batch
+                [ mountEditor ()
+                , setEditorContent content
+                , loadDraft meta.path
                 ]
             )
 
         FileLoaded (Err _) ->
-            ( model, Effect.none )
+            ( model, Cmd.none )
 
         EditorContentChanged newContent ->
             case model.editorState of
                 Editing session ->
                     ( { model | editorState = Editing { session | content = newContent } }
-                    , Effect.none
+                    , Cmd.none
                     )
 
                 _ ->
-                    ( model, Effect.none )
+                    ( model, Cmd.none )
 
         DraftLoaded maybeDraft ->
             case ( model.editorState, maybeDraft ) of
                 ( Editing session, Just draft ) ->
                     ( { model | editorState = Editing { session | pendingDraft = Just draft } }
-                    , Effect.none
+                    , Cmd.none
                     )
 
                 _ ->
-                    ( model, Effect.none )
+                    ( model, Cmd.none )
 
         ResumedDraft ->
             case model.editorState of
@@ -343,52 +404,50 @@ update _ _ msg model =
                     case session.pendingDraft of
                         Just draft ->
                             ( { model | editorState = Editing { session | content = draft, pendingDraft = Nothing } }
-                            , Effect.fromCmd (setEditorContent draft)
+                            , setEditorContent draft
                             )
 
                         Nothing ->
-                            ( model, Effect.none )
+                            ( model, Cmd.none )
 
                 _ ->
-                    ( model, Effect.none )
+                    ( model, Cmd.none )
 
         DiscardedDraft ->
             case model.editorState of
                 Editing session ->
                     ( { model | editorState = Editing { session | pendingDraft = Nothing } }
-                    , Effect.fromCmd (clearDraft session.file.path)
+                    , clearDraft session.file.path
                     )
 
                 _ ->
-                    ( model, Effect.none )
+                    ( model, Cmd.none )
 
         CommitMessageChanged commitMsg ->
             case model.editorState of
                 Editing session ->
-                    ( { model | editorState = Editing { session | commitMessage = commitMsg } }, Effect.none )
+                    ( { model | editorState = Editing { session | commitMessage = commitMsg } }, Cmd.none )
 
                 _ ->
-                    ( model, Effect.none )
+                    ( model, Cmd.none )
 
         ClickedCommit ->
             case ( model.editorState, model.auth ) of
                 ( Editing session, LoggedIn token ) ->
                     ( { model | editorState = Editing { session | commitState = Committing } }
-                    , Effect.fromCmd
-                        (commitFile
-                            { token = token.value
-                            , owner = model.siteMeta.contentOwner
-                            , repo = model.siteMeta.contentRepo
-                            , path = session.file.path
-                            , content = session.content
-                            , sha = session.originalSha
-                            , message = session.commitMessage
-                            }
-                        )
+                    , commitFile
+                        { token = token.value
+                        , owner = model.siteMeta.contentOwner
+                        , repo = model.siteMeta.contentRepo
+                        , path = session.file.path
+                        , content = session.content
+                        , sha = session.originalSha
+                        , message = session.commitMessage
+                        }
                     )
 
                 _ ->
-                    ( model, Effect.none )
+                    ( model, Cmd.none )
 
         CommitResultReceived (Ok commitSha) ->
             case ( model.editorState, model.auth ) of
@@ -409,35 +468,33 @@ update _ _ msg model =
                         | editorState = Editing { session | commitState = Idle }
                         , buildStatus = PollingActions { commitSha = commitSha, attempt = 0 }
                       }
-                    , Effect.batch
-                        [ Effect.fromCmd (clearDraft session.file.path)
-                        , Effect.fromCmd
-                            (startBuildPolling
-                                { commitSha = commitSha
-                                , token = token.value
-                                , owner = model.siteMeta.owner
-                                , repo = model.siteMeta.repo
-                                , pageUrl = pageUrl
-                                , actionsIntervalMs = 15000
-                                , pageIntervalMs = 30000
-                                , timeoutMs = 600000
-                                }
-                            )
+                    , Cmd.batch
+                        [ clearDraft session.file.path
+                        , startBuildPolling
+                            { commitSha = commitSha
+                            , token = token.value
+                            , owner = model.siteMeta.owner
+                            , repo = model.siteMeta.repo
+                            , pageUrl = pageUrl
+                            , actionsIntervalMs = 15000
+                            , pageIntervalMs = 30000
+                            , timeoutMs = 600000
+                            }
                         ]
                     )
 
                 _ ->
-                    ( model, Effect.none )
+                    ( model, Cmd.none )
 
         CommitResultReceived (Err errMsg) ->
             case model.editorState of
                 Editing session ->
                     ( { model | editorState = Editing { session | commitState = CommitError errMsg } }
-                    , Effect.none
+                    , Cmd.none
                     )
 
                 _ ->
-                    ( model, Effect.none )
+                    ( model, Cmd.none )
 
         BuildStatusUpdated event ->
             let
@@ -458,20 +515,15 @@ update _ _ msg model =
                         _ ->
                             model.buildStatus
             in
-            ( { model | buildStatus = next }, Effect.none )
+            ( { model | buildStatus = next }, Cmd.none )
 
 
 
 -- ── Subscriptions ─────────────────────────────────────────────────────────────
 
 
-subscriptions :
-    RouteParams
-    -> UrlPath
-    -> Shared.Model
-    -> Model
-    -> Sub Msg
-subscriptions _ _ _ _ =
+subscriptions : Model -> Sub Msg
+subscriptions _ =
     Sub.batch
         [ deviceCodeReceived (decodeDeviceCode >> DeviceCodeReceived)
         , tokenReceived (decodeToken >> TokenReceived)
@@ -489,19 +541,8 @@ subscriptions _ _ _ _ =
 -- ── View ──────────────────────────────────────────────────────────────────────
 
 
-view :
-    App Data ActionData RouteParams
-    -> Shared.Model
-    -> Model
-    -> View (PagesMsg Msg)
-view _ _ model =
-    { title = "Login — Suomen Palikkaharrastajat ry"
-    , body = [ Html.map PagesMsg.fromMsg (viewBody model) ]
-    }
-
-
-viewBody : Model -> Html Msg
-viewBody model =
+view : Model -> Html Msg
+view model =
     Html.div [ Attr.class "min-h-screen bg-bg-subtle flex flex-col" ]
         [ viewNav model
         , viewBuildStatus model.buildStatus
@@ -518,7 +559,7 @@ viewBody model =
 
                 AuthError err ->
                     viewCard []
-                        [ Html.p [ Attr.class "text-red-600 mb-4" ] [ Html.text ("Error: " ++ err) ]
+                        [ Html.p [ Attr.class "text-brand-red mb-4" ] [ Html.text ("Error: " ++ err) ]
                         , btnSecondary [ Events.onClick ClickedUsePAT ] "Try again"
                         ]
 
@@ -543,7 +584,7 @@ viewNav model =
             , case model.auth of
                 LoggedIn token ->
                     Html.div [ Attr.class "flex items-center gap-4" ]
-                        [ Html.span [ Attr.class "text-sm text-white/70" ]
+                        [ Html.span [ Attr.class "type-caption text-white/70" ]
                             [ Html.text
                                 (if String.isEmpty token.login then
                                     "Logged in"
@@ -554,7 +595,7 @@ viewNav model =
                             ]
                         , Html.button
                             [ Events.onClick ClickedLogout
-                            , Attr.class "text-sm text-white/70 hover:text-white underline"
+                            , Attr.class "type-caption text-white/70 hover:text-white underline"
                             ]
                             [ Html.text "Log out" ]
                         ]
@@ -568,9 +609,9 @@ viewNav model =
 viewPATEntry : String -> Html Msg
 viewPATEntry draft =
     viewCard [ Attr.class "max-w-md mx-auto" ]
-        [ Html.h2 [ Attr.class "text-xl font-semibold text-text-primary mb-2" ]
+        [ Html.h2 [ Attr.class "type-h3 text-text-primary mb-2" ]
             [ Html.text "Personal Access Token" ]
-        , Html.p [ Attr.class "text-sm text-text-muted mb-4" ]
+        , Html.p [ Attr.class "type-caption text-text-muted mb-4" ]
             [ Html.text "Paste a GitHub Personal Access Token with repo scope." ]
         , Html.div [ Attr.class "flex gap-2" ]
             [ Html.input
@@ -578,7 +619,7 @@ viewPATEntry draft =
                 , Attr.value draft
                 , Attr.placeholder "ghp_..."
                 , Events.onInput PATChanged
-                , Attr.class "flex-1 border border-border-default rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-yellow"
+                , Attr.class "flex-1 border border-border-default rounded-lg px-3 py-2 type-caption focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-yellow"
                 ]
                 []
             , btnPrimary [ Events.onClick PATSubmitted ] "Save"
@@ -601,7 +642,7 @@ viewEditorState editorState =
 
         FileBrowser files ->
             Html.div []
-                [ Html.h2 [ Attr.class "text-lg font-semibold text-text-primary mb-4" ]
+                [ Html.h2 [ Attr.class "type-h4 text-text-primary mb-4" ]
                     [ Html.text "Choose a file" ]
                 , Html.ul [ Attr.class "divide-y divide-border-default border border-border-default rounded-lg overflow-hidden bg-bg-page shadow-sm" ]
                     (List.map
@@ -609,7 +650,7 @@ viewEditorState editorState =
                             Html.li []
                                 [ Html.button
                                     [ Events.onClick (ClickedFile f)
-                                    , Attr.class "w-full text-left px-4 py-3 text-sm text-text-primary hover:bg-bg-subtle hover:text-brand transition-colors"
+                                    , Attr.class "w-full text-left px-4 py-3 type-caption text-text-primary hover:bg-bg-subtle hover:text-brand motion-safe:transition-colors"
                                     ]
                                     [ Html.text f.name ]
                                 ]
@@ -625,18 +666,18 @@ viewEditorState editorState =
         Editing session ->
             Html.div [ Attr.class "flex flex-col gap-4" ]
                 [ Html.div [ Attr.class "flex items-center justify-between" ]
-                    [ Html.h2 [ Attr.class "text-lg font-semibold text-text-primary" ]
+                    [ Html.h2 [ Attr.class "type-h4 text-text-primary" ]
                         [ Html.text ("Editing: " ++ session.file.name) ]
                     ]
                 , case session.pendingDraft of
                     Just _ ->
-                        Html.div [ Attr.class "bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 flex items-center gap-3 text-sm" ]
-                            [ Html.span [ Attr.class "text-amber-800 flex-1" ]
+                        Html.div [ Attr.class "bg-brand-yellow/10 border border-brand-yellow/40 rounded-lg px-4 py-3 flex items-center gap-3 type-caption" ]
+                            [ Html.span [ Attr.class "text-brand flex-1" ]
                                 [ Html.text "You have an unsaved draft." ]
                             , btnSecondary [ Events.onClick ResumedDraft ] "Resume draft"
                             , Html.button
                                 [ Events.onClick DiscardedDraft
-                                , Attr.class "text-sm text-text-muted hover:text-text-primary underline"
+                                , Attr.class "type-caption text-text-muted hover:text-text-primary underline"
                                 ]
                                 [ Html.text "Discard" ]
                             ]
@@ -650,14 +691,14 @@ viewEditorState editorState =
                         , Attr.value session.commitMessage
                         , Attr.placeholder "Commit message"
                         , Events.onInput CommitMessageChanged
-                        , Attr.class "flex-1 min-w-0 border border-border-default rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-yellow"
+                        , Attr.class "flex-1 min-w-0 border border-border-default rounded-lg px-3 py-2 type-caption focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-yellow"
                         ]
                         []
                     , Html.button
                         [ Events.onClick ClickedCommit
                         , Attr.disabled (session.commitState == Committing)
                         , Attr.class
-                            ("inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-colors "
+                            ("inline-flex items-center px-4 py-2 rounded-lg type-body-small motion-safe:transition-colors "
                                 ++ (if session.commitState == Committing then
                                         "bg-brand-yellow/40 text-brand cursor-not-allowed"
 
@@ -676,7 +717,7 @@ viewEditorState editorState =
                         ]
                     , case session.commitState of
                         CommitError err ->
-                            Html.p [ Attr.class "w-full text-sm text-red-600" ]
+                            Html.p [ Attr.class "w-full type-caption text-brand-red" ]
                                 [ Html.text ("Error: " ++ err) ]
 
                         _ ->
@@ -729,7 +770,7 @@ viewCard attrs children =
 btnPrimary : List (Html.Attribute Msg) -> String -> Html Msg
 btnPrimary attrs label =
     Html.button
-        (Attr.class "inline-flex items-center justify-center px-4 py-2 rounded-lg text-sm font-medium text-brand bg-brand-yellow hover:bg-brand hover:text-brand-yellow transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        (Attr.class "inline-flex items-center justify-center px-4 py-2 rounded-lg type-body-small text-brand bg-brand-yellow hover:bg-brand hover:text-brand-yellow motion-safe:transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             :: attrs
         )
         [ Html.text label ]
@@ -738,7 +779,7 @@ btnPrimary attrs label =
 btnSecondary : List (Html.Attribute Msg) -> String -> Html Msg
 btnSecondary attrs label =
     Html.button
-        (Attr.class "inline-flex items-center justify-center px-4 py-2 rounded-lg text-sm font-medium text-brand bg-white border border-brand/40 hover:bg-brand/5 transition-colors"
+        (Attr.class "inline-flex items-center justify-center px-4 py-2 rounded-lg type-body-small text-brand bg-white border border-brand/40 hover:bg-brand/5 motion-safe:transition-colors"
             :: attrs
         )
         [ Html.text label ]

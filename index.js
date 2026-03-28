@@ -1,26 +1,14 @@
 import './style.css';
-import { wireAdminPorts } from './public/admin-ports.js';
 
 const config = {
     load: async function (elmLoaded) {
         const app = await elmLoaded;
-        wireAdminPorts(app);
         app.ports.focusMobileNav.subscribe(function () {
             requestAnimationFrame(function () {
-                const el = document.querySelector('#pages-mobile-nav a');
+                const el = document.querySelector('#mobile-nav-active') || document.querySelector('#mobile-nav a');
                 if (el) el.focus();
             });
         });
-
-        // Expose site config values for the polling closure
-        fetch('/site-config.json')
-            .then(r => r.json())
-            .then(cfg => {
-                window.__githubOauthClientId = cfg.oauthClientId;
-                window.__githubOauthProxyUrl = cfg.oauthProxyUrl;
-                window.__repoScope = cfg.repoScope || 'public_repo';
-            })
-            .catch(() => {});
     },
     flags: function () {
         return null;

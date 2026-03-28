@@ -1,9 +1,28 @@
 // SECURITY: Never log `token` or `window.__gh*` variables.
-// Port implementations for the Admin route.
+// Entry point for the standalone admin app.
 
-import { mountEditor, setContent } from '../src/admin/Editor.js';
+import { mountEditor, setContent } from './Editor.js';
 
-export function wireAdminPorts(app) {
+async function boot() {
+  let cfg = {};
+  try {
+    const res = await fetch('/site-config.json');
+    cfg = await res.json();
+  } catch (_) {
+    // boot with empty config; Elm will show login UI regardless
+  }
+
+  const app = window.Elm.Main.init({
+    node: document.getElementById('admin-root'),
+    flags: cfg,
+  });
+
+  wireAdminPorts(app);
+}
+
+boot();
+
+function wireAdminPorts(app) {
   const STORAGE_KEY = 'gh_token';
   const DRAFT_PREFIX = 'draft:';
   let draftSaveTimer = null;
@@ -24,16 +43,20 @@ export function wireAdminPorts(app) {
     localStorage.removeItem(STORAGE_KEY);
   });
 
+  // clientId and proxyUrl are stored here so startPolling can use them
+  let oauthClientId = '';
+  let oauthProxyUrl = '';
+
   // ── requestDeviceCode ──────────────────────────────────────────────────────
   app.ports.requestDeviceCode.subscribe(async ({ clientId, proxyUrl }) => {
-    const base = proxyUrl || 'https://github.com';
-    window.__githubOauthProxyUrl = base;
-    window.__githubOauthClientId = clientId;
+    oauthClientId = clientId;
+    oauthProxyUrl = proxyUrl || 'https://github.com';
+    const base = oauthProxyUrl;
     try {
       const res = await fetch(`${base}/login/device/code`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'application/json' },
-        body: new URLSearchParams({ client_id: clientId, scope: window.__repoScope || 'public_repo' }),
+        body: new URLSearchParams({ client_id: clientId, scope: 'public_repo' }),
       });
       const json = await res.json();
       if (json.error) throw new Error(json.error_description || json.error);
@@ -51,7 +74,7 @@ export function wireAdminPorts(app) {
 
   // ── startPolling ───────────────────────────────────────────────────────────
   app.ports.startPolling.subscribe(async ({ deviceCode, interval }) => {
-    const base = window.__githubOauthProxyUrl || 'https://github.com';
+    const base = oauthProxyUrl || 'https://github.com';
     const intervalMs = (interval ?? 5) * 1000;
     const timeout = Date.now() + 15 * 60 * 1000;
 
@@ -65,7 +88,7 @@ export function wireAdminPorts(app) {
           method: 'POST',
           headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'application/json' },
           body: new URLSearchParams({
-            client_id: window.__githubOauthClientId,
+            client_id: oauthClientId,
             device_code: deviceCode,
             grant_type: 'urn:ietf:params:oauth:grant-type:device_code',
           }),

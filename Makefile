@@ -40,6 +40,12 @@ sync-assets: ## Copy non-markdown assets from $(CONTENT_DIR) to public/
 		cp "$$f" "$$dest"; \
 	done
 
+# ── Clean ────────────────────────────────────────────────────────────────────
+
+.PHONY: clean
+clean: ## Remove build artifacts (dist/, elm-stuff/, .elm-pages/, gen/)
+	rm -rf dist elm-stuff .elm-pages gen
+
 # ── Build ────────────────────────────────────────────────────────────────────
 
 .PHONY: dev
@@ -52,11 +58,28 @@ watch: ## Start dev server pointed at ./content (CONTENT_DIR=content)
 	$(MAKE) CONTENT_DIR=content sync-assets
 	CONTENT_DIR=content elm-pages dev
 
+.PHONY: build-admin
+build-admin: ## Build standalone admin app into public/admin/
+	mkdir -p public/admin
+	cd admin-app && npx elm-optimize-level-2 src/Main.elm --output elm.js
+	cp admin-app/elm.js public/admin/elm.js
+	./node_modules/.bin/esbuild admin-app/main.js --bundle --minify --outfile=public/admin/main.js
+	cp admin-app/index.html public/admin/index.html
+
 .PHONY: build
 build: ## Build elm-pages site into dist/ (fetch content first when CONTENT_OWNER/CONTENT_REPO are set)
 	bash scripts/fetch-content.sh
 	$(MAKE) sync-assets
+	$(MAKE) build-admin
 	elm-pages build
+
+# ── Design guide vendor sync ─────────────────────────────────────────────────
+
+DESIGN_GUIDE_SRC ?= ../logo/src/Component
+
+.PHONY: update-submodules
+update-submodules: ## Sync design-guide Component library from ../logo/src/Component/ into vendor/
+	rsync -av --delete $(DESIGN_GUIDE_SRC)/ vendor/design-guide/src/Component/
 
 # ── Deploy ───────────────────────────────────────────────────────────────────
 
