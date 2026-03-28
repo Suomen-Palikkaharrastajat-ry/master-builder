@@ -18,6 +18,8 @@ dist/
 build/
 content/
 public/
+functions/render/elm-pages-cli.mjs
+functions/server-render/elm-pages-cli.mjs
 
 # --- Editor & OS ---
 .vscode/
