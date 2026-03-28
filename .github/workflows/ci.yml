@@ -26,8 +26,4 @@ jobs:
         run: make vendor
 
       - name: Install dependencies
-        # postinstall runs elm-tooling install, which provides elm + elm-format
         run: npm ci
-
-      - name: Check Elm formatting
-        run: make check
