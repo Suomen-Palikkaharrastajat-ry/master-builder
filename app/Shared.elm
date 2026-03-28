@@ -167,7 +167,7 @@ view navItems page model toMsg pageView =
                     [ viewNavbar model (toMsg << SharedMsg) navItems
                     , Html.main_ [ Attr.id "main-content", Attr.class "flex-1 max-w-5xl mx-auto px-6 py-10 w-full" ] pageView.body
                     , viewFooter
-                    , MobileDrawer.viewOverlay { isOpen = model.menuOpen, onClose = toMsg (SharedMsg CloseMenu), breakpoint = MobileDrawer.Lg }
+                    , MobileDrawer.viewOverlay { isOpen = model.menuOpen, onClose = toMsg (SharedMsg CloseMenu), breakpoint = MobileDrawer.Sm }
                     , viewMobileDrawer page.path model (toMsg << SharedMsg) navItems
                     ]
                 ]
@@ -177,47 +177,60 @@ view navItems page model toMsg pageView =
 
 viewNavbar : Model -> (SharedMsg -> msg) -> List NavItem -> Html msg
 viewNavbar model toMsg navItems =
-    Html.nav [ Attr.class "bg-brand shadow-sm sticky top-0 z-50" ]
-        [ Html.div [ Attr.class "max-w-5xl mx-auto px-6 py-3 flex items-center" ]
-            [ Html.a
-                [ Attr.href "/"
-                , Attr.class "shrink-0"
-                , Html.Events.onClick (toMsg CloseMenu)
-                ]
-                [ Html.img
-                    [ Attr.src "https://logo.palikkaharrastajat.fi/logo/horizontal/svg/horizontal-full-dark.svg"
-                    , Attr.alt "Suomen Palikkaharrastajat ry"
-                    , Attr.class "h-14"
+    Html.nav
+        [ Attr.class "bg-brand sticky top-0 z-50 shadow-md" ]
+        [ Html.div
+            [ Attr.class "max-w-5xl mx-auto px-4" ]
+            [ Html.div
+                [ Attr.class "flex items-center py-2 sm:py-3" ]
+                [ Html.a
+                    [ Attr.href "/"
+                    , Attr.class "flex-shrink-0 mr-auto focus:outline-none focus:ring-2 focus:ring-brand-yellow rounded"
+                    , Html.Events.onClick (toMsg CloseMenu)
                     ]
-                    []
-                ]
-            , Html.div [ Attr.class "flex-1" ] []
-            , Html.div [ Attr.class "max-lg:hidden flex items-center gap-6" ]
-                (List.map navLink navItems)
-            , Html.button
-                [ Attr.class "lg:hidden text-white/80 hover:text-white motion-safe:transition-colors p-1 -mr-1 cursor-pointer focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-brand rounded"
-                , Attr.attribute "aria-label"
-                    (if model.menuOpen then
-                        "Sulje valikko"
+                    [ Html.node "picture"
+                        []
+                        [ Html.node "source"
+                            [ Attr.attribute "media" "(min-width: 640px)"
+                            , Attr.attribute "srcset" "https://logo.palikkaharrastajat.fi/logo/horizontal/svg/horizontal-full-dark-bold.svg"
+                            ]
+                            []
+                        , Html.img
+                            [ Attr.src "https://logo.palikkaharrastajat.fi/logo/horizontal/svg/horizontal.svg"
+                            , Attr.alt "Suomen Palikkaharrastajat ry"
+                            , Attr.class "h-10 sm:h-14"
+                            ]
+                            []
+                        ]
+                    ]
+                , Html.button
+                    [ Attr.class "sm:hidden text-white p-2 ml-2 rounded focus:outline-none focus:ring-2 focus:ring-brand-yellow cursor-pointer"
+                    , Html.Events.onClick (toMsg ToggleMenu)
+                    , Attr.attribute "aria-label"
+                        (if model.menuOpen then
+                            "Sulje valikko"
 
-                     else
-                        "Avaa valikko"
-                    )
-                , Attr.attribute "aria-expanded"
-                    (if model.menuOpen then
-                        "true"
+                         else
+                            "Avaa valikko"
+                        )
+                    , Attr.attribute "aria-expanded"
+                        (if model.menuOpen then
+                            "true"
 
-                     else
-                        "false"
-                    )
-                , Attr.attribute "aria-controls" "mobile-nav"
-                , Html.Events.onClick (toMsg ToggleMenu)
-                ]
-                [ if model.menuOpen then
-                    FeatherIcons.x |> FeatherIcons.withSize 24 |> FeatherIcons.toHtml []
+                         else
+                            "false"
+                        )
+                    , Attr.attribute "aria-controls" "mobile-nav"
+                    ]
+                    [ if model.menuOpen then
+                        FeatherIcons.x |> FeatherIcons.withSize 24 |> FeatherIcons.toHtml []
 
-                  else
-                    FeatherIcons.menu |> FeatherIcons.withSize 24 |> FeatherIcons.toHtml []
+                      else
+                        FeatherIcons.menu |> FeatherIcons.withSize 24 |> FeatherIcons.toHtml []
+                    ]
+                , Html.ul
+                    [ Attr.class "hidden sm:flex flex-wrap gap-0.5 list-none m-0 p-0" ]
+                    (List.map navLink navItems)
                 ]
             ]
         ]
@@ -225,11 +238,13 @@ viewNavbar model toMsg navItems =
 
 navLink : NavItem -> Html msg
 navLink item =
-    Html.a
-        [ Attr.href ("/" ++ item.slug)
-        , Attr.class "type-caption text-white/80 hover:text-white motion-safe:transition-colors focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-brand rounded"
+    Html.li []
+        [ Html.a
+            [ Attr.href ("/" ++ item.slug)
+            , Attr.class "text-white/80 hover:text-brand-yellow font-medium px-2 sm:px-3 py-1 rounded transition-colors text-sm cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-yellow"
+            ]
+            [ Html.text item.title ]
         ]
-        [ Html.text item.title ]
 
 
 viewMobileDrawer : UrlPath -> Model -> (SharedMsg -> msg) -> List NavItem -> Html msg
@@ -245,7 +260,7 @@ viewMobileDrawer currentPath model toMsg navItems =
         { isOpen = model.menuOpen
         , id = "mobile-nav"
         , onClose = close
-        , breakpoint = MobileDrawer.Lg
+        , breakpoint = MobileDrawer.Sm
         , content =
             [ Html.nav [ Attr.class "p-4" ]
                 [ Html.ul [ Attr.class "flex flex-col gap-1 list-none m-0 p-0" ]
@@ -276,7 +291,7 @@ viewFooter =
                 [ -- Col 1: service links + logo
                   Html.div [ Attr.class "flex items-start gap-4" ]
                     [ Html.img
-                        [ Attr.src "https://logo.palikkaharrastajat.fi/logo/square/svg/square-smile-full-dark.svg"
+                        [ Attr.src "https://logo.palikkaharrastajat.fi/logo/square/svg/square-smile-full-dark-bold.svg"
                         , Attr.alt ""
                         , Attr.attribute "aria-hidden" "true"
                         , Attr.class "h-35 w-35 flex-shrink-0"
