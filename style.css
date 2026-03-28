@@ -1,13 +1,9 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
-html {
-  font-size: 18px;
-}
-
 @font-face {
   font-family: "Outfit";
-  src: url("https://logo.palikkaharrastajat.fi/fonts/Outfit-VariableFont_wght.ttf") format("truetype");
+  src: url("/fonts/Outfit-VariableFont_wght.ttf") format("truetype");
   font-weight: 100 900;
   font-style: normal;
   font-display: swap;
@@ -42,27 +38,6 @@ html {
   --color-border-default: #E5E7EB;
   --color-border-brand:   #05131D;
 
-  /* ── Typography scale (Outfit) ────────────────────────────────────────── */
-  --text-display:      3rem;      /* 48px / weight 700 – hero headlines     */
-  --text-heading-1:    1.875rem;  /* 30px / weight 700 – page headings      */
-  --text-heading-2:    1.5rem;    /* 24px / weight 700 – section headings   */
-  --text-heading-3:    1.25rem;   /* 20px / weight 600 – sub-section heads  */
-  --text-body:         1rem;      /* 16px / weight 400 – body copy          */
-  --text-body-small:   0.875rem;  /* 14px / weight 500 – labels, controls  */
-  --text-caption:      0.875rem;  /* 14px / weight 400 – captions, meta    */
-  --text-mono:         0.875rem;  /* 14px / weight 400 – code, hex values  */
-  --text-overline:     0.75rem;   /* 12px / weight 600 – category labels   */
-
-  /* ── Spacing scale (4px base) ─────────────────────────────────────────── */
-  --spacing-1:  0.25rem;  /* 4px  – icon padding, inline gaps     */
-  --spacing-2:  0.5rem;   /* 8px  – button padding, tag gaps      */
-  --spacing-3:  0.75rem;  /* 12px – input padding, list item gaps */
-  --spacing-4:  1rem;     /* 16px – card padding, form field gaps */
-  --spacing-6:  1.5rem;   /* 24px – section sub-divisions         */
-  --spacing-8:  2rem;     /* 32px – card body padding             */
-  --spacing-12: 3rem;     /* 48px – page section vertical margins */
-  --spacing-16: 4rem;     /* 64px – hero and feature block spacing */
-
   /* ── Motion ───────────────────────────────────────────────────────────── */
   --duration-fast: 150ms;
   --duration-base: 300ms;
@@ -72,7 +47,84 @@ html {
   --ease-accelerate: cubic-bezier(0.4, 0.0, 1.0, 1.0);
 }
 
+/* ── Typography scale ─────────────────────────────────────────────────────── */
+
+@utility type-display {
+  font-size: 3rem;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+@utility type-h1 {
+  font-size: 1.875rem;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+@utility type-h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+@utility type-h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+@utility type-h4 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+@utility type-body {
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.6;
+}
+
+@utility type-body-small {
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+@utility type-caption {
+  font-size: 0.875rem;
+  font-weight: 400;
+  line-height: 1.4;
+  letter-spacing: 0.02em;
+}
+
+@utility type-mono {
+  font-size: 0.875rem;
+  font-weight: 400;
+  line-height: 1.6;
+  font-family: ui-monospace, monospace;
+}
+
+@utility type-overline {
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.4;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* ── Base ─────────────────────────────────────────────────────────────────── */
+
+@layer base {
+  body {
+    font-family: var(--font-sans);
+  }
+}
+
 /* ── Reduced-motion override ──────────────────────────────────────────────── */
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
@@ -80,16 +132,3 @@ html {
     transition-duration: 0.01ms !important;
   }
 }
-
-/* ── CodeMirror editor container ──────────────────────────────────────────── */
-#cm-editor {
-  @apply border border-border-default rounded-lg overflow-hidden;
-}
-
-/* ── Build status banners ─────────────────────────────────────────────────── */
-.build-status {
-  @apply px-4 py-3 rounded-lg mb-4 flex items-center gap-2 text-sm font-medium;
-}
-.build-status.polling { @apply bg-blue-50 text-blue-800; }
-.build-status.live    { @apply bg-green-50 text-green-800; }
-.build-status.error   { @apply bg-red-50 text-red-800; }

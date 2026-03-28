@@ -16,12 +16,12 @@ view config =
         [ Html.div
             [ Attr.class "mx-auto max-w-4xl px-6 lg:px-8 text-center" ]
             [ Html.h1
-                [ Attr.class "text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl lg:text-6xl" ]
+                [ Attr.class "type-display tracking-tight text-text-primary" ]
                 [ Html.text config.title ]
             , case config.subtitle of
                 Just sub ->
                     Html.p
-                        [ Attr.class "mt-6 text-lg leading-8 text-gray-600 max-w-2xl mx-auto" ]
+                        [ Attr.class "mt-6 type-body leading-8 text-text-muted max-w-2xl mx-auto" ]
                         [ Html.text sub ]
 
                 Nothing ->

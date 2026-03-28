@@ -106,7 +106,7 @@ view app _ =
     , body =
         [ Html.a
             [ Attr.href "/"
-            , Attr.class "inline-flex items-center gap-1 text-sm text-text-muted hover:text-text-primary mb-6 transition-colors"
+            , Attr.class "inline-flex items-center gap-1 type-caption text-text-muted hover:text-text-primary mb-6 motion-safe:transition-colors"
             ]
             [ Html.text "← Etusivulle" ]
         , MarkdownRenderer.renderMarkdown app.data.body

@@ -18,7 +18,7 @@ view :
     -> Html msg
 view config =
     Html.nav
-        [ Attr.class "bg-white border-b border-gray-200" ]
+        [ Attr.class "bg-white border-b border-border-default" ]
         [ Html.div
             [ Attr.class "mx-auto max-w-7xl px-6 lg:px-8" ]
             [ Html.div
@@ -43,6 +43,6 @@ viewLink : NavLink -> Html msg
 viewLink link =
     Html.a
         [ Attr.href link.href
-        , Attr.class "text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+        , Attr.class "type-body-small text-text-muted hover:text-text-primary motion-safe:transition-colors"
         ]
         [ Html.text link.label ]

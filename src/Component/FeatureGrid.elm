@@ -28,16 +28,16 @@ viewFeature feature =
         [ case feature.icon of
             Just ico ->
                 Html.div
-                    [ Attr.class "mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-600 text-white text-lg" ]
+                    [ Attr.class "mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-brand-yellow text-brand type-h4" ]
                     [ Html.text ico ]
 
             Nothing ->
                 Html.text ""
         , Html.h3
-            [ Attr.class "text-base font-semibold leading-7 text-gray-900" ]
+            [ Attr.class "type-h4 leading-7 text-text-primary" ]
             [ Html.text feature.title ]
         , Html.div
-            [ Attr.class "mt-2 text-sm leading-7 text-gray-600" ]
+            [ Attr.class "mt-2 type-caption leading-7 text-text-muted" ]
             feature.description
         ]
 

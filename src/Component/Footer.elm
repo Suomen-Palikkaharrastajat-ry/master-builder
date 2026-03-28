@@ -17,16 +17,16 @@ view :
     -> Html msg
 view config =
     Html.footer
-        [ Attr.class "bg-gray-900" ]
+        [ Attr.class "bg-brand" ]
         [ Html.div
             [ Attr.class "mx-auto max-w-7xl px-6 py-12 lg:px-8" ]
             [ Html.div
                 [ Attr.class "grid grid-cols-2 gap-8 md:grid-cols-4" ]
                 (List.map viewGroup config.groups)
             , Html.div
-                [ Attr.class "mt-10 border-t border-gray-800 pt-8" ]
+                [ Attr.class "mt-10 border-t border-white/10 pt-8" ]
                 [ Html.p
-                    [ Attr.class "text-sm text-gray-400 text-center" ]
+                    [ Attr.class "type-caption text-white/50 text-center" ]
                     [ Html.text config.copyright ]
                 ]
             ]
@@ -37,7 +37,7 @@ viewGroup : LinkGroup -> Html msg
 viewGroup group =
     Html.div []
         [ Html.h3
-            [ Attr.class "text-sm font-semibold text-white" ]
+            [ Attr.class "type-body-small text-white" ]
             [ Html.text group.heading ]
         , Html.ul
             [ Attr.class "mt-4 space-y-3" ]
@@ -50,7 +50,7 @@ viewGroupLink link =
     Html.li []
         [ Html.a
             [ Attr.href link.href
-            , Attr.class "text-sm text-gray-400 hover:text-white transition-colors"
+            , Attr.class "type-caption text-white/60 hover:text-white motion-safe:transition-colors"
             ]
             [ Html.text link.label ]
         ]

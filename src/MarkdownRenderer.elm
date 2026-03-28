@@ -27,7 +27,7 @@ renderMarkdown markdown =
             Html.article [ Attr.class "prose prose-gray max-w-none" ] rendered
 
         Err err ->
-            Html.pre [ Attr.class "text-red-600 text-sm p-4 bg-red-50 rounded" ] [ Html.text err ]
+            Html.pre [ Attr.class "text-brand-red type-caption p-4 bg-brand-red/10 rounded" ] [ Html.text err ]
 
 
 {-| Custom renderer — no explicit type annotation so Elm can freely unify the
@@ -35,20 +35,20 @@ renderMarkdown markdown =
 -}
 renderer =
     { heading = viewHeading
-    , paragraph = Html.p [ Attr.class "my-4 leading-7 text-gray-700" ]
+    , paragraph = Html.p [ Attr.class "my-4 leading-7 text-text-primary" ]
     , hardLineBreak = Html.br [] []
     , blockQuote =
         \children ->
             Html.blockquote
-                [ Attr.class "pl-4 border-l-4 border-gray-300 text-gray-600 italic my-6" ]
+                [ Attr.class "pl-4 border-l-4 border-border-default text-text-muted italic my-6" ]
                 children
-    , strong = \children -> Html.strong [ Attr.class "font-semibold text-gray-900" ] children
+    , strong = \children -> Html.strong [ Attr.class "type-body-small text-text-primary" ] children
     , emphasis = \children -> Html.em [ Attr.class "italic" ] children
     , strikethrough = \children -> Html.s [] children
     , codeSpan =
         \code ->
             Html.code
-                [ Attr.class "px-1.5 py-0.5 rounded bg-gray-100 text-gray-800 font-mono text-sm" ]
+                [ Attr.class "px-1.5 py-0.5 rounded bg-bg-subtle text-text-primary type-mono" ]
                 [ Html.text code ]
     , link = viewLink
     , image = viewImage
@@ -56,17 +56,17 @@ renderer =
     , unorderedList = viewUnorderedList
     , orderedList = viewOrderedList
     , codeBlock = viewCodeBlock
-    , thematicBreak = Html.hr [ Attr.class "my-8 border-gray-200" ] []
-    , table = Html.table [ Attr.class "w-full text-sm border-collapse my-6 rounded overflow-hidden" ]
-    , tableHeader = Html.thead [ Attr.class "bg-gray-50 border-b border-gray-200" ]
+    , thematicBreak = Html.hr [ Attr.class "my-8 border-border-default" ] []
+    , table = Html.table [ Attr.class "w-full type-caption border-collapse my-6 rounded overflow-hidden" ]
+    , tableHeader = Html.thead [ Attr.class "bg-bg-subtle border-b border-border-default" ]
     , tableBody = Html.tbody []
-    , tableRow = Html.tr [ Attr.class "border-b border-gray-100 last:border-0" ]
+    , tableRow = Html.tr [ Attr.class "border-b border-border-default last:border-0" ]
     , tableHeaderCell =
         \_ children ->
-            Html.th [ Attr.class "px-4 py-2 text-left font-semibold text-gray-700" ] children
+            Html.th [ Attr.class "px-4 py-2 text-left type-body-small text-text-muted" ] children
     , tableCell =
         \_ children ->
-            Html.td [ Attr.class "px-4 py-2 text-gray-700" ] children
+            Html.td [ Attr.class "px-4 py-2 text-text-primary" ] children
     , html = htmlRenderer
     }
 
@@ -77,29 +77,29 @@ viewHeading :
 viewHeading { level, children } =
     case level of
         Block.H1 ->
-            Html.h1 [ Attr.class "text-3xl font-bold tracking-tight text-gray-900 mt-8 mb-4" ] children
+            Html.h1 [ Attr.class "type-h1 tracking-tight text-text-primary mt-8 mb-4" ] children
 
         Block.H2 ->
-            Html.h2 [ Attr.class "text-2xl font-bold text-gray-900 mt-8 mb-3 border-b border-gray-200 pb-2" ] children
+            Html.h2 [ Attr.class "type-h2 text-text-primary mt-8 mb-3 border-b border-border-default pb-2" ] children
 
         Block.H3 ->
-            Html.h3 [ Attr.class "text-xl font-semibold text-gray-900 mt-6 mb-2" ] children
+            Html.h3 [ Attr.class "type-h3 text-text-primary mt-6 mb-2" ] children
 
         Block.H4 ->
-            Html.h4 [ Attr.class "text-base font-semibold text-gray-900 mt-4 mb-1" ] children
+            Html.h4 [ Attr.class "type-h4 text-text-primary mt-4 mb-1" ] children
 
         Block.H5 ->
-            Html.h5 [ Attr.class "text-sm font-semibold text-gray-700 mt-3 mb-1 uppercase tracking-wide" ] children
+            Html.h5 [ Attr.class "type-overline text-text-muted mt-3 mb-1" ] children
 
         Block.H6 ->
-            Html.h6 [ Attr.class "text-sm font-medium text-gray-500 mt-2 mb-1" ] children
+            Html.h6 [ Attr.class "type-caption text-text-muted mt-2 mb-1" ] children
 
 
 viewLink : { title : Maybe String, destination : String } -> List (Html msg) -> Html msg
 viewLink link children =
     Html.a
         [ Attr.href link.destination
-        , Attr.class "text-brand font-medium underline underline-offset-2 hover:opacity-70 transition-opacity"
+        , Attr.class "text-brand type-body-small underline underline-offset-2 hover:opacity-70 motion-safe:transition-opacity"
         ]
         children
 
@@ -124,7 +124,7 @@ viewImage img =
             []
         , case img.title of
             Just title ->
-                Html.figcaption [ Attr.class "mt-2 text-center text-sm text-gray-500" ]
+                Html.figcaption [ Attr.class "mt-2 text-center type-caption text-text-muted" ]
                     [ Html.text title ]
 
             Nothing ->
@@ -134,14 +134,14 @@ viewImage img =
 
 viewUnorderedList : List (Block.ListItem (Html msg)) -> Html msg
 viewUnorderedList items =
-    Html.ul [ Attr.class "my-4 space-y-1 list-disc pl-6 text-gray-700" ]
+    Html.ul [ Attr.class "my-4 space-y-1 list-disc pl-6 text-text-primary" ]
         (List.map
             (\(Block.ListItem task children) ->
                 Html.li
                     [ Attr.class
                         (case task of
                             Block.CompletedTask ->
-                                "line-through text-gray-400"
+                                "line-through text-text-subtle"
 
                             _ ->
                                 ""
@@ -156,7 +156,7 @@ viewUnorderedList items =
 viewOrderedList : Int -> List (List (Html msg)) -> Html msg
 viewOrderedList startingIndex items =
     Html.ol
-        [ Attr.class "my-4 space-y-1 list-decimal pl-6 text-gray-700"
+        [ Attr.class "my-4 space-y-1 list-decimal pl-6 text-text-primary"
         , Attr.attribute "start" (String.fromInt startingIndex)
         ]
         (List.map (Html.li []) items)
@@ -167,13 +167,13 @@ viewCodeBlock { body, language } =
     Html.div [ Attr.class "my-6 rounded-lg overflow-hidden" ]
         [ case language of
             Just lang ->
-                Html.div [ Attr.class "px-4 py-1.5 bg-gray-700 text-gray-300 text-xs font-mono" ]
+                Html.div [ Attr.class "px-4 py-1.5 bg-brand text-white/70 type-mono" ]
                     [ Html.text lang ]
 
             Nothing ->
                 Html.text ""
         , Html.pre
-            [ Attr.class "bg-gray-900 text-gray-100 p-4 overflow-x-auto text-sm font-mono leading-relaxed" ]
+            [ Attr.class "bg-brand text-white/90 p-4 overflow-x-auto type-mono leading-relaxed" ]
             [ Html.code [] [ Html.text body ] ]
         ]
 
@@ -189,6 +189,7 @@ htmlRenderer =
                     { alertType = parseAlertType calloutType
                     , title = Nothing
                     , body = children
+                    , onDismiss = Nothing
                     }
             )
             |> Markdown.Html.withAttribute "type"
@@ -237,14 +238,14 @@ htmlRenderer =
                     [ case icon of
                         Just ico ->
                             Html.div
-                                [ Attr.class "mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-brand-yellow text-brand text-lg" ]
+                                [ Attr.class "mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-brand-yellow text-brand type-h4" ]
                                 [ Html.text ico ]
 
                         Nothing ->
                             Html.text ""
-                    , Html.h3 [ Attr.class "text-base font-semibold leading-7 text-gray-900" ]
+                    , Html.h3 [ Attr.class "type-h4 leading-7 text-text-primary" ]
                         [ Html.text title ]
-                    , Html.div [ Attr.class "mt-2 text-sm leading-7 text-gray-600" ] children
+                    , Html.div [ Attr.class "mt-2 type-caption leading-7 text-text-muted" ] children
                     ]
             )
             |> Markdown.Html.withAttribute "title"
@@ -261,25 +262,25 @@ htmlRenderer =
           Markdown.Html.tag "pricing-tier"
             (\name price period children ->
                 Html.div
-                    [ Attr.class "rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden" ]
+                    [ Attr.class "rounded-2xl border border-border-default bg-white shadow-sm overflow-hidden" ]
                     [ Html.div [ Attr.class "p-8" ]
                         [ Html.h3
-                            [ Attr.class "text-lg font-semibold text-gray-900" ]
+                            [ Attr.class "type-h4 text-text-primary" ]
                             [ Html.text name ]
                         , Html.div [ Attr.class "mt-4 flex items-baseline gap-x-2" ]
                             [ Html.span
-                                [ Attr.class "text-4xl font-bold tracking-tight text-gray-900" ]
+                                [ Attr.class "type-display tracking-tight text-text-primary" ]
                                 [ Html.text price ]
                             , case period of
                                 Just p ->
                                     Html.span
-                                        [ Attr.class "text-sm font-semibold text-gray-500" ]
+                                        [ Attr.class "type-body-small text-text-muted" ]
                                         [ Html.text ("/ " ++ p) ]
 
                                 Nothing ->
                                     Html.text ""
                             ]
-                        , Html.div [ Attr.class "mt-8 text-sm text-gray-700" ] children
+                        , Html.div [ Attr.class "mt-8 type-caption text-text-primary" ] children
                         ]
                     ]
             )
@@ -301,7 +302,7 @@ htmlRenderer =
           Markdown.Html.tag "card"
             (\title children ->
                 Card.view
-                    { header = Maybe.map (\t -> Html.span [ Attr.class "font-semibold text-gray-900" ] [ Html.text t ]) title
+                    { header = Maybe.map (\t -> Html.span [ Attr.class "type-body-small text-text-primary" ] [ Html.text t ]) title
                     , body = children
                     , footer = Nothing
                     , image = Nothing
@@ -321,7 +322,7 @@ htmlRenderer =
         , -- <accordion-item summary="…">…</accordion-item>
           Markdown.Html.tag "accordion-item"
             (\summary children ->
-                Accordion.viewItem { summary = summary, children = children }
+                Accordion.viewItem { title = summary, body = children }
             )
             |> Markdown.Html.withAttribute "summary"
         , -- <stat-grid><stat label="…" value="…" change="…"></stat></stat-grid>
@@ -338,14 +339,15 @@ htmlRenderer =
         , -- <timeline><timeline-item date="…" title="…">…</timeline-item></timeline>
           Markdown.Html.tag "timeline"
             (\children -> Timeline.view children)
-        , -- <timeline-item date="…" title="…" icon="…">…</timeline-item>
+        , -- <timeline-item date="…" title="…" icon="…" image="…">…</timeline-item>
           Markdown.Html.tag "timeline-item"
-            (\date title icon children ->
-                Timeline.viewItem { date = date, title = title, icon = Maybe.map resolveIcon icon, children = children }
+            (\date title icon image children ->
+                Timeline.viewItem { date = date, title = title, icon = Maybe.map (resolveIcon >> FeatherIcons.toHtml []) icon, image = image, children = children }
             )
             |> Markdown.Html.withAttribute "date"
             |> Markdown.Html.withAttribute "title"
             |> Markdown.Html.withOptionalAttribute "icon"
+            |> Markdown.Html.withOptionalAttribute "image"
         , -- <with-image src="…" alt="…" side="left|right">…</with-image>
           Markdown.Html.tag "with-image"
             (\src alt side children ->
@@ -394,28 +396,28 @@ parseAlertType s =
 
 badgeClass : Maybe String -> String
 badgeClass color =
-    "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium "
+    "inline-flex items-center rounded-full px-2.5 py-0.5 type-caption "
         ++ (case Maybe.withDefault "gray" color of
                 "blue" ->
-                    "bg-blue-100 text-blue-700"
+                    "bg-brand/15 text-brand"
 
                 "green" ->
-                    "bg-green-100 text-green-700"
+                    "bg-brand-nougat-light text-brand-nougat-dark"
 
                 "yellow" ->
-                    "bg-yellow-100 text-yellow-800"
+                    "bg-brand-yellow/20 text-brand"
 
                 "red" ->
-                    "bg-red-100 text-red-700"
+                    "bg-brand-red/15 text-brand-red"
 
                 "purple" ->
-                    "bg-purple-100 text-purple-700"
+                    "bg-brand/15 text-brand"
 
                 "indigo" ->
-                    "bg-indigo-100 text-indigo-700"
+                    "bg-brand/20 text-brand"
 
                 _ ->
-                    "bg-gray-100 text-gray-700"
+                    "bg-bg-subtle text-text-primary"
            )
 
 
@@ -423,7 +425,7 @@ buttonLinkClass : Maybe String -> String
 buttonLinkClass variant =
     let
         base =
-            "no-underline inline-flex items-center justify-center font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 px-4 py-2 text-sm mr-2 mb-2 [&_p]:text-inherit [&_p]:my-0"
+            "no-underline inline-flex items-center justify-center type-body-small rounded-lg motion-safe:transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 px-4 py-2 mr-2 mb-2 [&_p]:text-inherit [&_p]:my-0"
     in
     base
         ++ " "
