@@ -106,11 +106,18 @@ viewLink link children =
 
 normalizeSrc : String -> String
 normalizeSrc src =
-    if String.startsWith "./" src then
-        String.dropLeft 1 src
+    if String.startsWith "http://" src
+        || String.startsWith "https://" src
+        || String.startsWith "/" src
+        || String.startsWith "data:" src
+    then
+        src
+
+    else if String.startsWith "./" src then
+        "/" ++ String.dropLeft 2 src
 
     else
-        src
+        "/" ++ src
 
 
 viewImage : { alt : String, src : String, title : Maybe String } -> Html msg
