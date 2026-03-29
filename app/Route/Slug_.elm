@@ -1,6 +1,7 @@
 module Route.Slug_ exposing (ActionData, Data, Model, Msg, route)
 
 import BackendTask exposing (BackendTask)
+import FeatherIcons
 import BackendTask.File as File
 import BackendTask.Glob as Glob
 import ContentDir
@@ -107,7 +108,11 @@ view app _ =
     { title = app.data.frontmatter.title ++ " — Suomen Palikkaharrastajat ry"
     , body =
         [ Html.a [ Attr.href "/", Attr.class "inline-flex items-center gap-1 type-caption text-text-muted hover:text-text-primary mb-6 motion-safe:transition-colors" ]
-            [ Html.text "← Etusivulle" ]
+            [ FeatherIcons.arrowLeft
+                |> FeatherIcons.withSize 14
+                |> FeatherIcons.toHtml [ Attr.attribute "aria-hidden" "true" ]
+            , Html.text "Etusivulle"
+            ]
         , MarkdownRenderer.renderMarkdown app.data.body
         ]
     }
