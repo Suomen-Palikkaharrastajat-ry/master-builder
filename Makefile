@@ -1,5 +1,6 @@
 .PHONY:
 
+ELM_PAGES ?= elm-pages
 CONTENT_DIR ?= template
 
 help:
@@ -71,13 +72,13 @@ vendor: ## Init and update all git submodules to their pinned commits
 dev: vendor ## Start elm-pages dev server (uses local template/)
 	$(MAKE) sync-assets
 	$(MAKE) sync-fonts
-	elm-pages dev
+	$(ELM_PAGES) dev
 
 .PHONY: watch
 watch: vendor ## Start dev server pointed at ./content (CONTENT_DIR=content)
 	$(MAKE) CONTENT_DIR=content sync-assets
 	$(MAKE) sync-fonts
-	CONTENT_DIR=content elm-pages dev
+	CONTENT_DIR=content $(ELM_PAGES) dev
 
 .PHONY: build-admin
 build-admin: node_modules ## Build standalone admin app into public/admin/
@@ -94,7 +95,7 @@ build: vendor ## Build elm-pages site into dist/ (fetch content first when CONTE
 	$(MAKE) CONTENT_DIR=content sync-assets
 	$(MAKE) sync-fonts
 	$(MAKE) build-admin
-	elm-pages build
+	$(ELM_PAGES) build
 
 # ── Deploy ───────────────────────────────────────────────────────────────────
 
