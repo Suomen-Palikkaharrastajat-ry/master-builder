@@ -21,9 +21,12 @@ devenv.local.nix:
 devenv.local.yaml:
 	cp devenv.local.yaml.example devenv.local.yaml
 
-.PHONY: install
-install: ## Install npm dependencies
+node_modules: package.json package-lock.json
 	npm install
+	@touch node_modules
+
+.PHONY: install
+install: node_modules ## Install npm dependencies
 
 # ── Content ──────────────────────────────────────────────────────────────────
 
@@ -68,7 +71,7 @@ watch: vendor ## Start dev server pointed at ./content (CONTENT_DIR=content)
 	CONTENT_DIR=content elm-pages dev
 
 .PHONY: build-admin
-build-admin: ## Build standalone admin app into public/admin/
+build-admin: node_modules ## Build standalone admin app into public/admin/
 	mkdir -p public/admin
 	cd admin-app && npx elm-optimize-level-2 src/Main.elm --output elm.js
 	cp admin-app/elm.js public/admin/elm.js
