@@ -43,6 +43,13 @@ sync-assets: ## Copy non-markdown assets from $(CONTENT_DIR) to public/
 		cp "$$f" "$$dest"; \
 	done
 
+.PHONY: sync-fonts
+sync-fonts: ## Copy font files from vendor/design-guide/fonts/ to public/fonts/
+	@mkdir -p public/fonts
+	@find vendor/design-guide/fonts -maxdepth 1 -name "*.ttf" | while IFS= read -r f; do \
+		cp "$$f" "public/fonts/$$(basename "$$f")"; \
+	done
+
 # ── Clean ────────────────────────────────────────────────────────────────────
 
 .PHONY: clean
@@ -63,11 +70,13 @@ vendor: ## Init and update all git submodules to their pinned commits
 .PHONY: dev
 dev: vendor ## Start elm-pages dev server (uses local template/)
 	$(MAKE) sync-assets
+	$(MAKE) sync-fonts
 	elm-pages dev
 
 .PHONY: watch
 watch: vendor ## Start dev server pointed at ./content (CONTENT_DIR=content)
 	$(MAKE) CONTENT_DIR=content sync-assets
+	$(MAKE) sync-fonts
 	CONTENT_DIR=content elm-pages dev
 
 .PHONY: build-admin
@@ -82,6 +91,8 @@ build-admin: node_modules ## Build standalone admin app into public/admin/
 build: vendor ## Build elm-pages site into dist/ (fetch content first when CONTENT_OWNER/CONTENT_REPO are set)
 	bash scripts/fetch-content.sh
 	$(MAKE) sync-assets
+	$(MAKE) CONTENT_DIR=content sync-assets
+	$(MAKE) sync-fonts
 	$(MAKE) build-admin
 	elm-pages build
 
