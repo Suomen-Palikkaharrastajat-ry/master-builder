@@ -1,5 +1,8 @@
 module Frontmatter exposing (Frontmatter, decoder)
 
+{-| Markdown front-matter type and JSON decoder.
+-}
+
 import Json.Decode as Decode exposing (Decoder)
 
 

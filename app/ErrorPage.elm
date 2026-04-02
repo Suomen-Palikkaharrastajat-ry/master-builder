@@ -1,5 +1,8 @@
 module ErrorPage exposing (ErrorPage(..), Model, Msg, head, init, internalError, notFound, statusCode, update, view)
 
+{-| elm-pages error page handler (404, 500, etc.).
+-}
+
 import Effect exposing (Effect)
 import Head
 import Html exposing (Html)

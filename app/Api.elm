@@ -1,5 +1,8 @@
 module Api exposing (routes)
 
+{-| elm-pages API route definitions.
+-}
+
 import ApiRoute exposing (ApiRoute)
 import BackendTask exposing (BackendTask)
 import FatalError exposing (FatalError)

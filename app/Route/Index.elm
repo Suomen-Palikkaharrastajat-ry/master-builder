@@ -1,5 +1,8 @@
 module Route.Index exposing (ActionData, Data, Model, Msg, route)
 
+{-| Route for the site index page (/).
+-}
+
 import BackendTask exposing (BackendTask)
 import BackendTask.File as File
 import ContentDir

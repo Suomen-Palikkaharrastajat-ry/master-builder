@@ -1,5 +1,8 @@
 module Route.Greet exposing (ActionData, Data, Model, Msg, route)
 
+{-| Demo route for the /greet page.
+-}
+
 import BackendTask exposing (BackendTask)
 import BackendTask.Http
 import ErrorPage exposing (ErrorPage)

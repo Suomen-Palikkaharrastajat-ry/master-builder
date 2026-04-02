@@ -1,5 +1,8 @@
 module SiteMeta exposing (SiteMeta, decoder, task)
 
+{-| Site-wide metadata loaded from site-meta.json at build time.
+-}
+
 import BackendTask exposing (BackendTask)
 import BackendTask.File as File
 import FatalError exposing (FatalError)

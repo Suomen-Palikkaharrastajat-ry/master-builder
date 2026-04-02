@@ -1,5 +1,8 @@
 module Site exposing (config)
 
+{-| elm-pages site configuration (metadata, manifest, head tags).
+-}
+
 import BackendTask exposing (BackendTask)
 import FatalError exposing (FatalError)
 import Head

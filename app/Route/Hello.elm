@@ -1,5 +1,8 @@
 module Route.Hello exposing (ActionData, Data, Model, Msg(..), RouteParams, action, data, route)
 
+{-| Server-rendered route for /hello — fetches the elm-pages GitHub star count.
+-}
+
 import BackendTask exposing (BackendTask)
 import BackendTask.Http
 import Effect exposing (Effect)
@@ -29,6 +32,7 @@ type alias RouteParams =
     {}
 
 
+route : RouteBuilder.StatefulRoute RouteParams Data ActionData Model Msg
 route =
     RouteBuilder.serverRender { data = data, action = action, head = head }
         |> RouteBuilder.buildWithLocalState

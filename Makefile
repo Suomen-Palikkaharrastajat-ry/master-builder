@@ -95,6 +95,7 @@ build: vendor ## Build elm-pages site into dist/ (fetch content first when CONTE
 	$(MAKE) CONTENT_DIR=content sync-assets
 	$(MAKE) sync-fonts
 	$(MAKE) build-admin
+	npx elm-tailwind-classes gen
 	$(ELM_PAGES) build
 
 # ── Deploy ───────────────────────────────────────────────────────────────────
@@ -104,8 +105,9 @@ deploy: ## Commit and push to trigger CI deploy (requires clean working tree)
 	git push origin main
 
 .PHONY: check
-check: ## Check Elm formatting (no changes)
+check: ## Check Elm formatting and elm-review rules (no changes)
 	elm-format --validate app/ src/
+	npx elm-review --config review
 
 .PHONY: format
 format: ## Auto-format Elm source files
