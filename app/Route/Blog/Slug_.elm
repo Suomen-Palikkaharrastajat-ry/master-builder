@@ -1,11 +1,14 @@
 module Route.Blog.Slug_ exposing (ActionData, Data, Model, Msg, route)
 
+{-| Route for individual blog post pages at /blog/:slug.
+-}
+
 import BackendTask exposing (BackendTask)
-import FeatherIcons
 import BackendTask.File as File
 import BackendTask.Glob as Glob
 import ContentDir
 import FatalError exposing (FatalError)
+import FeatherIcons
 import Frontmatter exposing (Frontmatter)
 import Head
 import Head.Seo as Seo
@@ -17,6 +20,10 @@ import Pages.Url
 import PagesMsg exposing (PagesMsg)
 import RouteBuilder exposing (App, StatelessRoute)
 import Shared
+import Tailwind as Tw exposing (classes)
+import Tailwind.Breakpoints as Bp
+import Tailwind.Theme exposing (s1, s6)
+import TailwindTokens as TC
 import View exposing (View)
 
 
@@ -107,7 +114,16 @@ view app _ =
     , body =
         [ Html.a
             [ Attr.href "/"
-            , Attr.class "inline-flex items-center gap-1 type-caption text-text-muted hover:text-text-primary mb-6 motion-safe:transition-colors"
+            , classes
+                [ Tw.inline_flex
+                , Tw.items_center
+                , Tw.gap s1
+                , Tw.type_caption
+                , Tw.text_simple TC.textMuted
+                , Bp.hover [ Tw.text_simple TC.textPrimary ]
+                , Tw.mb s6
+                , Bp.withVariant "motion-safe" [ Tw.transition_colors ]
+                ]
             ]
             [ FeatherIcons.arrowLeft
                 |> FeatherIcons.withSize 14

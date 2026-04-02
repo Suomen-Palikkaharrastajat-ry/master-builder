@@ -1,15 +1,15 @@
 import { defineConfig } from "vite";
 import adapter from "elm-pages/adapter/netlify.js";
 import tailwindcss from "@tailwindcss/vite";
+import elmTailwind from "elm-tailwind-classes/vite";
 
 export default {
   vite: defineConfig({
-    plugins: [tailwindcss()],
+    plugins: [elmTailwind(), tailwindcss()],
   }),
   adapter,
   headTagsTemplate(context) {
     return `
-<link rel="stylesheet" href="/style.css" />
 <meta name="generator" content="elm-pages v${context.cliVersion}" />
 <link rel="icon" href="https://logo.palikkaharrastajat.fi/favicon/favicon.ico" type="image/x-icon" />
 <link rel="icon" href="https://logo.palikkaharrastajat.fi/favicon/favicon-32.png" sizes="32x32" type="image/png" />

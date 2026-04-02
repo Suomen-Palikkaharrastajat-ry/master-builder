@@ -1,5 +1,8 @@
 module MarkdownRenderer exposing (renderMarkdown)
 
+{-| Markdown renderer for elm-pages content.
+-}
+
 import Component.Accordion as Accordion
 import Component.Alert as Alert
 import Component.Card as Card
@@ -13,6 +16,44 @@ import Markdown.Block as Block
 import Markdown.Html
 import Markdown.Parser
 import Markdown.Renderer
+import Regex
+import Tailwind as Tw exposing (classes)
+import Tailwind.Breakpoints as Bp
+import Tailwind.Theme exposing (s0_dot_5, s1, s10, s1_dot_5, s2, s2_dot_5, s3, s4, s6, s8, white)
+import TailwindExtra as TwEx
+import TailwindTokens as TC
+
+
+splitClassPrefix : String -> ( Maybe String, String )
+splitClassPrefix str =
+    case Regex.fromString "^\\{([^}]*)\\}\\s*(.*)$" of
+        Nothing ->
+            ( Nothing, str )
+
+        Just re ->
+            case Regex.find re str of
+                [] ->
+                    ( Nothing, str )
+
+                match :: _ ->
+                    case match.submatches of
+                        [ maybeCls, maybeRest ] ->
+                            let
+                                cls =
+                                    maybeCls
+
+                                rest =
+                                    case maybeRest of
+                                        Just r ->
+                                            r
+
+                                        Nothing ->
+                                            ""
+                            in
+                            ( cls, rest )
+
+                        _ ->
+                            ( Nothing, str )
 
 
 renderMarkdown : String -> Html msg
@@ -24,31 +65,29 @@ renderMarkdown markdown =
             |> Result.andThen (Markdown.Renderer.render renderer)
     of
         Ok rendered ->
-            Html.article [ Attr.class "prose prose-gray max-w-none" ] rendered
+            Html.article [ classes [ Tw.prose, Tw.prose_gray, Tw.max_w_none ] ] rendered
 
         Err err ->
-            Html.pre [ Attr.class "text-brand-red type-caption p-4 bg-brand-red/10 rounded" ] [ Html.text err ]
+            Html.pre [ classes [ Tw.text_simple TC.brandRed, Tw.type_caption, Tw.p s4, TwEx.bg_brand_red_10, Tw.rounded ] ] [ Html.text err ]
 
 
-{-| Custom renderer — no explicit type annotation so Elm can freely unify the
-`msg` type variable across all fields.
--}
+renderer : Markdown.Renderer.Renderer (Html msg)
 renderer =
     { heading = viewHeading
-    , paragraph = Html.p [ Attr.class "my-4 leading-7 text-text-primary" ]
+    , paragraph = Html.p [ classes [ Tw.my s4, TwEx.leading_7, Tw.text_simple TC.textPrimary ] ]
     , hardLineBreak = Html.br [] []
     , blockQuote =
         \children ->
             Html.blockquote
-                [ Attr.class "pl-4 border-l-4 border-border-default text-text-muted italic my-6" ]
+                [ classes [ Tw.pl s4, Tw.border_l_4, Tw.border_simple TC.borderDefault, Tw.text_simple TC.textMuted, Tw.italic, Tw.my s6 ] ]
                 children
-    , strong = \children -> Html.strong [ Attr.class "type-body-small text-text-primary" ] children
-    , emphasis = \children -> Html.em [ Attr.class "italic" ] children
+    , strong = \children -> Html.strong [ classes [ Tw.type_body_small, Tw.text_simple TC.textPrimary ] ] children
+    , emphasis = \children -> Html.em [ classes [ Tw.italic ] ] children
     , strikethrough = \children -> Html.s [] children
     , codeSpan =
         \code ->
             Html.code
-                [ Attr.class "px-1.5 py-0.5 rounded bg-bg-subtle text-text-primary type-mono" ]
+                [ classes [ Tw.px s1_dot_5, Tw.py s0_dot_5, Tw.rounded, Tw.bg_simple TC.bgSubtle, Tw.text_simple TC.textPrimary, Tw.type_mono ] ]
                 [ Html.text code ]
     , link = viewLink
     , image = viewImage
@@ -56,17 +95,17 @@ renderer =
     , unorderedList = viewUnorderedList
     , orderedList = viewOrderedList
     , codeBlock = viewCodeBlock
-    , thematicBreak = Html.hr [ Attr.class "my-8 border-border-default" ] []
-    , table = Html.table [ Attr.class "w-full type-caption border-collapse my-6 rounded overflow-hidden" ]
-    , tableHeader = Html.thead [ Attr.class "bg-bg-subtle border-b border-border-default" ]
+    , thematicBreak = Html.hr [ classes [ Tw.my s8, Tw.border_simple TC.borderDefault ] ] []
+    , table = Html.table [ classes [ Tw.w_full, Tw.type_caption, Tw.border_collapse, Tw.my s6, Tw.rounded, Tw.overflow_hidden ] ]
+    , tableHeader = Html.thead [ classes [ Tw.bg_simple TC.bgSubtle, Tw.border_b, Tw.border_simple TC.borderDefault ] ]
     , tableBody = Html.tbody []
-    , tableRow = Html.tr [ Attr.class "border-b border-border-default last:border-0" ]
+    , tableRow = Html.tr [ classes [ Tw.border_b, Tw.border_simple TC.borderDefault, Bp.last [ Tw.border_0 ] ] ]
     , tableHeaderCell =
         \_ children ->
-            Html.th [ Attr.class "px-4 py-2 text-left type-body-small text-text-muted" ] children
+            Html.th [ classes [ Tw.px s4, Tw.py s2, Tw.text_left, Tw.type_body_small, Tw.text_simple TC.textMuted ] ] children
     , tableCell =
         \_ children ->
-            Html.td [ Attr.class "px-4 py-2 text-text-primary" ] children
+            Html.td [ classes [ Tw.px s4, Tw.py s2, Tw.text_simple TC.textPrimary ] ] children
     , html = htmlRenderer
     }
 
@@ -77,39 +116,47 @@ viewHeading :
 viewHeading { level, children } =
     case level of
         Block.H1 ->
-            Html.h1 [ Attr.class "type-h1 tracking-tight text-text-primary mt-8 mb-4" ] children
+            Html.h1 [ classes [ Tw.type_h1, Tw.tracking_tight, Tw.text_simple TC.textPrimary, Tw.mt s8, Tw.mb s4 ] ] children
 
         Block.H2 ->
-            Html.h2 [ Attr.class "type-h2 text-text-primary mt-8 mb-3 border-b border-border-default pb-2" ] children
+            Html.h2 [ classes [ Tw.type_h2, Tw.text_simple TC.textPrimary, Tw.mt s8, Tw.mb s3, Tw.border_b, Tw.border_simple TC.borderDefault, Tw.pb s2 ] ] children
 
         Block.H3 ->
-            Html.h3 [ Attr.class "type-h3 text-text-primary mt-6 mb-2" ] children
+            Html.h3 [ classes [ Tw.type_h3, Tw.text_simple TC.textPrimary, Tw.mt s6, Tw.mb s2 ] ] children
 
         Block.H4 ->
-            Html.h4 [ Attr.class "type-h4 text-text-primary mt-4 mb-1" ] children
+            Html.h4 [ classes [ Tw.type_h4, Tw.text_simple TC.textPrimary, Tw.mt s4, Tw.mb s1 ] ] children
 
         Block.H5 ->
-            Html.h5 [ Attr.class "type-overline text-text-muted mt-3 mb-1" ] children
+            Html.h5 [ classes [ Tw.type_overline, Tw.text_simple TC.textMuted, Tw.mt s3, Tw.mb s1 ] ] children
 
         Block.H6 ->
-            Html.h6 [ Attr.class "type-caption text-text-muted mt-2 mb-1" ] children
+            Html.h6 [ classes [ Tw.type_caption, Tw.text_simple TC.textMuted, Tw.mt s2, Tw.mb s1 ] ] children
 
 
 viewLink : { title : Maybe String, destination : String } -> List (Html msg) -> Html msg
 viewLink link children =
     Html.a
         [ Attr.href link.destination
-        , Attr.class "text-brand type-body-small underline underline-offset-2 hover:opacity-70 motion-safe:transition-opacity"
+        , classes
+            [ Tw.text_simple TC.brand
+            , Tw.type_body
+            , Tw.underline
+            , Tw.underline_offset_2
+            , Bp.hover [ Tw.opacity_70 ]
+            , Bp.withVariant "motion-safe" [ Tw.transition_opacity ]
+            ]
         ]
         children
 
 
 normalizeSrc : String -> String
 normalizeSrc src =
-    if String.startsWith "http://" src
-        || String.startsWith "https://" src
-        || String.startsWith "/" src
-        || String.startsWith "data:" src
+    if
+        String.startsWith "http://" src
+            || String.startsWith "https://" src
+            || String.startsWith "/" src
+            || String.startsWith "data:" src
     then
         src
 
@@ -122,16 +169,34 @@ normalizeSrc src =
 
 viewImage : { alt : String, src : String, title : Maybe String } -> Html msg
 viewImage img =
-    Html.figure [ Attr.class "my-8" ]
+    let
+        ( maybeClass, altText ) =
+            splitClassPrefix img.alt
+
+        imageClasses =
+            case maybeClass of
+                Just "self-center" ->
+                    Tw.batch [ Tw.mx_auto, Tw.w_4over6 ]
+
+                Just "w-2" ->
+                    Tw.w_4over6
+
+                Just _ ->
+                    Tw.batch []
+
+                Nothing ->
+                    Tw.batch []
+    in
+    Html.figure [ classes [ Tw.my s8 ] ]
         [ Html.img
             [ Attr.src (normalizeSrc img.src)
-            , Attr.alt img.alt
-            , Attr.class "rounded-lg w-full"
+            , Attr.alt altText
+            , classes [ imageClasses ]
             ]
             []
         , case img.title of
             Just title ->
-                Html.figcaption [ Attr.class "mt-2 text-center type-caption text-text-muted" ]
+                Html.figcaption [ classes [ Tw.mt s2, Tw.text_center, Tw.type_caption, Tw.text_simple TC.textMuted ] ]
                     [ Html.text title ]
 
             Nothing ->
@@ -141,17 +206,17 @@ viewImage img =
 
 viewUnorderedList : List (Block.ListItem (Html msg)) -> Html msg
 viewUnorderedList items =
-    Html.ul [ Attr.class "my-4 space-y-1 list-disc pl-6 text-text-primary" ]
+    Html.ul [ classes [ Tw.my s4, TwEx.space_y s1, Tw.list_disc, Tw.pl s6, Tw.text_simple TC.textPrimary ] ]
         (List.map
             (\(Block.ListItem task children) ->
                 Html.li
-                    [ Attr.class
+                    [ classes
                         (case task of
                             Block.CompletedTask ->
-                                "line-through text-text-subtle"
+                                [ Tw.line_through, Tw.text_simple TC.textSubtle ]
 
                             _ ->
-                                ""
+                                []
                         )
                     ]
                     children
@@ -163,7 +228,7 @@ viewUnorderedList items =
 viewOrderedList : Int -> List (List (Html msg)) -> Html msg
 viewOrderedList startingIndex items =
     Html.ol
-        [ Attr.class "my-4 space-y-1 list-decimal pl-6 text-text-primary"
+        [ classes [ Tw.my s4, TwEx.space_y s1, Tw.list_decimal, Tw.pl s6, Tw.text_simple TC.textPrimary ]
         , Attr.attribute "start" (String.fromInt startingIndex)
         ]
         (List.map (Html.li []) items)
@@ -171,22 +236,21 @@ viewOrderedList startingIndex items =
 
 viewCodeBlock : { body : String, language : Maybe String } -> Html msg
 viewCodeBlock { body, language } =
-    Html.div [ Attr.class "my-6 rounded-lg overflow-hidden" ]
+    Html.div [ classes [ Tw.my s6, Tw.rounded_lg, Tw.overflow_hidden ] ]
         [ case language of
             Just lang ->
-                Html.div [ Attr.class "px-4 py-1.5 bg-brand text-white/70 type-mono" ]
+                Html.div [ classes [ Tw.px s4, Tw.py s1_dot_5, Tw.bg_simple TC.brand, TwEx.text_white_70, Tw.type_mono ] ]
                     [ Html.text lang ]
 
             Nothing ->
                 Html.text ""
         , Html.pre
-            [ Attr.class "bg-brand text-white/90 p-4 overflow-x-auto type-mono leading-relaxed" ]
+            [ classes [ Tw.bg_simple TC.brand, TwEx.text_white_90, Tw.p s4, Tw.overflow_x_auto, Tw.type_mono, Tw.leading_relaxed ] ]
             [ Html.code [] [ Html.text body ] ]
         ]
 
 
-{-| No explicit type annotation — lets Elm freely infer and unify `msg`.
--}
+htmlRenderer : Markdown.Html.Renderer (Html msg)
 htmlRenderer =
     Markdown.Html.oneOf
         [ -- <callout type="info|success|warning|error">…</callout>
@@ -221,17 +285,21 @@ htmlRenderer =
                             |> Maybe.withDefault 3
                 in
                 Html.div
-                    [ Attr.class
-                        ("not-prose grid gap-x-8 gap-y-10 "
+                    [ classes
+                        ([ TwEx.not_prose
+                         , Tw.grid
+                         , Tw.gap_x s8
+                         , Tw.gap_y s10
+                         ]
                             ++ (case cols of
                                     2 ->
-                                        "sm:grid-cols-2"
+                                        [ Bp.sm [ Tw.grid_cols_2 ] ]
 
                                     3 ->
-                                        "sm:grid-cols-2 lg:grid-cols-3"
+                                        [ Bp.sm [ Tw.grid_cols_2 ], Bp.lg [ Tw.grid_cols_3 ] ]
 
                                     _ ->
-                                        "sm:grid-cols-2 lg:grid-cols-4"
+                                        [ Bp.sm [ Tw.grid_cols_2 ], Bp.lg [ Tw.grid_cols_4 ] ]
                                )
                         )
                     ]
@@ -241,18 +309,18 @@ htmlRenderer =
         , -- <feature title="…" icon="…">…</feature>
           Markdown.Html.tag "feature"
             (\title icon children ->
-                Html.div [ Attr.class "flex flex-col" ]
+                Html.div [ classes [ Tw.flex, Tw.flex_col ] ]
                     [ case icon of
                         Just ico ->
                             Html.div
-                                [ Attr.class "mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-brand-yellow text-brand type-h4" ]
+                                [ classes [ Tw.mb s4, Tw.flex, Tw.h s10, Tw.w s10, Tw.items_center, Tw.justify_center, Tw.rounded_lg, Tw.bg_simple TC.brandYellow, Tw.text_simple TC.brand, Tw.type_h4 ] ]
                                 [ Html.text ico ]
 
                         Nothing ->
                             Html.text ""
-                    , Html.h3 [ Attr.class "type-h4 leading-7 text-text-primary" ]
+                    , Html.h3 [ classes [ Tw.type_h4, TwEx.leading_7, Tw.text_simple TC.textPrimary ] ]
                         [ Html.text title ]
-                    , Html.div [ Attr.class "mt-2 type-caption leading-7 text-text-muted" ] children
+                    , Html.div [ classes [ Tw.mt s2, Tw.type_caption, TwEx.leading_7, Tw.text_simple TC.textMuted ] ] children
                     ]
             )
             |> Markdown.Html.withAttribute "title"
@@ -261,7 +329,7 @@ htmlRenderer =
           Markdown.Html.tag "pricing-table"
             (\_ children ->
                 Html.div
-                    [ Attr.class "not-prose py-8 grid gap-8 sm:grid-cols-2 lg:grid-cols-3" ]
+                    [ classes [ TwEx.not_prose, Tw.py s8, Tw.grid, Tw.gap s8, Bp.sm [ Tw.grid_cols_2 ], Bp.lg [ Tw.grid_cols_3 ] ] ]
                     children
             )
             |> Markdown.Html.withOptionalAttribute "highlighted"
@@ -269,25 +337,25 @@ htmlRenderer =
           Markdown.Html.tag "pricing-tier"
             (\name price period children ->
                 Html.div
-                    [ Attr.class "rounded-2xl border border-border-default bg-white shadow-sm overflow-hidden" ]
-                    [ Html.div [ Attr.class "p-8" ]
+                    [ classes [ Tw.rounded_2xl, Tw.border, Tw.border_simple TC.borderDefault, Tw.bg_simple white, Tw.shadow_sm, Tw.overflow_hidden ] ]
+                    [ Html.div [ classes [ Tw.p s8 ] ]
                         [ Html.h3
-                            [ Attr.class "type-h4 text-text-primary" ]
+                            [ classes [ Tw.type_h4, Tw.text_simple TC.textPrimary ] ]
                             [ Html.text name ]
-                        , Html.div [ Attr.class "mt-4 flex items-baseline gap-x-2" ]
+                        , Html.div [ classes [ Tw.mt s4, Tw.flex, Tw.items_baseline, Tw.gap_x s2 ] ]
                             [ Html.span
-                                [ Attr.class "type-display tracking-tight text-text-primary" ]
+                                [ classes [ Tw.type_display, Tw.tracking_tight, Tw.text_simple TC.textPrimary ] ]
                                 [ Html.text price ]
                             , case period of
                                 Just p ->
                                     Html.span
-                                        [ Attr.class "type-body-small text-text-muted" ]
+                                        [ classes [ Tw.type_body_small, Tw.text_simple TC.textMuted ] ]
                                         [ Html.text ("/ " ++ p) ]
 
                                 Nothing ->
                                     Html.text ""
                             ]
-                        , Html.div [ Attr.class "mt-8 type-caption text-text-primary" ] children
+                        , Html.div [ classes [ Tw.mt s8, Tw.type_caption, Tw.text_simple TC.textPrimary ] ] children
                         ]
                     ]
             )
@@ -299,7 +367,7 @@ htmlRenderer =
             (\href variant children ->
                 Html.a
                     [ Attr.href href
-                    , Attr.class (buttonLinkClass variant)
+                    , classes (buttonLinkClasses variant)
                     ]
                     children
             )
@@ -309,7 +377,7 @@ htmlRenderer =
           Markdown.Html.tag "card"
             (\title children ->
                 Card.view
-                    { header = Maybe.map (\t -> Html.span [ Attr.class "type-body-small text-text-primary" ] [ Html.text t ]) title
+                    { header = Maybe.map (\t -> Html.span [ classes [ Tw.type_body_small, Tw.text_simple TC.textPrimary ] ] [ Html.text t ]) title
                     , body = children
                     , footer = Nothing
                     , image = Nothing
@@ -320,7 +388,7 @@ htmlRenderer =
         , -- <badge color="gray|blue|green|yellow|red|purple|indigo">label</badge>
           Markdown.Html.tag "badge"
             (\color children ->
-                Html.span [ Attr.class (badgeClass color) ] children
+                Html.span [ classes (badgeClasses color) ] children
             )
             |> Markdown.Html.withOptionalAttribute "color"
         , -- <accordion><accordion-item summary="…">…</accordion-item></accordion>
@@ -363,7 +431,7 @@ htmlRenderer =
                         Html.img
                             [ Attr.src (normalizeSrc src)
                             , Attr.alt (Maybe.withDefault "" alt)
-                            , Attr.class "w-full rounded-lg"
+                            , classes [ Tw.w_full, Tw.rounded_lg ]
                             ]
                             []
 
@@ -371,7 +439,7 @@ htmlRenderer =
                         Maybe.withDefault "right" side == "right"
                 in
                 Html.div
-                    [ Attr.class "not-prose grid grid-cols-1 md:grid-cols-2 gap-8 items-center my-8" ]
+                    [ classes [ TwEx.not_prose, Tw.grid, Tw.grid_cols_1, Bp.md [ Tw.grid_cols_2 ], Tw.gap s8, Tw.items_center, Tw.my s8 ] ]
                     (if isRight then
                         [ Html.div [] children, Html.div [] [ imgEl ] ]
 
@@ -401,50 +469,83 @@ parseAlertType s =
             Alert.Info
 
 
-badgeClass : Maybe String -> String
-badgeClass color =
-    "inline-flex items-center rounded-full px-2.5 py-0.5 type-caption "
+badgeClasses : Maybe String -> List Tw.Tailwind
+badgeClasses color =
+    [ Tw.inline_flex
+    , Tw.items_center
+    , Tw.rounded_full
+    , Tw.px s2_dot_5
+    , Tw.py s0_dot_5
+    , Tw.type_caption
+    ]
         ++ (case Maybe.withDefault "gray" color of
                 "blue" ->
-                    "bg-brand/15 text-brand"
+                    [ TwEx.bg_brand_15, Tw.text_simple TC.brand ]
 
                 "green" ->
-                    "bg-brand-nougat-light text-brand-nougat-dark"
+                    [ Tw.bg_simple TC.brandNougatLight, Tw.text_simple TC.brandNougatDark ]
 
                 "yellow" ->
-                    "bg-brand-yellow/20 text-brand"
+                    [ TwEx.bg_brand_yellow_20, Tw.text_simple TC.brand ]
 
                 "red" ->
-                    "bg-brand-red/15 text-brand-red"
+                    [ TwEx.bg_brand_red_15, Tw.text_simple TC.brandRed ]
 
                 "purple" ->
-                    "bg-brand/15 text-brand"
+                    [ TwEx.bg_brand_15, Tw.text_simple TC.brand ]
 
                 "indigo" ->
-                    "bg-brand/20 text-brand"
+                    [ TwEx.bg_brand_20, Tw.text_simple TC.brand ]
 
                 _ ->
-                    "bg-bg-subtle text-text-primary"
+                    [ Tw.bg_simple TC.bgSubtle, Tw.text_simple TC.textPrimary ]
            )
 
 
-buttonLinkClass : Maybe String -> String
-buttonLinkClass variant =
+buttonLinkClasses : Maybe String -> List Tw.Tailwind
+buttonLinkClasses variant =
     let
         base =
-            "no-underline inline-flex items-center justify-center type-body-small rounded-lg motion-safe:transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 px-4 py-2 mr-2 mb-2 [&_p]:text-inherit [&_p]:my-0"
+            [ Tw.no_underline
+            , Tw.inline_flex
+            , Tw.items_center
+            , Tw.justify_center
+            , Tw.type_body_small
+            , Tw.rounded_lg
+            , Bp.withVariant "motion-safe" [ Tw.transition_colors ]
+            , Bp.focus [ Tw.outline_none ]
+            , Bp.focus_visible [ Tw.ring_2, Tw.ring_offset_2 ]
+            , Tw.px s4
+            , Tw.py s2
+            , Tw.mr s2
+            , Tw.mb s2
+            , TwEx.p_text_inherit
+            , TwEx.p_my_0
+            ]
     in
     base
-        ++ " "
         ++ (case Maybe.withDefault "primary" variant of
                 "secondary" ->
-                    "bg-white text-brand border border-brand/40 hover:bg-brand/5 focus:ring-brand"
+                    [ Tw.bg_simple white
+                    , Tw.text_simple TC.brand
+                    , Tw.border
+                    , TwEx.border_brand_40
+                    , Bp.hover [ TwEx.bg_brand_5 ]
+                    , Bp.focus [ TwEx.ring_brand ]
+                    ]
 
                 "ghost" ->
-                    "text-brand hover:bg-brand/5 focus:ring-brand"
+                    [ Tw.text_simple TC.brand
+                    , Bp.hover [ TwEx.bg_brand_5 ]
+                    , Bp.focus [ TwEx.ring_brand ]
+                    ]
 
                 _ ->
-                    "bg-brand-yellow text-brand hover:bg-brand hover:text-brand-yellow focus:ring-brand-yellow"
+                    [ Tw.bg_simple TC.brandYellow
+                    , Tw.text_simple TC.brand
+                    , Bp.hover [ Tw.bg_simple TC.brand, Tw.text_simple TC.brandYellow ]
+                    , Bp.focus [ TwEx.ring_brand_yellow ]
+                    ]
            )
 
 

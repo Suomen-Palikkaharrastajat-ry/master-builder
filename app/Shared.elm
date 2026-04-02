@@ -1,5 +1,8 @@
 module Shared exposing (Data, Model, Msg(..), SharedMsg(..), template)
 
+{-| Shared layout shell: navbar, footer, and mobile drawer.
+-}
+
 import BackendTask exposing (BackendTask)
 import BackendTask.File as File
 import BackendTask.Glob as Glob
@@ -19,6 +22,11 @@ import Pages.PageUrl exposing (PageUrl)
 import Ports
 import Route exposing (Route(..))
 import SharedTemplate exposing (SharedTemplate)
+import Tailwind as Tw exposing (classes)
+import Tailwind.Breakpoints as Bp
+import Tailwind.Theme exposing (s0, s0_dot_5, s1, s10, s12, s14, s16, s2, s3, s4, s6, s8, white)
+import TailwindExtra as TwEx
+import TailwindTokens as TC
 import UrlPath exposing (UrlPath)
 import View exposing (View)
 
@@ -160,12 +168,16 @@ view navItems page model toMsg pageView =
             { body =
                 [ Html.a
                     [ Attr.href "#main-content"
-                    , Attr.class "sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:px-4 focus:py-2 focus:bg-brand-yellow focus:text-brand focus:type-body-small focus:rounded focus-visible:ring-2 focus-visible:ring-brand"
+                    , classes
+                        [ Tw.sr_only
+                        , Bp.focus [ Tw.not_sr_only, Tw.fixed, TwEx.top_2, TwEx.left_2, Tw.z_50, Tw.px s4, Tw.py s2, Tw.bg_simple TC.brandYellow, Tw.text_simple TC.brand, Tw.type_body_small, Tw.rounded ]
+                        , Bp.focus_visible [ Tw.ring_2, TwEx.ring_brand ]
+                        ]
                     ]
                     [ Html.text "Siirry pääsisältöön" ]
-                , Html.div [ Attr.class "min-h-screen flex flex-col" ]
+                , Html.div [ classes [ Tw.min_h_screen, Tw.flex, Tw.flex_col ] ]
                     [ viewNavbar model (toMsg << SharedMsg) navItems
-                    , Html.main_ [ Attr.id "main-content", Attr.class "flex-1 max-w-5xl mx-auto px-6 py-10 w-full" ] pageView.body
+                    , Html.main_ [ Attr.id "main-content", classes [ Tw.flex_1, TwEx.max_w_5xl, Tw.mx_auto, Tw.px s6, Tw.py s10, Tw.w_full ] ] pageView.body
                     , viewFooter
                     , MobileDrawer.viewOverlay { isOpen = model.menuOpen, onClose = toMsg (SharedMsg CloseMenu), breakpoint = MobileDrawer.Sm }
                     , viewMobileDrawer page.path model (toMsg << SharedMsg) navItems
@@ -178,14 +190,14 @@ view navItems page model toMsg pageView =
 viewNavbar : Model -> (SharedMsg -> msg) -> List NavItem -> Html msg
 viewNavbar model toMsg navItems =
     Html.nav
-        [ Attr.class "bg-brand sticky top-0 z-50 shadow-md" ]
+        [ classes [ Tw.bg_simple TC.brand, Tw.sticky, TwEx.top_0, Tw.z_50, Tw.shadow_md ] ]
         [ Html.div
-            [ Attr.class "max-w-5xl mx-auto px-4" ]
+            [ classes [ TwEx.max_w_5xl, Tw.mx_auto, Tw.px s4 ] ]
             [ Html.div
-                [ Attr.class "flex items-center py-2 sm:py-3" ]
+                [ classes [ Tw.flex, Tw.items_center, Tw.py s2, Bp.sm [ Tw.py s3 ] ] ]
                 [ Html.a
                     [ Attr.href "/"
-                    , Attr.class "flex-shrink-0 mr-auto focus:outline-none focus:ring-2 focus:ring-brand-yellow rounded"
+                    , classes [ Tw.shrink_0, Tw.mr_auto, Bp.focus [ Tw.outline_none, Tw.ring_2, TwEx.ring_brand_yellow ], Tw.rounded ]
                     , Html.Events.onClick (toMsg CloseMenu)
                     ]
                     [ Html.node "picture"
@@ -198,13 +210,13 @@ viewNavbar model toMsg navItems =
                         , Html.img
                             [ Attr.src "https://logo.palikkaharrastajat.fi/logo/horizontal/svg/horizontal.svg"
                             , Attr.alt "Suomen Palikkaharrastajat ry"
-                            , Attr.class "h-10 sm:h-14"
+                            , classes [ Tw.h s10, Bp.sm [ Tw.h s14 ] ]
                             ]
                             []
                         ]
                     ]
                 , Html.button
-                    [ Attr.class "sm:hidden text-white p-2 ml-2 rounded focus:outline-none focus:ring-2 focus:ring-brand-yellow cursor-pointer"
+                    [ classes [ Bp.sm [ Tw.hidden ], Tw.text_simple white, Tw.p s2, Tw.ml s2, Tw.rounded, Bp.focus [ Tw.outline_none, Tw.ring_2, TwEx.ring_brand_yellow ], Tw.cursor_pointer ]
                     , Html.Events.onClick (toMsg ToggleMenu)
                     , Attr.attribute "aria-label"
                         (if model.menuOpen then
@@ -229,7 +241,7 @@ viewNavbar model toMsg navItems =
                         FeatherIcons.menu |> FeatherIcons.withSize 24 |> FeatherIcons.toHtml []
                     ]
                 , Html.ul
-                    [ Attr.class "hidden sm:flex flex-wrap gap-0.5 list-none m-0 p-0" ]
+                    [ classes [ Bp.sm [ Tw.flex ], Tw.hidden, Tw.flex_wrap, Tw.gap s0_dot_5, Tw.list_none, Tw.m s0, Tw.p s0 ] ]
                     (List.map navLink navItems)
                 ]
             ]
@@ -241,7 +253,19 @@ navLink item =
     Html.li []
         [ Html.a
             [ Attr.href ("/" ++ item.slug)
-            , Attr.class "text-white/80 hover:text-brand-yellow font-medium px-2 sm:px-3 py-1 rounded transition-colors text-sm cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-yellow"
+            , classes
+                [ TwEx.text_white_80
+                , Bp.hover [ Tw.text_simple TC.brandYellow ]
+                , Tw.font_medium
+                , Tw.px s2
+                , Bp.sm [ Tw.px s3 ]
+                , Tw.py s1
+                , Tw.rounded
+                , Tw.transition_colors
+                , Tw.text_sm
+                , Tw.cursor_pointer
+                , Bp.focus [ Tw.outline_none, Tw.ring_2, TwEx.ring_brand_yellow ]
+                ]
             ]
             [ Html.text item.title ]
         ]
@@ -262,8 +286,8 @@ viewMobileDrawer currentPath model toMsg navItems =
         , onClose = close
         , breakpoint = MobileDrawer.Sm
         , content =
-            [ Html.nav [ Attr.class "p-4" ]
-                [ Html.ul [ Attr.class "flex flex-col gap-1 list-none m-0 p-0" ]
+            [ Html.nav [ classes [ Tw.p s4 ] ]
+                [ Html.ul [ classes [ Tw.flex, Tw.flex_col, Tw.gap s1, Tw.list_none, Tw.m s0, Tw.p s0 ] ]
                     (List.map
                         (\item ->
                             MobileDrawer.viewNavLink
@@ -283,59 +307,59 @@ viewMobileDrawer currentPath model toMsg navItems =
 viewFooter : Html msg
 viewFooter =
     Html.footer
-        [ Attr.class "bg-brand text-white mt-16 py-12 px-4" ]
+        [ classes [ Tw.bg_simple TC.brand, Tw.text_simple white, Tw.mt s16, Tw.py s12, Tw.px s4 ] ]
         [ Html.div
-            [ Attr.class "max-w-5xl mx-auto" ]
+            [ classes [ TwEx.max_w_5xl, Tw.mx_auto ] ]
             [ Html.div
-                [ Attr.class "grid grid-cols-1 sm:grid-cols-[auto_1fr] gap-8 sm:items-end" ]
+                [ classes [ Tw.grid, Tw.grid_cols_1, Bp.sm [ TwEx.grid_cols_auto_1fr ], Tw.gap s8, Bp.sm [ Tw.items_end ] ] ]
                 [ -- Col 1: service links + logo
-                  Html.div [ Attr.class "flex items-start gap-4" ]
+                  Html.div [ classes [ Tw.flex, Tw.items_start, Tw.gap s4 ] ]
                     [ Html.img
                         [ Attr.src "https://logo.palikkaharrastajat.fi/logo/square/svg/square-smile-full-dark-bold.svg"
                         , Attr.alt ""
                         , Attr.attribute "aria-hidden" "true"
-                        , Attr.class "h-35 w-35 flex-shrink-0"
+                        , classes [ TwEx.h_35, TwEx.w_35, Tw.shrink_0 ]
                         ]
                         []
-                    , Html.div [ Attr.class "space-y-3" ]
-                        [ Html.p [ Attr.class "text-xs font-semibold text-white/50 uppercase tracking-wider" ]
+                    , Html.div [ classes [ TwEx.space_y s3 ] ]
+                        [ Html.p [ classes [ Tw.text_xs, Tw.font_semibold, TwEx.text_white_50, Tw.uppercase, Tw.tracking_wider ] ]
                             [ Html.text "Palikkaharrastajat" ]
-                        , Html.div [ Attr.class "flex gap-4" ]
-                            [ Html.ul [ Attr.class "space-y-2 list-none m-0 p-0" ]
+                        , Html.div [ classes [ Tw.flex, Tw.gap s4 ] ]
+                            [ Html.ul [ classes [ TwEx.space_y s2, Tw.list_none, Tw.m s0, Tw.p s0 ] ]
                                 [ Html.li []
                                     [ Html.a
                                         [ Attr.href "https://forum.palikkaharrastajat.fi"
-                                        , Attr.class "text-sm text-white/80 hover:text-white underline transition-colors"
+                                        , classes [ Tw.text_sm, TwEx.text_white_80, Bp.hover [ Tw.text_simple white ], Tw.underline, Tw.transition_colors ]
                                         ]
                                         [ Html.text "Jäsenfoorumi" ]
                                     ]
                                 , Html.li []
                                     [ Html.a
                                         [ Attr.href "https://kortti.palikkaharrastajat.fi"
-                                        , Attr.class "text-sm text-white/80 hover:text-white underline transition-colors"
+                                        , classes [ Tw.text_sm, TwEx.text_white_80, Bp.hover [ Tw.text_simple white ], Tw.underline, Tw.transition_colors ]
                                         ]
                                         [ Html.text "Jäsenkortti" ]
                                     ]
                                 , Html.li []
                                     [ Html.a
                                         [ Attr.href "https://maksut.palikkaharrastajat.fi"
-                                        , Attr.class "text-sm text-white/80 hover:text-white underline transition-colors"
+                                        , classes [ Tw.text_sm, TwEx.text_white_80, Bp.hover [ Tw.text_simple white ], Tw.underline, Tw.transition_colors ]
                                         ]
                                         [ Html.text "Jäsenmaksu" ]
                                     ]
                                 ]
-                            , Html.ul [ Attr.class "space-y-2 list-none m-0 p-0" ]
+                            , Html.ul [ classes [ TwEx.space_y s2, Tw.list_none, Tw.m s0, Tw.p s0 ] ]
                                 [ Html.li []
                                     [ Html.a
                                         [ Attr.href "https://kalenteri.palikkaharrastajat.fi"
-                                        , Attr.class "text-sm text-white/80 hover:text-white underline transition-colors"
+                                        , classes [ Tw.text_sm, TwEx.text_white_80, Bp.hover [ Tw.text_simple white ], Tw.underline, Tw.transition_colors ]
                                         ]
                                         [ Html.text "Palikkakalenteri" ]
                                     ]
                                 , Html.li []
                                     [ Html.a
                                         [ Attr.href "https://linkit.palikkaharrastajat.fi"
-                                        , Attr.class "text-sm text-white/80 hover:text-white underline transition-colors"
+                                        , classes [ Tw.text_sm, TwEx.text_white_80, Bp.hover [ Tw.text_simple white ], Tw.underline, Tw.transition_colors ]
                                         ]
                                         [ Html.text "Palikkalinkit" ]
                                     ]
@@ -344,8 +368,8 @@ viewFooter =
                         ]
                     ]
                 , -- Col 2: org name & legal
-                  Html.div [ Attr.class "space-y-1 sm:text-right" ]
-                    [ Html.div [ Attr.class "space-y-1 text-xs text-white/50" ]
+                  Html.div [ classes [ TwEx.space_y s1, Bp.sm [ Tw.text_right ] ] ]
+                    [ Html.div [ classes [ TwEx.space_y s1, Tw.text_xs, TwEx.text_white_50 ] ]
                         [ Html.p [] [ Html.text "© 2026 Suomen Palikkaharrastajat ry" ]
                         , Html.p [] [ Html.text "LEGO® on LEGO Groupin rekisteröity tavaramerkki" ]
                         ]
