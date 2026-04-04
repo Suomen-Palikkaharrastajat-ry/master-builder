@@ -45,6 +45,7 @@ template =
 type alias NavItem =
     { title : String
     , slug : String
+    , order : Int
     }
 
 
@@ -135,7 +136,6 @@ data =
                     |> BackendTask.andThen
                         (\slugs ->
                             slugs
-                                |> List.filter (\s -> s /= "index")
                                 |> List.map
                                     (\slug ->
                                         File.bodyWithFrontmatter
@@ -148,7 +148,8 @@ data =
             )
         |> BackendTask.map
             (List.filter (\fm -> fm.nav)
-                >> List.map (\fm -> { title = fm.title, slug = fm.slug })
+                >> List.map (\fm -> { title = Maybe.withDefault fm.title fm.navTitle, slug = fm.slug, order = fm.order })
+                >> List.sortBy .order
             )
 
 
@@ -250,9 +251,17 @@ viewNavbar model toMsg navItems =
 
 navLink : NavItem -> Html msg
 navLink item =
+    let
+        href =
+            if item.slug == "index" then
+                "/"
+
+            else
+                "/" ++ item.slug
+    in
     Html.li []
         [ Html.a
-            [ Attr.href ("/" ++ item.slug)
+            [ Attr.href href
             , classes
                 [ TwEx.text_white_80
                 , Bp.hover [ Tw.text_simple TC.brandYellow ]
@@ -290,8 +299,16 @@ viewMobileDrawer currentPath model toMsg navItems =
                 [ Html.ul [ classes [ Tw.flex, Tw.flex_col, Tw.gap s1, Tw.list_none, Tw.m s0, Tw.p s0 ] ]
                     (List.map
                         (\item ->
+                            let
+                                href =
+                                    if item.slug == "index" then
+                                        "/"
+
+                                    else
+                                        "/" ++ item.slug
+                            in
                             MobileDrawer.viewNavLink
-                                { href = "/" ++ item.slug
+                                { href = href
                                 , label = item.title
                                 , isActive = isActive item.slug
                                 , onClose = close
