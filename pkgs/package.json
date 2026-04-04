@@ -2,7 +2,7 @@
   "name": "master-builder",
   "type": "module",
   "scripts": {
-    "postinstall": "elm-tooling install && node scripts/patch-tailwind-resolver.mjs",
+    "postinstall": "elm-tooling install && node deploy/patch-tailwind-resolver.mjs",
     "start": "elm-pages dev",
     "build": "elm-pages build"
   },

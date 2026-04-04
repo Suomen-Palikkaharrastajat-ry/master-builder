@@ -1,190 +1,143 @@
 # Palikkaharrastajat Site
 
-Elm-pages static site for [Suomen Palikkaharrastajat ry](https://palikkaharrastajat.fi).
-Built with [elm-pages](https://elm-pages.com) and Tailwind CSS v4.
-Deployed to GitHub Pages via GitHub Actions.
+Static site generator for [Suomen Palikkaharrastajat ry](https://palikkaharrastajat.fi).
+Built with [elm-pages](https://elm-pages.com), Elm 0.19.1, and Tailwind CSS v4.
 
 ## Architecture
 
-This repository contains the **site code** — Elm routes, reusable UI components,
-and the Tailwind design system. The actual page **content** (Markdown files) can
-live either here or in a separate repository.
+**Dual-repo design.** This repository contains the **site code**: Elm routes, a 33-component UI library, design tokens, and the build system. The actual page **content** (Markdown files with YAML frontmatter) lives in a separate content repository.
+
+At build time, `deploy/fetch-content.sh` clones the content repo into the workspace before `elm-pages build` runs. For local development you can use the bundled `template/` directory or point at a local `content/` checkout.
 
 ```
 ┌──────────────────────┐          ┌──────────────────────┐
 │   Code repo (this)   │  build   │    Content repo       │
 │  ─────────────────── │ ──────►  │  ─────────────────── │
-│  app/  (Elm routes)  │  pulls   │  template/             │
-│  src/  (components)  │  content │    index.md           │
-│  style.css           │          │    about.md           │
-│  scripts/            │          │    blog/hello.md      │
+│  app/  (Elm routes)  │  pulls   │  *.md pages           │
+│  src/  (components)  │  content │  public/ (assets)     │
+│  style.css           │          │  .github/ (pipeline)  │
+│  deploy/             │          │                       │
 └──────────────────────┘          └──────────────────────┘
 ```
 
-At build time `scripts/fetch-content.sh` clones the content repo and copies its
-`template/` directory into this workspace before `elm-pages build` runs.
+## Prerequisites
 
-The in-browser admin editor (at `/admin`) also points at the content repo so
-edits are committed there, not here.
+- [devenv](https://devenv.sh) (recommended) — provides Elm, Node.js, elm-pages, and all build tools in a reproducible Nix shell
+- Or manually: Node.js 22+, Elm 0.19.1, elm-pages CLI
 
-## Content repo structure
+## Quick start
 
-The content repo must have a `template/` directory with Markdown files:
+```bash
+# Enter the development shell (installs all tools)
+devenv shell
 
+# Start dev server with bundled example content
+make dev
+
+# Start dev server with content/ directory
+make watch
 ```
-template/
-  index.md          ← home page
-  about.md          ← /about route
-  blog/
-    hello.md        ← /blog/hello route
-  <slug>.md         ← any additional /‹slug› routes
-```
 
-Each file needs YAML frontmatter:
+## Content repo requirements
 
-```markdown
+The content repo must contain Markdown files at the root with YAML frontmatter:
+
+```yaml
 ---
-title: Page title
-description: Short description for meta tags
+title: "Page Title"
+description: "SEO description"
 slug: page-slug
 published: true
+nav: true           # Include in site navigation (default: false)
+navTitle: "Short"   # Optional shorter label for nav (default: title)
+order: 1            # Navigation sort order (default: 999)
 ---
 
 Page body in Markdown…
 ```
 
+- `index.md` → renders at `/`
+- Any other `<slug>.md` → renders at `/<slug>`
+- `blog/<slug>.md` → renders at `/blog/<slug>`
+
+### Static assets
+
+Content-specific images and files can be placed in `content/public/`. They are merged into `public/` at build time via `make sync-assets`.
+
 ## Configuration
 
-### Repository variables (Settings → Secrets and variables → Actions → Variables)
+### Repository variables (Settings → Actions → Variables)
 
 | Variable | Required | Description |
 |---|---|---|
-| `CONTENT_OWNER` | No | GitHub owner of the content repo (user or org). Defaults to this repo's owner. |
-| `CONTENT_REPO` | No | GitHub repo name of the content repo. Defaults to this repo. |
-| `CONTENT_REF` | No | Branch, tag, or SHA to check out. Defaults to `main`. |
-| `OAUTH_CLIENT_ID` | No | GitHub OAuth App client ID for the admin editor. |
+| `CONTENT_OWNER` | No | GitHub owner of the content repo |
+| `CONTENT_REPO` | No | GitHub repo name |
+| `CONTENT_REF` | No | Branch/tag/SHA (default: `main`) |
+| `OAUTH_CLIENT_ID` | No | GitHub OAuth App client ID for admin editor |
 
-### Repository secrets (Settings → Secrets and variables → Actions → Secrets)
+### Repository secrets (Settings → Actions → Secrets)
 
 | Secret | Required | Description |
 |---|---|---|
-| `CONTENT_PAT` | Only for private content repos | Personal Access Token with `repo` scope, used to clone a private content repo during the build. |
+| `CONTENT_PAT` | Only for private content repos | PAT with `repo` scope |
 
-### Typical setup for a separate public content repo
+## Development
 
-1. Create a new GitHub repository (e.g. `my-org/site-content`) with the
-   `template/` directory structure described above.
-2. In **this** repository go to **Settings → Secrets and variables → Actions**.
-3. Add repository variables:
-   - `CONTENT_OWNER` = `my-org`
-   - `CONTENT_REPO` = `site-content`
-4. Push to `main` — the CI pipeline will clone the content repo and build.
+| Command | Description |
+|---|---|
+| `devenv shell -- make dev` | Dev server using `template/` |
+| `devenv shell -- make watch` | Dev server using `content/` |
+| `devenv shell -- make build` | Production build to `dist/` |
+| `devenv shell -- make check` | Validate elm-format + elm-review |
+| `devenv shell -- make format` | Auto-format Elm sources |
+| `devenv shell -- make design-tokens` | Regenerate tokens from TOML |
 
-### Typical setup for a separate private content repo
-
-Same as above, plus:
-
-5. Create a [fine-grained PAT](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token)
-   with **Read access to contents** on the content repo.
-6. Add a repository secret `CONTENT_PAT` = `<the token>`.
-
-## Local development
-
-### Prerequisites
-
-- [Node.js](https://nodejs.org) 20+
-- [devenv](https://devenv.sh) (optional, for the full Nix-based dev shell)
-
-### Quick start
+## Building & deployment
 
 ```bash
-# Install JS dependencies
-make install
+# Build (fetches external content if configured)
+devenv shell -- make build
 
-# Dev server using the bundled example content in template/
-make dev
-
-# Dev server using a locally checked-out content repo in content/
-make watch   # sets CONTENT_DIR=content automatically
-
-# Dev server using any other directory
-CONTENT_DIR=my-content npx elm-pages dev
+# Deploy (push to main triggers CI)
+devenv shell -- make deploy
 ```
 
-The `CONTENT_DIR` environment variable controls which directory elm-pages reads
-Markdown files from. It defaults to `template/` (the bundled example content).
-
-### Devenv shell (full Nix environment)
-
-```bash
-make shell   # enter the devenv shell
-make dev     # then start the dev server inside the shell
-```
-
-## Building
-
-```bash
-# Build into dist/ (fetches external content first if configured)
-CONTENT_OWNER=my-org CONTENT_REPO=site-content make build
-
-# Or, if env vars are set in your shell already
-make build
-```
-
-The `build` target:
-1. Runs `scripts/fetch-content.sh` — syncs content from the external repo into `template/` (no-op when not configured)
-2. Runs `npx elm-pages build` — compiles Elm, bundles CSS, outputs to `dist/`
-
-## Deployment
-
-Push to `main` to trigger the GitHub Actions pipeline:
-
-```bash
-make deploy   # git push origin main
-```
-
-The pipeline:
-1. Restores npm / Elm / elm-pages caches
-2. Runs `scripts/fetch-content.sh` (using `CONTENT_OWNER`, `CONTENT_REPO`, `CONTENT_PAT`)
-3. Injects build metadata into `public/site-config.json`
-4. Builds the site with `npx elm-pages build`
+The CI pipeline:
+1. Restores caches (npm, Elm, elm-pages)
+2. Runs `deploy/fetch-content.sh`
+3. Injects build metadata via `deploy/inject-build-meta.sh`
+4. Builds with `elm-pages build`
 5. Deploys `dist/` to GitHub Pages
-6. Runs a smoke test to verify the deployment
+6. Runs `deploy/smoke-test.sh`
 
-## Admin / CMS
+## Design system
 
-The `/admin` route provides an in-browser Markdown editor backed by the GitHub
-API. It reads and writes files in the **content repo** (configured via
-`site-config.json` at runtime).
+Colors, typography, spacing, and motion tokens are defined in `style.css` as Tailwind v4 `@theme` custom properties. The canonical reference is at [logo.palikkaharrastajat.fi](https://logo.palikkaharrastajat.fi/).
 
-To use the admin editor:
-
-1. Navigate to `<your-site>/admin`
-2. Enter a GitHub Personal Access Token with `repo` (private) or `public_repo`
-   (public) scope for the content repo
-3. Browse files, edit Markdown, and commit changes directly from the browser
-
-When a commit is pushed to the content repo you can trigger a rebuild of this
-site via the **Actions → Build and Deploy → Run workflow** button, or configure
-a [repository dispatch](https://docs.github.com/en/rest/repos/repos#create-a-repository-dispatch-event)
-webhook in the content repo to trigger the build automatically.
+Design tokens are generated from TOML sources in `vendor/design-guide/` and vendored as typed Elm modules in `vendor/design-tokens/`.
 
 ## Project structure
 
 ```
-app/Route/          Elm page routes (Index, Slug_, Blog/Slug_, Admin)
-src/Components/     Reusable Elm UI components (Hero, Card, Button, …)
-src/               Frontmatter decoder, Markdown renderer
-template/            Markdown content files (may be synced from external repo)
-public/             Static assets (site-config.json, admin JS, favicon)
-scripts/            Build helper scripts
-style.css           Tailwind v4 @theme with brand design tokens
-elm-pages.config.mjs elm-pages + Vite configuration
-.github/workflows/  CI/CD pipeline
+app/                Elm page routes (Index, Slug_, Blog/Slug_)
+src/                Shared modules (MarkdownRenderer, Frontmatter, TailwindTokens)
+src/Component/      33 UI components (Accordion, Alert, Badge, Button, Card, …)
+vendor/design-guide/  Git submodule — Haskell token pipeline (TOML → Elm)
+vendor/design-tokens/ Generated Elm package (committed to git)
+content/            Content repo mount point
+template/           Bundled example content
+public/             Static assets (logos, favicons, fonts)
+deploy/             CI/CD scripts (fetch-content, inject-build-meta, smoke-test)
+script/             Elm code generation tool (AddRoute, AddStaticRoute)
+review/             elm-review config with 4 LLM-optimised rules
+admin-app/          Standalone SPA — browser-based content editor (future)
+style.css           Tailwind v4 @theme with design tokens
 ```
 
-## Design system
+## Admin editor (future)
 
-Colors, typography, spacing, and motion tokens are defined in `style.css` as
-Tailwind v4 `@theme` custom properties and documented in `AGENTS.md`.
-Brand assets (logo, fonts) are served from `logo.palikkaharrastajat.fi`.
+The `admin-app/` directory contains a standalone SPA for in-browser Markdown editing via the GitHub API. It reads and writes files in the content repo. This feature is not yet wired into the main site.
+
+## License
+
+See individual files for licensing information.

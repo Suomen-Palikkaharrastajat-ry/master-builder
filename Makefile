@@ -27,16 +27,19 @@ devenv.local.yaml:
 
 .PHONY: fetch-content
 fetch-content: ## Sync content/ from external repo (set CONTENT_OWNER, CONTENT_REPO, CONTENT_REF)
-	bash scripts/fetch-content.sh
+	bash deploy/fetch-content.sh
 
 .PHONY: sync-assets
 sync-assets: ## Copy non-markdown assets from $(CONTENT_DIR) to public/
-	@find "$(CONTENT_DIR)" -type f -not -name "*.md" -not -path "*/.git/*" | while IFS= read -r f; do \
+	@find "$(CONTENT_DIR)" -type f -not -name "*.md" -not -path "*/.git/*" -not -path "*/reference/*" | while IFS= read -r f; do \
 		rel="$${f#$(CONTENT_DIR)/}"; \
 		dest="public/$$rel"; \
 		mkdir -p "$$(dirname "$$dest")"; \
 		cp "$$f" "$$dest"; \
 	done
+	@if [ -d "$(CONTENT_DIR)/public" ]; then \
+		cp -r "$(CONTENT_DIR)/public/." public/; \
+	fi
 
 # ── Clean ────────────────────────────────────────────────────────────────────
 
@@ -78,7 +81,7 @@ watch: ## Start dev server pointed at ./content (CONTENT_DIR=content)
 
 .PHONY: build
 build: ## Build elm-pages site into dist/ (fetch content first when CONTENT_OWNER/CONTENT_REPO are set)
-	bash scripts/fetch-content.sh
+	bash deploy/fetch-content.sh
 	$(MAKE) sync-assets
 	$(MAKE) CONTENT_DIR=content sync-assets
 	$(ELM_TAILWIND) gen
@@ -104,4 +107,4 @@ format: ## Auto-format Elm source files
 
 .PHONY: test
 test: ## Run smoke test against SITE_URL
-	bash scripts/smoke-test.sh
+	bash deploy/smoke-test.sh
