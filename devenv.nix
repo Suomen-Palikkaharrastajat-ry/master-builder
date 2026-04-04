@@ -29,6 +29,12 @@ let shell = { pkgs, ...}:
     env.NODE_PATH = "${npmTools}/lib/node_modules";
 
     enterShell = ''
+      # ESM `import` does not respect NODE_PATH; only CJS `require()` does.
+      # elm-pages.config.mjs uses `import` for @tailwindcss/vite and
+      # elm-tailwind-classes/vite, so we symlink node_modules → the Nix store
+      # tree so Node's standard module resolution finds them.
+      ln -sfn "${npmTools}/lib/node_modules" node_modules
+
       echo ""
       echo "── master-builder dev environment ────────────────────"
       echo "  Elm:       $(elm --version)"

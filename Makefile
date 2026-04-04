@@ -67,20 +67,30 @@ design-tokens: ## Regenerate design tokens from vendor/design-guide (requires su
 
 # ── Build ────────────────────────────────────────────────────────────────────
 
+# ESM `import` (used by elm-pages.config.mjs) does not respect NODE_PATH —
+# only CJS `require()` does. Creating a node_modules symlink pointing at the
+# Nix store tree lets Node's standard module resolution find the packages.
+# NODE_PATH is set by devenv (env.NODE_PATH) and flake.nix (shellHook) to the
+# npmTools derivation's lib/node_modules directory.
+.PHONY: node_modules
+node_modules: ## Symlink node_modules → Nix store (requires NODE_PATH from devenv/nix develop)
+	@[ -n "$$NODE_PATH" ] && ln -sfn "$$(echo "$$NODE_PATH" | cut -d: -f1)" node_modules \
+	  || echo "node_modules: NODE_PATH not set, skipping symlink"
+
 .PHONY: dev
-dev: ## Start elm-pages dev server (uses local template/)
+dev: node_modules ## Start elm-pages dev server (uses local template/)
 	$(MAKE) sync-assets
 	$(ELM_TAILWIND) gen
 	$(ELM_PAGES) dev
 
 .PHONY: watch
-watch: ## Start dev server pointed at ./content (CONTENT_DIR=content)
+watch: node_modules ## Start dev server pointed at ./content (CONTENT_DIR=content)
 	$(MAKE) CONTENT_DIR=content sync-assets
 	$(ELM_TAILWIND) gen
 	CONTENT_DIR=content $(ELM_PAGES) dev
 
 .PHONY: build
-build: ## Build elm-pages site into dist/ (fetch content first when CONTENT_OWNER/CONTENT_REPO are set)
+build: node_modules ## Build elm-pages site into dist/ (fetch content first when CONTENT_OWNER/CONTENT_REPO are set)
 	bash deploy/fetch-content.sh
 	$(MAKE) sync-assets
 	$(MAKE) CONTENT_DIR=content sync-assets
