@@ -1,5 +1,5 @@
 # yaml-language-server: $schema=https://devenv.sh/devenv.schema.json
 inputs:
   nixpkgs:
-    url: github:nixos/nixpkgs
+    url: github:nixos/nixpkgs/719d25d6d269c87936932bc6db8d8da2b9278c85
 profile: shell

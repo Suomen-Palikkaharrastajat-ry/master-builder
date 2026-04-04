@@ -1,0 +1,27 @@
+{
+  "name": "master-builder",
+  "type": "module",
+  "scripts": {
+    "postinstall": "elm-tooling install && node scripts/patch-tailwind-resolver.mjs",
+    "start": "elm-pages dev",
+    "build": "elm-pages build"
+  },
+  "devDependencies": {
+    "elm-codegen": "^0.6.3",
+    "elm-optimize-level-2": "^0.3.5",
+    "elm-review": "^2.13.5",
+    "elm-tooling": "^1.17.0",
+    "lamdera": "^0.19.1-1.4.0",
+    "vite": "^7.3.1"
+  },
+  "dependencies": {
+    "@tailwindcss/typography": "^0.5.19",
+    "@tailwindcss/vite": "^4.2.1",
+    "elm-pages": "3.1.5",
+    "elm-tailwind-classes": "github:dillonkearns/elm-tailwind-classes",
+    "tailwindcss": "^4.2.1"
+  },
+  "optionalDependencies": {
+    "tailwind-resolver": "^0.3.7"
+  }
+}

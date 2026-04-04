@@ -1,37 +1,47 @@
-let shell = { pkgs, ...}: {
-  # https://devenv.sh/languages/
-  languages = {
-    elm.enable = true;
+let shell = { pkgs, ...}:
+  let
+    lamdera  = pkgs.elmPackages.lamdera;
+    npmTools = pkgs.callPackage ./pkgs/npm-tools.nix { inherit lamdera; };
+  in
+  {
+    # https://devenv.sh/languages/
+    languages = {
+      elm.enable = true;
+    };
+
+    # https://devenv.sh/packages/
+    packages = [
+      pkgs.elmPackages.elm-format
+      pkgs.elmPackages.elm-review
+      pkgs.elmPackages.elm-test
+      pkgs.elmPackages.elm-json
+      lamdera
+      pkgs.nodejs_22
+      npmTools          # provides elm-pages and elm-tailwind-classes bins
+      pkgs.treefmt
+    ];
+
+    dotenv.disableHint = true;
+
+    # Vite (and elm-pages dev server) must be able to `require()` packages
+    # like @tailwindcss/vite and elm-tailwind-classes/vite at runtime.
+    # npmTools bundles the full node_modules tree; expose it via NODE_PATH.
+    env.NODE_PATH = "${npmTools}/lib/node_modules";
+
+    enterShell = ''
+      echo ""
+      echo "── master-builder dev environment ────────────────────"
+      echo "  Elm:       $(elm --version)"
+      echo "  Node:      $(node --version)"
+      echo "  lamdera:   $(lamdera --version 2>/dev/null || echo ok)"
+      echo "  elm-pages: $(elm-pages --version)"
+      echo ""
+      echo "  make dev   — start dev server (uses template/)"
+      echo "  make watch — start dev server (uses content/)"
+      echo "  make build — production build"
+      echo ""
+    '';
   };
-
-  # https://devenv.sh/packages/
-  packages = [
-    pkgs.nodejs
-    pkgs.elmPackages.elm-format
-    pkgs.elmPackages.elm-review
-    pkgs.elmPackages.elm-test
-    pkgs.elmPackages.elm-json
-    pkgs.treefmt
-  ];
-
-  dotenv.enable = true;
-
-  # elm-pages is typically run via npx or installed via npm.
-  # We can create a script to make it easier to run.
-  scripts.elm-pages.exec = "npx elm-pages \"$@\"";
-
-  enterShell = ''
-    echo ""
-    echo "── pages dev environment ────────────────────────────"
-    echo "  Elm:       $(elm --version)"
-    echo "  Node:      $(node --version)"
-    echo "  elm-pages: $(npx elm-pages --version 2>/dev/null || echo 'run npm install first')"
-    echo ""
-    echo "  make dev   — start dev server (uses template/)"
-    echo "  make watch — start dev server (uses content/)"
-    echo ""
-  '';
-};
 
 in {
   profiles.shell.module = {
