@@ -6,9 +6,14 @@ module MarkdownRenderer exposing (renderMarkdown)
 import Component.Accordion as Accordion
 import Component.Alert as Alert
 import Component.Card as Card
+import Component.ColorSwatch as ColorSwatch
+import Component.Gallery as Gallery
 import Component.Hero as Hero
+import Component.LogoCard as LogoCard
 import Component.Stats as Stats
 import Component.Timeline as Timeline
+import DesignTokens.Guide.Colors as Colors
+import DesignTokens.Guide.Logos as Logos
 import FeatherIcons
 import Html exposing (Html)
 import Html.Attributes as Attr
@@ -19,7 +24,7 @@ import Markdown.Renderer
 import Regex
 import Tailwind as Tw exposing (classes)
 import Tailwind.Breakpoints as Bp
-import Tailwind.Theme exposing (s0_dot_5, s1, s10, s1_dot_5, s2, s2_dot_5, s3, s4, s6, s8, white)
+import Tailwind.Theme as Th exposing (s0_dot_5, s1, s10, s1_dot_5, s2, s2_dot_5, s3, s4, s6, s8, white)
 import TailwindExtra as TwEx
 import TailwindTokens as TC
 
@@ -423,6 +428,29 @@ htmlRenderer =
             |> Markdown.Html.withAttribute "title"
             |> Markdown.Html.withOptionalAttribute "icon"
             |> Markdown.Html.withOptionalAttribute "image"
+        , -- <asset-gallery source="logos-square|logos-square-full|logos-horizontal" title="…" description="…"/>
+          Markdown.Html.tag "asset-gallery"
+            (\source title description _ ->
+                viewAssetGallery source title description
+            )
+            |> Markdown.Html.withAttribute "source"
+            |> Markdown.Html.withOptionalAttribute "title"
+            |> Markdown.Html.withOptionalAttribute "description"
+        , -- <color-grid source="brand|skin-tones|rainbow" title="…" description="…"/>
+          Markdown.Html.tag "color-grid"
+            (\source title description _ ->
+                viewColorGrid source title description
+            )
+            |> Markdown.Html.withAttribute "source"
+            |> Markdown.Html.withOptionalAttribute "title"
+            |> Markdown.Html.withOptionalAttribute "description"
+        , -- <info-panel color="amber|blue|green|red" title="…">…</info-panel>
+          Markdown.Html.tag "info-panel"
+            (\color title children ->
+                viewInfoPanel color title children
+            )
+            |> Markdown.Html.withOptionalAttribute "color"
+            |> Markdown.Html.withOptionalAttribute "title"
         , -- <with-image src="…" alt="…" side="left|right">…</with-image>
           Markdown.Html.tag "with-image"
             (\src alt side children ->
@@ -547,6 +575,99 @@ buttonLinkClasses variant =
                     , Bp.focus [ TwEx.ring_brand_yellow ]
                     ]
            )
+
+
+viewAssetGallery : String -> Maybe String -> Maybe String -> Html msg
+viewAssetGallery source maybeTitle maybeDescription =
+    let
+        cols =
+            if source == "logos-horizontal" then
+                Gallery.TwoWide
+
+            else
+                Gallery.Four
+    in
+    Gallery.view
+        { title = Maybe.withDefault "" maybeTitle
+        , description = maybeDescription
+        , columns = cols
+        , items = List.map LogoCard.view (logoItemsFromSource source)
+        }
+
+
+logoItemsFromSource : String -> List LogoCard.LogoVariant
+logoItemsFromSource source =
+    case source of
+        "logos-square" ->
+            Logos.squareVariants
+
+        "logos-square-full" ->
+            Logos.squareFullVariants
+
+        "logos-horizontal" ->
+            Logos.horizontalVariants
+
+        _ ->
+            []
+
+
+viewColorGrid : String -> Maybe String -> Maybe String -> Html msg
+viewColorGrid source maybeTitle maybeDescription =
+    Gallery.view
+        { title = Maybe.withDefault "" maybeTitle
+        , description = maybeDescription
+        , columns = Gallery.Four
+        , items = List.map ColorSwatch.view (colorItemsFromSource source)
+        }
+
+
+colorItemsFromSource : String -> List ColorSwatch.ColorSwatchConfig
+colorItemsFromSource source =
+    case source of
+        "brand" ->
+            List.map (\c -> { hex = c.hex, name = c.name, description = c.description, usageTags = c.usage }) Colors.brandColors
+
+        "skin-tones" ->
+            List.map (\c -> { hex = c.hex, name = c.name, description = c.description, usageTags = [] }) Colors.skinTones
+
+        "rainbow" ->
+            List.map (\c -> { hex = c.hex, name = c.name, description = c.description, usageTags = [] }) Colors.rainbowColors
+
+        _ ->
+            []
+
+
+viewInfoPanel : Maybe String -> Maybe String -> List (Html msg) -> Html msg
+viewInfoPanel maybeColor maybeTitle children =
+    let
+        ( bgClass, borderClass, textClass ) =
+            infoPanelColors (Maybe.withDefault "amber" maybeColor)
+    in
+    Html.div
+        [ classes [ TwEx.not_prose, bgClass, Tw.border, borderClass, Tw.rounded_lg, Tw.p s4, Tw.text_sm, textClass, TwEx.space_y s2 ] ]
+        (case maybeTitle of
+            Just t ->
+                Html.p [ classes [ Tw.font_semibold ] ] [ Html.text t ] :: children
+
+            Nothing ->
+                children
+        )
+
+
+infoPanelColors : String -> ( Tw.Tailwind, Tw.Tailwind, Tw.Tailwind )
+infoPanelColors color =
+    case color of
+        "blue" ->
+            ( Tw.bg_color (Th.blue Th.s50), Tw.border_color (Th.blue Th.s200), Tw.text_color (Th.blue Th.s800) )
+
+        "green" ->
+            ( Tw.bg_color (Th.green Th.s50), Tw.border_color (Th.green Th.s200), Tw.text_color (Th.green Th.s800) )
+
+        "red" ->
+            ( Tw.bg_color (Th.red Th.s50), Tw.border_color (Th.red Th.s200), Tw.text_color (Th.red Th.s800) )
+
+        _ ->
+            ( Tw.bg_color (Th.amber Th.s50), Tw.border_color (Th.amber Th.s200), Tw.text_color (Th.amber Th.s800) )
 
 
 resolveIcon : String -> FeatherIcons.Icon

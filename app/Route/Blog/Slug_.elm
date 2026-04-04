@@ -15,6 +15,8 @@ import Head.Seo as Seo
 import Html
 import Html.Attributes as Attr
 import Json.Decode as Decode
+import LanguageTag.Language
+import LanguageTag.Region
 import MarkdownRenderer
 import Pages.Url
 import PagesMsg exposing (PagesMsg)
@@ -89,18 +91,25 @@ data routeParams =
 
 head : App Data ActionData RouteParams -> List Head.Tag
 head app =
+    let
+        fm =
+            app.data.frontmatter
+    in
     Seo.summary
         { canonicalUrlOverride = Nothing
-        , siteName = "My Site"
+        , siteName = app.sharedData.config.site.title
         , image =
-            { url = Pages.Url.external ""
-            , alt = ""
+            { url =
+                fm.image
+                    |> Maybe.map Pages.Url.external
+                    |> Maybe.withDefault (Pages.Url.external "")
+            , alt = fm.title
             , dimensions = Nothing
             , mimeType = Nothing
             }
-        , description = app.data.frontmatter.description
-        , locale = Nothing
-        , title = app.data.frontmatter.title ++ " — Suomen Palikkaharrastajat ry"
+        , description = fm.description
+        , locale = Just ( LanguageTag.Language.fi, LanguageTag.Region.fi )
+        , title = fm.title ++ " — Suomen Palikkaharrastajat ry"
         }
         |> Seo.website
 

@@ -1,5 +1,6 @@
 module DesignTokens.Colors exposing
-    ( legoBlack
+    ( legoYellow
+    , legoBlack
     , legoWhite
     , red
     , skinToneYellow
@@ -33,6 +34,11 @@ All values are CSS hex strings (e.g. "#05131D").
 
 -}
 
+
+{-| Yellow — Classic LEGO minifig yellow. Brand accent color. -}
+legoYellow : String
+legoYellow =
+    "#FAC80A"
 
 {-| Black — Primary brand color. -}
 legoBlack : String

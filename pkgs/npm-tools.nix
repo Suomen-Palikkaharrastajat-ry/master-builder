@@ -85,6 +85,16 @@ pkgs.stdenv.mkDerivation {
       fi
     done
 
+    # Patch elm-tailwind vite plugin: bundledReviewConfig points into the Nix
+    # store (read-only). elm-review tries to mkdir 'suppressed/' inside the
+    # config dir and gets EACCES. Fix: copy extractor to a writable tmpdir at
+    # runtime so elm-review can write there. (fs is already imported in the file.)
+    substituteInPlace \
+      "$out/lib/node_modules/elm-tailwind-classes/vite-plugin/index.js" \
+      --replace-fail \
+      "const bundledReviewConfig = path.resolve(__dirname, '..', 'extractor');" \
+      "const bundledReviewConfig = (() => { const src = path.resolve(__dirname, '..', 'extractor'); const dst = path.join(process.env.TMPDIR || '/tmp', 'elm-tailwind-extractor'); try { fs.cpSync(src, dst, { recursive: true, force: true }); } catch(e) {} return dst; })();"
+
     # elm-pages CLI
     # Entry point: node_modules/elm-pages/generator/src/cli.js
     makeWrapper ${pkgs.nodejs_22}/bin/node $out/bin/elm-pages \

@@ -1,0 +1,37 @@
+# Site-wide configuration for Suomen Palikkaharrastajat ry
+# Edit this file to update branding, navigation, and footer content.
+
+[site]
+title       = "Suomen Palikkaharrastajat ry"
+description = "Suomen LEGO-harrastajien yhteisö"
+url         = "https://palikkaharrastajat.fi"
+
+[branding]
+logo_light = "/logo/horizontal/svg/horizontal-full.svg"
+logo_dark  = "/logo/horizontal/svg/horizontal-full-dark-bold.svg"
+logo_alt   = "Suomen Palikkaharrastajat ry"
+footer_logo = "/logo/square/svg/square-smile-full-dark-bold.svg"
+
+[[footer.links]]
+label = "Jäsenfoorumi"
+href  = "https://forum.palikkaharrastajat.fi"
+
+[[footer.links]]
+label = "Jäsenkortti"
+href  = "https://kortti.palikkaharrastajat.fi"
+
+[[footer.links]]
+label = "Jäsenmaksu"
+href  = "https://maksut.palikkaharrastajat.fi"
+
+[[footer.links]]
+label = "Palikkakalenteri"
+href  = "https://kalenteri.palikkaharrastajat.fi"
+
+[[footer.links]]
+label = "Palikkalinkit"
+href  = "https://linkit.palikkaharrastajat.fi"
+
+[footer]
+copyright  = "© 2026 Suomen Palikkaharrastajat ry"
+disclaimer = "LEGO® on LEGO Groupin rekisteröity tavaramerkki"

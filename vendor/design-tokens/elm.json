@@ -13,7 +13,9 @@
         "DesignTokens.Effects",
         "DesignTokens.Accessibility",
         "DesignTokens.Opacity",
-        "DesignTokens.Components"
+        "DesignTokens.Components",
+        "DesignTokens.Guide.Colors",
+        "DesignTokens.Guide.Logos"
     ],
     "elm-version": "0.19.0 <= v < 0.20.0",
     "dependencies": {

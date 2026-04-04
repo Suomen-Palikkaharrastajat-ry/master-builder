@@ -8,11 +8,12 @@ import BackendTask.File as File
 import BackendTask.Glob as Glob
 import Browser.Events
 import Component.MobileDrawer as MobileDrawer
+import Config exposing (Config)
 import ContentDir
 import Effect exposing (Effect)
 import FatalError exposing (FatalError)
 import FeatherIcons
-import Frontmatter
+import Frontmatter exposing (NavVisibility(..))
 import Html exposing (Html)
 import Html.Attributes as Attr
 import Html.Events
@@ -46,11 +47,14 @@ type alias NavItem =
     { title : String
     , slug : String
     , order : Int
+    , mobileOnly : Bool
     }
 
 
 type alias Data =
-    List NavItem
+    { navItems : List NavItem
+    , config : Config
+    }
 
 
 type SharedMsg
@@ -123,8 +127,8 @@ subscriptions _ model =
         Sub.none
 
 
-data : BackendTask FatalError Data
-data =
+navItemsTask : BackendTask FatalError (List NavItem)
+navItemsTask =
     ContentDir.backendTask
         |> BackendTask.andThen
             (\dir ->
@@ -147,10 +151,22 @@ data =
                         )
             )
         |> BackendTask.map
-            (List.filter (\fm -> fm.nav)
-                >> List.map (\fm -> { title = Maybe.withDefault fm.title fm.navTitle, slug = fm.slug, order = fm.order })
+            (List.filter (\fm -> fm.nav /= NavHidden)
+                >> List.map
+                    (\fm ->
+                        { title = Maybe.withDefault fm.title fm.navTitle
+                        , slug = fm.slug
+                        , order = fm.order
+                        , mobileOnly = fm.nav == NavMobileOnly
+                        }
+                    )
                 >> List.sortBy .order
             )
+
+
+data : BackendTask FatalError Data
+data =
+    BackendTask.map2 Data navItemsTask Config.task
 
 
 view :
@@ -163,7 +179,7 @@ view :
     -> (Msg -> msg)
     -> View msg
     -> { body : List (Html msg), title : String }
-view navItems page model toMsg pageView =
+view sharedData page model toMsg pageView =
     case page.route of
         _ ->
             { body =
@@ -177,19 +193,19 @@ view navItems page model toMsg pageView =
                     ]
                     [ Html.text "Siirry pääsisältöön" ]
                 , Html.div [ classes [ Tw.min_h_screen, Tw.flex, Tw.flex_col ] ]
-                    [ viewNavbar model (toMsg << SharedMsg) navItems
+                    [ viewNavbar model (toMsg << SharedMsg) sharedData.config sharedData.navItems
                     , Html.main_ [ Attr.id "main-content", classes [ Tw.flex_1, TwEx.max_w_5xl, Tw.mx_auto, Tw.px s6, Tw.py s10, Tw.w_full ] ] pageView.body
-                    , viewFooter
+                    , viewFooter sharedData.config
                     , MobileDrawer.viewOverlay { isOpen = model.menuOpen, onClose = toMsg (SharedMsg CloseMenu), breakpoint = MobileDrawer.Sm }
-                    , viewMobileDrawer page.path model (toMsg << SharedMsg) navItems
+                    , viewMobileDrawer page.path model (toMsg << SharedMsg) sharedData.navItems
                     ]
                 ]
             , title = pageView.title
             }
 
 
-viewNavbar : Model -> (SharedMsg -> msg) -> List NavItem -> Html msg
-viewNavbar model toMsg navItems =
+viewNavbar : Model -> (SharedMsg -> msg) -> Config -> List NavItem -> Html msg
+viewNavbar model toMsg config navItems =
     Html.nav
         [ classes [ Tw.bg_simple TC.brand, Tw.sticky, TwEx.top_0, Tw.z_50, Tw.shadow_md ] ]
         [ Html.div
@@ -205,12 +221,12 @@ viewNavbar model toMsg navItems =
                         []
                         [ Html.node "source"
                             [ Attr.attribute "media" "(min-width: 640px)"
-                            , Attr.attribute "srcset" "/logo/horizontal/svg/horizontal-full-dark-bold.svg"
+                            , Attr.attribute "srcset" config.branding.logoDark
                             ]
                             []
                         , Html.img
-                            [ Attr.src "/logo/horizontal/svg/horizontal.svg"
-                            , Attr.alt "Suomen Palikkaharrastajat ry"
+                            [ Attr.src config.branding.logoLight
+                            , Attr.alt config.branding.logoAlt
                             , classes [ Tw.h s10, Bp.sm [ Tw.h s14 ] ]
                             ]
                             []
@@ -243,7 +259,7 @@ viewNavbar model toMsg navItems =
                     ]
                 , Html.ul
                     [ classes [ Bp.sm [ Tw.flex ], Tw.hidden, Tw.flex_wrap, Tw.gap s0_dot_5, Tw.list_none, Tw.m s0, Tw.p s0 ] ]
-                    (List.map navLink navItems)
+                    (navItems |> List.filter (not << .mobileOnly) |> List.map navLink)
                 ]
             ]
         ]
@@ -321,18 +337,18 @@ viewMobileDrawer currentPath model toMsg navItems =
         }
 
 
-viewFooter : Html msg
-viewFooter =
+viewFooter : Config -> Html msg
+viewFooter config =
     Html.footer
         [ classes [ Tw.bg_simple TC.brand, Tw.text_simple white, Tw.mt s16, Tw.py s12, Tw.px s4 ] ]
         [ Html.div
             [ classes [ TwEx.max_w_5xl, Tw.mx_auto ] ]
             [ Html.div
-                [ classes [ Tw.grid, Tw.grid_cols_1, Bp.sm [ TwEx.grid_cols_auto_1fr ], Tw.gap s8, Bp.sm [ Tw.items_end ] ] ]
+                [ classes [ Tw.grid, Tw.grid_cols_2, Bp.sm [ Tw.grid_cols_2 ], Tw.gap s8, Bp.sm [ Tw.items_end ] ] ]
                 [ -- Col 1: service links + logo
                   Html.div [ classes [ Tw.flex, Tw.items_start, Tw.gap s4 ] ]
                     [ Html.img
-                        [ Attr.src "/logo/square/svg/square-smile-full-dark-bold.svg"
+                        [ Attr.src config.branding.footerLogo
                         , Attr.alt ""
                         , Attr.attribute "aria-hidden" "true"
                         , classes [ TwEx.h_35, TwEx.w_35, Tw.shrink_0 ]
@@ -340,57 +356,31 @@ viewFooter =
                         []
                     , Html.div [ classes [ TwEx.space_y s3 ] ]
                         [ Html.p [ classes [ Tw.text_xs, Tw.font_semibold, TwEx.text_white_50, Tw.uppercase, Tw.tracking_wider ] ]
-                            [ Html.text "Palikkaharrastajat" ]
+                            [ Html.text config.site.title ]
                         , Html.div [ classes [ Tw.flex, Tw.gap s4 ] ]
                             [ Html.ul [ classes [ TwEx.space_y s2, Tw.list_none, Tw.m s0, Tw.p s0 ] ]
-                                [ Html.li []
-                                    [ Html.a
-                                        [ Attr.href "https://forum.palikkaharrastajat.fi"
-                                        , classes [ Tw.text_sm, TwEx.text_white_80, Bp.hover [ Tw.text_simple white ], Tw.underline, Tw.transition_colors ]
-                                        ]
-                                        [ Html.text "Jäsenfoorumi" ]
-                                    ]
-                                , Html.li []
-                                    [ Html.a
-                                        [ Attr.href "https://kortti.palikkaharrastajat.fi"
-                                        , classes [ Tw.text_sm, TwEx.text_white_80, Bp.hover [ Tw.text_simple white ], Tw.underline, Tw.transition_colors ]
-                                        ]
-                                        [ Html.text "Jäsenkortti" ]
-                                    ]
-                                , Html.li []
-                                    [ Html.a
-                                        [ Attr.href "https://maksut.palikkaharrastajat.fi"
-                                        , classes [ Tw.text_sm, TwEx.text_white_80, Bp.hover [ Tw.text_simple white ], Tw.underline, Tw.transition_colors ]
-                                        ]
-                                        [ Html.text "Jäsenmaksu" ]
-                                    ]
-                                ]
-                            , Html.ul [ classes [ TwEx.space_y s2, Tw.list_none, Tw.m s0, Tw.p s0 ] ]
-                                [ Html.li []
-                                    [ Html.a
-                                        [ Attr.href "https://kalenteri.palikkaharrastajat.fi"
-                                        , classes [ Tw.text_sm, TwEx.text_white_80, Bp.hover [ Tw.text_simple white ], Tw.underline, Tw.transition_colors ]
-                                        ]
-                                        [ Html.text "Palikkakalenteri" ]
-                                    ]
-                                , Html.li []
-                                    [ Html.a
-                                        [ Attr.href "https://linkit.palikkaharrastajat.fi"
-                                        , classes [ Tw.text_sm, TwEx.text_white_80, Bp.hover [ Tw.text_simple white ], Tw.underline, Tw.transition_colors ]
-                                        ]
-                                        [ Html.text "Palikkalinkit" ]
-                                    ]
-                                ]
+                                (List.map viewFooterLink config.footer.links)
                             ]
                         ]
                     ]
                 , -- Col 2: org name & legal
                   Html.div [ classes [ TwEx.space_y s1, Bp.sm [ Tw.text_right ] ] ]
                     [ Html.div [ classes [ TwEx.space_y s1, Tw.text_xs, TwEx.text_white_50 ] ]
-                        [ Html.p [] [ Html.text "© 2026 Suomen Palikkaharrastajat ry" ]
-                        , Html.p [] [ Html.text "LEGO® on LEGO Groupin rekisteröity tavaramerkki" ]
+                        [ Html.p [] [ Html.text config.footer.copyright ]
+                        , Html.p [] [ Html.text config.footer.disclaimer ]
                         ]
                     ]
                 ]
             ]
+        ]
+
+
+viewFooterLink : Config.FooterLink -> Html msg
+viewFooterLink link =
+    Html.li []
+        [ Html.a
+            [ Attr.href link.href
+            , classes [ Tw.text_sm, TwEx.text_white_80, Bp.hover [ Tw.text_simple white ], Tw.underline, Tw.transition_colors ]
+            ]
+            [ Html.text link.label ]
         ]
