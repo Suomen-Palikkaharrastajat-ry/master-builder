@@ -12,7 +12,7 @@ import SiteMeta
 
 config : SiteConfig
 config =
-    { canonicalUrl = "https://elm-pages.com"
+    { canonicalUrl = "https://palikkaharrastajat.fi"
     , head = head
     }
 

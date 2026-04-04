@@ -250,7 +250,7 @@ viewCodeBlock { body, language } =
         ]
 
 
-htmlRenderer : Markdown.Html.Renderer (Html msg)
+htmlRenderer : Markdown.Html.Renderer (List (Html msg) -> Html msg)
 htmlRenderer =
     Markdown.Html.oneOf
         [ -- <callout type="info|success|warning|error">…</callout>

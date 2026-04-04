@@ -1,6 +1,7 @@
 .PHONY:
 
 ELM_PAGES ?= elm-pages
+ELM_TAILWIND ?= elm-tailwind-classes
 CONTENT_DIR ?= template
 
 help:
@@ -22,13 +23,6 @@ devenv.local.nix:
 devenv.local.yaml:
 	cp devenv.local.yaml.example devenv.local.yaml
 
-node_modules: package.json package-lock.json
-	npm install
-	@touch node_modules
-
-.PHONY: install
-install: node_modules ## Install npm dependencies
-
 # ── Content ──────────────────────────────────────────────────────────────────
 
 .PHONY: fetch-content
@@ -44,18 +38,11 @@ sync-assets: ## Copy non-markdown assets from $(CONTENT_DIR) to public/
 		cp "$$f" "$$dest"; \
 	done
 
-.PHONY: sync-fonts
-sync-fonts: ## Copy font files from vendor/design-guide/fonts/ to public/fonts/
-	@mkdir -p public/fonts
-	@find vendor/design-guide/fonts -maxdepth 1 -name "*.ttf" | while IFS= read -r f; do \
-		cp "$$f" "public/fonts/$$(basename "$$f")"; \
-	done
-
 # ── Clean ────────────────────────────────────────────────────────────────────
 
 .PHONY: clean
-clean: ## Remove build artifacts (dist/, elm-stuff/, .elm-pages/, gen/)
-	rm -rf dist elm-stuff .elm-pages gen
+clean: ## Remove build artifacts (dist/, elm-stuff/, .elm-pages/, gen/, .elm-tailwind/)
+	rm -rf dist elm-stuff .elm-pages gen .elm-tailwind
 
 # ── Vendor / submodules ──────────────────────────────────────────────────────
 
@@ -66,37 +53,39 @@ vendor: ## Init and update all git submodules to their pinned commits
 	@[ -z "$$CI" ] || git config --global url."https://github.com/".insteadOf "git@github.com:"
 	git submodule update --init --recursive
 
+.PHONY: design-tokens
+design-tokens: ## Regenerate design tokens from vendor/design-guide (requires submodule checkout)
+	cd vendor/design-guide && $(MAKE) dist
+	rm -rf vendor/design-tokens/src
+	mkdir -p vendor/design-tokens/src
+	cp -r vendor/design-guide/dist/design-tokens-elm/src/* vendor/design-tokens/src/
+	cp vendor/design-guide/dist/design-tokens-elm/elm.json vendor/design-tokens/elm.json
+	@echo "Design tokens updated in vendor/design-tokens/"
+
 # ── Build ────────────────────────────────────────────────────────────────────
 
 .PHONY: dev
-dev: vendor ## Start elm-pages dev server (uses local template/)
+dev: ## Start elm-pages dev server (uses local template/)
 	$(MAKE) sync-assets
-	$(MAKE) sync-fonts
+	$(ELM_TAILWIND) gen
 	$(ELM_PAGES) dev
 
 .PHONY: watch
-watch: vendor ## Start dev server pointed at ./content (CONTENT_DIR=content)
+watch: ## Start dev server pointed at ./content (CONTENT_DIR=content)
 	$(MAKE) CONTENT_DIR=content sync-assets
-	$(MAKE) sync-fonts
+	$(ELM_TAILWIND) gen
 	CONTENT_DIR=content $(ELM_PAGES) dev
 
-.PHONY: build-admin
-build-admin: node_modules ## Build standalone admin app into public/admin/
-	mkdir -p public/admin
-	cd admin-app && npx elm-optimize-level-2 src/Main.elm --output elm.js
-	cp admin-app/elm.js public/admin/elm.js
-	./node_modules/.bin/esbuild admin-app/main.js --bundle --minify --outfile=public/admin/main.js
-	cp admin-app/index.html public/admin/index.html
-
 .PHONY: build
-build: vendor ## Build elm-pages site into dist/ (fetch content first when CONTENT_OWNER/CONTENT_REPO are set)
+build: ## Build elm-pages site into dist/ (fetch content first when CONTENT_OWNER/CONTENT_REPO are set)
 	bash scripts/fetch-content.sh
 	$(MAKE) sync-assets
 	$(MAKE) CONTENT_DIR=content sync-assets
-	$(MAKE) sync-fonts
-	$(MAKE) build-admin
-	npx elm-tailwind-classes gen
+	$(ELM_TAILWIND) gen
 	$(ELM_PAGES) build
+
+.PHONY: all
+all: clean build ## Clean and rebuild everything
 
 # ── Deploy ───────────────────────────────────────────────────────────────────
 
@@ -107,7 +96,7 @@ deploy: ## Commit and push to trigger CI deploy (requires clean working tree)
 .PHONY: check
 check: ## Check Elm formatting and elm-review rules (no changes)
 	elm-format --validate app/ src/
-	npx elm-review --config review
+	elm-review --config review
 
 .PHONY: format
 format: ## Auto-format Elm source files

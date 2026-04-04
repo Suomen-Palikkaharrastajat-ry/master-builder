@@ -69,14 +69,11 @@ Always wrap animations with `prefers-reduced-motion` support (already in `style.
 
 ### Logos
 
-Self-hosted — serve logo files from `public/` (already copied). Use SVG first; WebP with PNG fallback for raster contexts.
+Self-hosted — serve logo files from `public/logo/`. Use SVG first; WebP with PNG fallback for raster contexts.
 
-- **On dark background** (e.g. brand nav): `horizontal-full-dark`
-  `https://logo.palikkaharrastajat.fi/logo/horizontal/svg/horizontal-full-dark.svg`
-- **On light background**: `horizontal-full`
-  `https://logo.palikkaharrastajat.fi/logo/horizontal/svg/horizontal-full.svg`
-- **Square mark**: `square-basic`
-  `https://logo.palikkaharrastajat.fi/logo/square/svg/square-basic.svg`
+- **On dark background** (e.g. brand nav): `/logo/horizontal/svg/horizontal-full-dark.svg`
+- **On light background**: `/logo/horizontal/svg/horizontal-full.svg`
+- **Square mark**: `/logo/square/svg/square-basic.svg`
 
 Minimum clear space: 25% of logo width on all sides. Minimum digital width: 80px (square) or 200px (horizontal). Never distort, recolour, or add shadows.
 
@@ -88,35 +85,44 @@ Minimum clear space: 25% of logo width on all sides. Minimum digital width: 80px
 - Mobile-first: base styles for mobile, `sm:` / `md:` / `lg:` for overrides
 - Minimum touch target: 44×44px
 
-### Running Elm commands
+### Running commands
 
-Always prefix Elm CLI commands with `devenv shell --`:
+Always prefix CLI commands with `devenv shell --` and use `make` targets whenever possible:
 
 ```
-devenv shell -- elm make ...
+devenv shell -- make dev
+devenv shell -- make build
 devenv shell -- elm-pages build
 devenv shell -- elm-json install <package>
 ```
 
+### Design Tokens
+
+`vendor/design-guide/` is a git submodule containing a Haskell pipeline that generates
+W3C Design Tokens (2025.10) JSON and a typed Elm package from TOML definitions.
+
+The **generated Elm package** is vendored into `vendor/design-tokens/` and committed to git,
+so daily builds do **not** require the submodule to be checked out or built.
+
+To regenerate tokens after editing `vendor/design-guide/content/*.toml`:
+
+```bash
+devenv shell -- make design-tokens
+```
+
+This runs `make dist` inside `vendor/design-guide/` and copies the output to `vendor/design-tokens/`.
+
 ### Components
 
-All 32 UI components come from the **design-guide** repository, available as a git submodule at `vendor/design-guide/`. The `vendor/design-guide/src` path is already in `elm.json` source-directories, so components are imported directly as `Component.*`:
+UI components live in `src/Component/` and are imported as `Component.*`:
 
 ```elm
-import Component.Button as Button
 import Component.Card as Card
 import Component.Alert as Alert
+import Component.Hero as Hero
 ```
 
-**Submodule management:**
-```bash
-# After cloning pages:
-git submodule update --init
-
-# To pull latest design-guide changes:
-git submodule update --remote vendor/design-guide
-```
+Reference implementations from the previous design-guide architecture are kept
+in `content/reference/src/Component/` for consultation.
 
 **Focus ring convention:** Use `focus-visible:ring-2 focus-visible:ring-brand` on all interactive elements (keyboard-only; no ring on mouse click). Do NOT use `focus:ring-*`.
-
-**All 32 components available:** Alert, Accordion, Badge, Breadcrumb, Button, ButtonGroup, Card, CloseButton, Collapse, ColorSwatch, Dialog, DownloadButton, Dropdown, FeatureGrid, Footer, Hero, ListGroup, LogoCard, Navbar, Pagination, Placeholder, Pricing, Progress, SectionHeader, Spinner, Stats, Tabs, Tag, Timeline, Toast, Toggle, Tooltip.
