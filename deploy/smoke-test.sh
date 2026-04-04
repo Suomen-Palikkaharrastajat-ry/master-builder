@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Smoke test: verify the live site is accessible and has a build-sha meta tag.
-# Usage: SITE_URL=https://org.github.io/repo bash scripts/smoke-test.sh
+# Usage: SITE_URL=https://org.github.io/repo bash deploy/smoke-test.sh
 
 set -euo pipefail
 
