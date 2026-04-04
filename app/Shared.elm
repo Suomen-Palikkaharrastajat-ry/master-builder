@@ -207,7 +207,7 @@ view sharedData page model toMsg pageView =
 viewNavbar : Model -> (SharedMsg -> msg) -> Config -> List NavItem -> Html msg
 viewNavbar model toMsg config navItems =
     Html.nav
-        [ classes [ Tw.bg_simple TC.brand, Tw.sticky, TwEx.top_0, Tw.z_50, Tw.shadow_md ] ]
+        [ classes [ Tw.bg_simple TC.brand, Tw.sticky, TwEx.top_0, Tw.z_50, Tw.shadow_md, Bp.sm [ Tw.relative ] ] ]
         [ Html.div
             [ classes [ TwEx.max_w_5xl, Tw.mx_auto, Tw.px s4 ] ]
             [ Html.div
