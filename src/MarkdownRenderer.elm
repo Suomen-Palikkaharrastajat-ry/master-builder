@@ -10,8 +10,13 @@ import Component.ColorSwatch as ColorSwatch
 import Component.Gallery as Gallery
 import Component.Hero as Hero
 import Component.LogoCard as LogoCard
+import Component.Progress as Progress
+import Component.SectionHeader as SectionHeader
+import Component.Spinner as Spinner
 import Component.Stats as Stats
+import Component.Tag as Tag
 import Component.Timeline as Timeline
+import Component.Toast as Toast
 import DesignTokens.Guide.Colors as Colors
 import DesignTokens.Guide.Logos as Logos
 import FeatherIcons
@@ -478,6 +483,69 @@ htmlRenderer =
             |> Markdown.Html.withAttribute "src"
             |> Markdown.Html.withOptionalAttribute "alt"
             |> Markdown.Html.withOptionalAttribute "side"
+        , -- <spinner size="small|medium|large" label="…"/>
+          Markdown.Html.tag "spinner"
+            (\size label _ ->
+                Spinner.view
+                    { size = parseSpinnerSize size
+                    , label = Maybe.withDefault "" label
+                    }
+            )
+            |> Markdown.Html.withOptionalAttribute "size"
+            |> Markdown.Html.withOptionalAttribute "label"
+        , -- <progress-bar value="75" max="100" label="…" color="brand|success|warning|danger|info"/>
+          Markdown.Html.tag "progress-bar"
+            (\value max label color _ ->
+                Progress.view
+                    { value = value |> Maybe.andThen String.toInt |> Maybe.withDefault 0
+                    , max = max |> Maybe.andThen String.toInt |> Maybe.withDefault 100
+                    , label = label
+                    , color = parseProgressColor color
+                    }
+            )
+            |> Markdown.Html.withOptionalAttribute "value"
+            |> Markdown.Html.withOptionalAttribute "max"
+            |> Markdown.Html.withOptionalAttribute "label"
+            |> Markdown.Html.withOptionalAttribute "color"
+        , -- <section-header title="…" description="…"/>
+          Markdown.Html.tag "section-header"
+            (\title description _ ->
+                SectionHeader.view
+                    { title = title
+                    , description = description
+                    }
+            )
+            |> Markdown.Html.withAttribute "title"
+            |> Markdown.Html.withOptionalAttribute "description"
+        , -- <section-subheader title="…" description="…"/>
+          Markdown.Html.tag "section-subheader"
+            (\title description _ ->
+                SectionHeader.viewSub
+                    { title = title
+                    , description = description
+                    }
+            )
+            |> Markdown.Html.withAttribute "title"
+            |> Markdown.Html.withOptionalAttribute "description"
+        , -- <toast variant="default|success|warning|danger" title="…" body="…"/>
+          Markdown.Html.tag "toast"
+            (\variant title body _ ->
+                Toast.view
+                    { variant = parseToastVariant variant
+                    , title = title
+                    , body = Maybe.withDefault "" body
+                    , onClose = Nothing
+                    }
+            )
+            |> Markdown.Html.withOptionalAttribute "variant"
+            |> Markdown.Html.withAttribute "title"
+            |> Markdown.Html.withOptionalAttribute "body"
+        , -- <tag label="…"/>
+          Markdown.Html.tag "tag"
+            (\label _ ->
+                Tag.view { label = label, onRemove = Nothing }
+            )
+            |> Markdown.Html.withAttribute "label"
         ]
 
 
@@ -705,3 +773,51 @@ resolveIcon name =
 
         _ ->
             FeatherIcons.circle
+
+
+parseSpinnerSize : Maybe String -> Spinner.Size
+parseSpinnerSize s =
+    case s of
+        Just "small" ->
+            Spinner.Small
+
+        Just "large" ->
+            Spinner.Large
+
+        _ ->
+            Spinner.Medium
+
+
+parseProgressColor : Maybe String -> Progress.Color
+parseProgressColor s =
+    case s of
+        Just "success" ->
+            Progress.Success
+
+        Just "warning" ->
+            Progress.Warning
+
+        Just "danger" ->
+            Progress.Danger
+
+        Just "info" ->
+            Progress.Info
+
+        _ ->
+            Progress.Brand
+
+
+parseToastVariant : Maybe String -> Toast.Variant
+parseToastVariant s =
+    case s of
+        Just "success" ->
+            Toast.Success
+
+        Just "warning" ->
+            Toast.Warning
+
+        Just "danger" ->
+            Toast.Danger
+
+        _ ->
+            Toast.Default
