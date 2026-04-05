@@ -38,7 +38,9 @@
         "Component.Timeline",
         "Component.Toast",
         "Component.Toggle",
-        "Component.Tooltip"
+        "Component.Tooltip",
+        "TailwindExtra",
+        "TailwindTokens"
     ],
     "elm-version": "0.19.0 <= v < 0.20.0",
     "dependencies": {
