@@ -113,7 +113,7 @@ check: ## Check Elm formatting and elm-review rules (no changes)
 
 .PHONY: format
 format: ## Auto-format Elm source files
-	elm-format --yes app/ src/
+	treefmt
 
 .PHONY: test
 test: ## Run smoke test against SITE_URL

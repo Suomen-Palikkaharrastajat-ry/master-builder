@@ -1,4 +1,4 @@
 [formatter.elm-format]
 command = "elm-format"
 options = ["--yes"]
-includes = ["app/**/*.elm", "src/**/*.elm"]
+includes = ["app/**/*.elm", "src/**/*.elm", "packages/**/*.elm"]
