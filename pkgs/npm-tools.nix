@@ -28,12 +28,12 @@ let
     # Computed by building with pkgs.lib.fakeHash and reading the "got:" line.
     # To update: set back to pkgs.lib.fakeHash, run `devenv shell`, replace with
     # the sha256 printed in the error output.
-    hash = "sha256-jDHMrlU2iWIeM+qLqwvb8VooVomKSlrCZBGaIVETwvE=";
+    hash = "sha256-KUK88B1G8Yh8UZifQS7uQHPvXfhKhUNblpHdQmxKmU4=";
   };
 in
 pkgs.stdenv.mkDerivation {
   pname = "master-builder-npm-tools";
-  version = "3.1.5";
+  version = "3.3.4";
 
   src = patchedSrc;
   inherit npmDeps;
@@ -54,12 +54,7 @@ pkgs.stdenv.mkDerivation {
   # download binaries from the network and fails in the Nix sandbox.
   npmRebuildFlags = "--ignore-scripts";
 
-  # elm-tailwind-classes is a git dependency (git+ssh://github.com/...).
-  # npm always runs prepare/postinstall for git deps during npm ci (even with
-  # --ignore-scripts), and elm-tailwind-classes' postinstall calls elm-tooling
-  # install which tries to download Elm binaries from the internet.
-  # postPatch runs just before postPatchHooks (which contains npmConfigHook),
-  # so we can stub elm-tooling with a no-op before npm ci executes.
+  # Stub elm-tooling so it can't try to download Elm binaries in the sandbox.
   postPatch = ''
     mkdir -p "$TMPDIR/fake-bin"
     printf '#!/bin/sh\nexec true\n' > "$TMPDIR/fake-bin/elm-tooling"
@@ -95,10 +90,26 @@ pkgs.stdenv.mkDerivation {
       "const bundledReviewConfig = path.resolve(__dirname, '..', 'extractor');" \
       "const bundledReviewConfig = (() => { const src = path.resolve(__dirname, '..', 'extractor'); const dst = path.join(process.env.TMPDIR || '/tmp', 'elm-tailwind-extractor'); try { fs.cpSync(src, dst, { recursive: true, force: true }); } catch(e) {} return dst; })();"
 
+    # Patch elm-pages: elm-review tries to mkdir 'suppressed/' inside the
+    # bundled review config dirs (in the read-only Nix store) and gets EACCES.
+    # Fix: create symlinks from suppressed/ to writable /tmp dirs so
+    # elm-review can write suppression data without modifying the Nix store.
+    for reviewDir in \
+      "$out/lib/node_modules/elm-pages/generator/server-review" \
+      "$out/lib/node_modules/elm-pages/generator/review" \
+      "$out/lib/node_modules/elm-pages/generator/dead-code-review"; do
+      if [ -d "$reviewDir" ]; then
+        targetName="$(basename "$reviewDir")"
+        ln -sfn "/tmp/elm-pages-$targetName-suppressed" "$reviewDir/suppressed"
+      fi
+    done
+
     # elm-pages CLI
     # Entry point: node_modules/elm-pages/generator/src/cli.js
+    # --run: pre-create writable suppressed/ targets for the symlinks above
     makeWrapper ${pkgs.nodejs_22}/bin/node $out/bin/elm-pages \
       --add-flags "$out/lib/node_modules/elm-pages/generator/src/cli.js" \
+      --run 'mkdir -p /tmp/elm-pages-server-review-suppressed /tmp/elm-pages-review-suppressed /tmp/elm-pages-dead-code-review-suppressed' \
       --prefix PATH : "$out/lib/node_modules/.bin" \
       --prefix PATH : "${lamdera}/bin" \
       --set NODE_PATH "$out/lib/node_modules"

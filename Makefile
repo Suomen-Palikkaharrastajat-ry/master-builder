@@ -73,7 +73,8 @@ design-tokens: ## Regenerate design tokens from vendor/design-guide (requires su
 # npmTools derivation's lib/node_modules directory.
 .PHONY: node_modules
 node_modules: ## Symlink node_modules → Nix store (requires NODE_PATH from devenv/nix develop)
-	@[ -n "$$NODE_PATH" ] && ln -sfn "$$(echo "$$NODE_PATH" | cut -d: -f1)" node_modules \
+	@[ -n "$$NODE_PATH" ] && { [ -L node_modules ] || rm -rf node_modules; \
+	  ln -sfn "$$(echo "$$NODE_PATH" | cut -d: -f1)" node_modules; } \
 	  || echo "node_modules: NODE_PATH not set, skipping symlink"
 
 .PHONY: dev
