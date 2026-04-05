@@ -2,6 +2,7 @@
     "type": "application",
     "source-directories": [
         "vendor/design-tokens/src",
+        "vendor/ui-components/src",
         "src",
         "app",
         ".elm-pages",
