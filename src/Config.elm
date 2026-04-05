@@ -1,4 +1,4 @@
-module Config exposing (BrandingConfig, Config, FooterConfig, FooterLink, SiteConfig, task)
+module Config exposing (BrandingConfig, Config, FooterConfig, FooterLink, NavbarConfig, SiteConfig, task)
 
 {-| Site-wide configuration loaded from content/config.toml at build time.
 -}
@@ -13,6 +13,7 @@ import Json.Encode as Encode
 type alias Config =
     { site : SiteConfig
     , branding : BrandingConfig
+    , navbar : NavbarConfig
     , footer : FooterConfig
     }
 
@@ -28,7 +29,11 @@ type alias BrandingConfig =
     { logoLight : String
     , logoDark : String
     , logoAlt : String
-    , footerLogo : String
+    }
+
+
+type alias NavbarConfig =
+    { sticky : Bool
     }
 
 
@@ -36,6 +41,8 @@ type alias FooterConfig =
     { links : List FooterLink
     , copyright : String
     , disclaimer : String
+    , footerLogo : String
+    , siteLabel : String
     }
 
 
@@ -55,9 +62,10 @@ task =
 
 decoder : Decoder Config
 decoder =
-    Decode.map3 Config
+    Decode.map4 Config
         (Decode.field "site" siteDecoder)
         (Decode.field "branding" brandingDecoder)
+        (Decode.field "navbar" navbarDecoder)
         (Decode.field "footer" footerDecoder)
 
 
@@ -71,19 +79,26 @@ siteDecoder =
 
 brandingDecoder : Decoder BrandingConfig
 brandingDecoder =
-    Decode.map4 BrandingConfig
+    Decode.map3 BrandingConfig
         (Decode.field "logo_light" Decode.string)
         (Decode.field "logo_dark" Decode.string)
         (Decode.field "logo_alt" Decode.string)
-        (Decode.field "footer_logo" Decode.string)
+
+
+navbarDecoder : Decoder NavbarConfig
+navbarDecoder =
+    Decode.map NavbarConfig
+        (Decode.field "sticky" Decode.bool)
 
 
 footerDecoder : Decoder FooterConfig
 footerDecoder =
-    Decode.map3 FooterConfig
+    Decode.map5 FooterConfig
         (Decode.field "links" (Decode.list footerLinkDecoder))
         (Decode.field "copyright" Decode.string)
         (Decode.field "disclaimer" Decode.string)
+        (Decode.field "logo" Decode.string)
+        (Decode.field "site_label" Decode.string)
 
 
 footerLinkDecoder : Decoder FooterLink

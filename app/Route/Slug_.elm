@@ -6,14 +6,13 @@ module Route.Slug_ exposing (ActionData, Data, Model, Msg, route)
 import BackendTask exposing (BackendTask)
 import BackendTask.File as File
 import BackendTask.Glob as Glob
+import Component.Breadcrumb as Breadcrumb
 import ContentDir
 import FatalError exposing (FatalError)
-import FeatherIcons
 import Frontmatter exposing (Frontmatter)
 import Head
 import Head.Seo as Seo
 import Html
-import Html.Attributes as Attr
 import Json.Decode as Decode
 import LanguageTag.Language
 import LanguageTag.Region
@@ -22,10 +21,6 @@ import Pages.Url
 import PagesMsg exposing (PagesMsg)
 import RouteBuilder exposing (App, StatelessRoute)
 import Shared
-import Tailwind as Tw exposing (classes)
-import Tailwind.Breakpoints as Bp
-import Tailwind.Theme exposing (s1, s6)
-import TailwindTokens as TC
 import UrlPath
 import View exposing (View)
 
@@ -123,24 +118,7 @@ view :
 view app _ =
     { title = app.data.frontmatter.title ++ " — Suomen Palikkaharrastajat ry"
     , body =
-        [ Html.a
-            [ Attr.href "/"
-            , classes
-                [ Tw.inline_flex
-                , Tw.items_center
-                , Tw.gap s1
-                , Tw.type_caption
-                , Tw.text_simple TC.textMuted
-                , Bp.hover [ Tw.text_simple TC.textPrimary ]
-                , Tw.mb s6
-                , Bp.withVariant "motion-safe" [ Tw.transition_colors ]
-                ]
-            ]
-            [ FeatherIcons.arrowLeft
-                |> FeatherIcons.withSize 14
-                |> FeatherIcons.toHtml [ Attr.attribute "aria-hidden" "true" ]
-            , Html.text "Etusivulle"
-            ]
+        [ Breadcrumb.viewBack { label = "Etusivulle", href = "/" }
         , MarkdownRenderer.renderMarkdown app.data.body
         ]
     }

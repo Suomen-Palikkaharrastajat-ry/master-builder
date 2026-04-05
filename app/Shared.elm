@@ -7,7 +7,9 @@ import BackendTask exposing (BackendTask)
 import BackendTask.File as File
 import BackendTask.Glob as Glob
 import Browser.Events
+import Component.Footer as Footer
 import Component.MobileDrawer as MobileDrawer
+import Component.Navbar as Navbar
 import Config exposing (Config)
 import ContentDir
 import Effect exposing (Effect)
@@ -25,7 +27,7 @@ import Route exposing (Route(..))
 import SharedTemplate exposing (SharedTemplate)
 import Tailwind as Tw exposing (classes)
 import Tailwind.Breakpoints as Bp
-import Tailwind.Theme exposing (s0, s0_dot_5, s1, s10, s12, s14, s16, s2, s3, s4, s6, s8, white)
+import Tailwind.Theme exposing (s0, s1, s10, s14, s2, s4, s6, white)
 import TailwindExtra as TwEx
 import TailwindTokens as TC
 import UrlPath exposing (UrlPath)
@@ -180,6 +182,74 @@ view :
     -> View msg
     -> { body : List (Html msg), title : String }
 view sharedData page model toMsg pageView =
+    let
+        config =
+            sharedData.config
+
+        logoHtml =
+            Html.a
+                [ Attr.href "/"
+                , classes [ Bp.focus [ Tw.outline_none, Tw.ring_2, TwEx.ring_brand_yellow ], Tw.rounded ]
+                , Html.Events.onClick (toMsg (SharedMsg CloseMenu))
+                ]
+                [ Html.node "picture"
+                    []
+                    [ Html.node "source"
+                        [ Attr.attribute "media" "(min-width: 640px)"
+                        , Attr.attribute "srcset" config.branding.logoDark
+                        ]
+                        []
+                    , Html.img
+                        [ Attr.src config.branding.logoLight
+                        , Attr.alt config.branding.logoAlt
+                        , classes [ Tw.h s10, Bp.sm [ Tw.h s14 ] ]
+                        ]
+                        []
+                    ]
+                ]
+
+        hamburgerHtml =
+            Html.button
+                [ classes [ Bp.sm [ Tw.hidden ], Tw.text_simple white, Tw.p s2, Tw.ml s2, Tw.rounded, Bp.focus [ Tw.outline_none, Tw.ring_2, TwEx.ring_brand_yellow ], Tw.cursor_pointer ]
+                , Html.Events.onClick (toMsg (SharedMsg ToggleMenu))
+                , Attr.attribute "aria-label"
+                    (if model.menuOpen then
+                        "Sulje valikko"
+
+                     else
+                        "Avaa valikko"
+                    )
+                , Attr.attribute "aria-expanded"
+                    (if model.menuOpen then
+                        "true"
+
+                     else
+                        "false"
+                    )
+                , Attr.attribute "aria-controls" "mobile-nav"
+                ]
+                [ if model.menuOpen then
+                    FeatherIcons.x |> FeatherIcons.withSize 24 |> FeatherIcons.toHtml []
+
+                  else
+                    FeatherIcons.menu |> FeatherIcons.withSize 24 |> FeatherIcons.toHtml []
+                ]
+
+        navLinks =
+            sharedData.navItems
+                |> List.map
+                    (\item ->
+                        { label = item.title
+                        , href =
+                            if item.slug == "index" then
+                                "/"
+
+                            else
+                                "/" ++ item.slug
+                        , mobileOnly = item.mobileOnly
+                        }
+                    )
+    in
     case page.route of
         _ ->
             { body =
@@ -193,107 +263,38 @@ view sharedData page model toMsg pageView =
                     ]
                     [ Html.text "Siirry pääsisältöön" ]
                 , Html.div [ classes [ Tw.min_h_screen, Tw.flex, Tw.flex_col ] ]
-                    [ viewNavbar model (toMsg << SharedMsg) sharedData.config sharedData.navItems
+                    [ Navbar.view
+                        { logo = logoHtml
+                        , links = navLinks
+                        , mobileMenuToggle = Just hamburgerHtml
+                        , action = Nothing
+                        , sticky = config.navbar.sticky
+                        , variant = Navbar.Dark
+                        }
                     , Html.main_ [ Attr.id "main-content", classes [ Tw.flex_1, TwEx.max_w_5xl, Tw.mx_auto, Tw.px s6, Tw.py s10, Tw.w_full ] ] pageView.body
-                    , viewFooter sharedData.config
+                    , Footer.view
+                        { logo =
+                            Just
+                                (Html.img
+                                    [ Attr.src config.footer.footerLogo
+                                    , Attr.alt ""
+                                    , Attr.attribute "aria-hidden" "true"
+                                    , classes [ TwEx.h_35, TwEx.w_35, Tw.shrink_0 ]
+                                    ]
+                                    []
+                                )
+                        , siteLabel = Just config.footer.siteLabel
+                        , links = config.footer.links
+                        , groups = []
+                        , copyright = config.footer.copyright
+                        , disclaimer = Just config.footer.disclaimer
+                        }
                     , MobileDrawer.viewOverlay { isOpen = model.menuOpen, onClose = toMsg (SharedMsg CloseMenu), breakpoint = MobileDrawer.Sm }
                     , viewMobileDrawer page.path model (toMsg << SharedMsg) sharedData.navItems
                     ]
                 ]
             , title = pageView.title
             }
-
-
-viewNavbar : Model -> (SharedMsg -> msg) -> Config -> List NavItem -> Html msg
-viewNavbar model toMsg config navItems =
-    Html.nav
-        [ classes [ Tw.bg_simple TC.brand, Tw.sticky, TwEx.top_0, Tw.z_50, Tw.shadow_md, Bp.sm [ Tw.relative ] ] ]
-        [ Html.div
-            [ classes [ TwEx.max_w_5xl, Tw.mx_auto, Tw.px s4 ] ]
-            [ Html.div
-                [ classes [ Tw.flex, Tw.items_center, Tw.py s2, Bp.sm [ Tw.py s3 ] ] ]
-                [ Html.a
-                    [ Attr.href "/"
-                    , classes [ Tw.shrink_0, Tw.mr_auto, Bp.focus [ Tw.outline_none, Tw.ring_2, TwEx.ring_brand_yellow ], Tw.rounded ]
-                    , Html.Events.onClick (toMsg CloseMenu)
-                    ]
-                    [ Html.node "picture"
-                        []
-                        [ Html.node "source"
-                            [ Attr.attribute "media" "(min-width: 640px)"
-                            , Attr.attribute "srcset" config.branding.logoDark
-                            ]
-                            []
-                        , Html.img
-                            [ Attr.src config.branding.logoLight
-                            , Attr.alt config.branding.logoAlt
-                            , classes [ Tw.h s10, Bp.sm [ Tw.h s14 ] ]
-                            ]
-                            []
-                        ]
-                    ]
-                , Html.button
-                    [ classes [ Bp.sm [ Tw.hidden ], Tw.text_simple white, Tw.p s2, Tw.ml s2, Tw.rounded, Bp.focus [ Tw.outline_none, Tw.ring_2, TwEx.ring_brand_yellow ], Tw.cursor_pointer ]
-                    , Html.Events.onClick (toMsg ToggleMenu)
-                    , Attr.attribute "aria-label"
-                        (if model.menuOpen then
-                            "Sulje valikko"
-
-                         else
-                            "Avaa valikko"
-                        )
-                    , Attr.attribute "aria-expanded"
-                        (if model.menuOpen then
-                            "true"
-
-                         else
-                            "false"
-                        )
-                    , Attr.attribute "aria-controls" "mobile-nav"
-                    ]
-                    [ if model.menuOpen then
-                        FeatherIcons.x |> FeatherIcons.withSize 24 |> FeatherIcons.toHtml []
-
-                      else
-                        FeatherIcons.menu |> FeatherIcons.withSize 24 |> FeatherIcons.toHtml []
-                    ]
-                , Html.ul
-                    [ classes [ Bp.sm [ Tw.flex ], Tw.hidden, Tw.flex_wrap, Tw.gap s0_dot_5, Tw.list_none, Tw.m s0, Tw.p s0 ] ]
-                    (navItems |> List.filter (not << .mobileOnly) |> List.map navLink)
-                ]
-            ]
-        ]
-
-
-navLink : NavItem -> Html msg
-navLink item =
-    let
-        href =
-            if item.slug == "index" then
-                "/"
-
-            else
-                "/" ++ item.slug
-    in
-    Html.li []
-        [ Html.a
-            [ Attr.href href
-            , classes
-                [ TwEx.text_white_80
-                , Bp.hover [ Tw.text_simple TC.brandYellow ]
-                , Tw.font_medium
-                , Tw.px s2
-                , Bp.sm [ Tw.px s3 ]
-                , Tw.py s1
-                , Tw.rounded
-                , Tw.transition_colors
-                , Tw.text_sm
-                , Tw.cursor_pointer
-                , Bp.focus [ Tw.outline_none, Tw.ring_2, TwEx.ring_brand_yellow ]
-                ]
-            ]
-            [ Html.text item.title ]
-        ]
 
 
 viewMobileDrawer : UrlPath -> Model -> (SharedMsg -> msg) -> List NavItem -> Html msg
@@ -335,52 +336,3 @@ viewMobileDrawer currentPath model toMsg navItems =
                 ]
             ]
         }
-
-
-viewFooter : Config -> Html msg
-viewFooter config =
-    Html.footer
-        [ classes [ Tw.bg_simple TC.brand, Tw.text_simple white, Tw.mt s16, Tw.py s12, Tw.px s4 ] ]
-        [ Html.div
-            [ classes [ TwEx.max_w_5xl, Tw.mx_auto ] ]
-            [ Html.div
-                [ classes [ Tw.grid, Tw.grid_cols_2, Bp.sm [ Tw.grid_cols_2 ], Tw.gap s8, Bp.sm [ Tw.items_end ] ] ]
-                [ -- Col 1: service links + logo
-                  Html.div [ classes [ Tw.flex, Tw.items_start, Tw.gap s4 ] ]
-                    [ Html.img
-                        [ Attr.src config.branding.footerLogo
-                        , Attr.alt ""
-                        , Attr.attribute "aria-hidden" "true"
-                        , classes [ TwEx.h_35, TwEx.w_35, Tw.shrink_0 ]
-                        ]
-                        []
-                    , Html.div [ classes [ TwEx.space_y s3 ] ]
-                        [ Html.p [ classes [ Tw.text_xs, Tw.font_semibold, TwEx.text_white_50, Tw.uppercase, Tw.tracking_wider ] ]
-                            [ Html.text config.site.title ]
-                        , Html.div [ classes [ Tw.flex, Tw.gap s4 ] ]
-                            [ Html.ul [ classes [ TwEx.space_y s2, Tw.list_none, Tw.m s0, Tw.p s0 ] ]
-                                (List.map viewFooterLink config.footer.links)
-                            ]
-                        ]
-                    ]
-                , -- Col 2: org name & legal
-                  Html.div [ classes [ TwEx.space_y s1, Bp.sm [ Tw.text_right ] ] ]
-                    [ Html.div [ classes [ TwEx.space_y s1, Tw.text_xs, TwEx.text_white_50 ] ]
-                        [ Html.p [] [ Html.text config.footer.copyright ]
-                        , Html.p [] [ Html.text config.footer.disclaimer ]
-                        ]
-                    ]
-                ]
-            ]
-        ]
-
-
-viewFooterLink : Config.FooterLink -> Html msg
-viewFooterLink link =
-    Html.li []
-        [ Html.a
-            [ Attr.href link.href
-            , classes [ Tw.text_sm, TwEx.text_white_80, Bp.hover [ Tw.text_simple white ], Tw.underline, Tw.transition_colors ]
-            ]
-            [ Html.text link.label ]
-        ]

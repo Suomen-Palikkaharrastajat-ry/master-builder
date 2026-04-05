@@ -1,8 +1,9 @@
-module Component.Breadcrumb exposing (view)
+module Component.Breadcrumb exposing (view, viewBack)
 
 {-| Breadcrumb navigation component.
 -}
 
+import FeatherIcons
 import Html exposing (Html)
 import Html.Attributes as Attr
 import Tailwind as Tw exposing (classes)
@@ -61,3 +62,28 @@ viewItem total idx item =
                     [ Html.span [ classes [ Tw.text_color (Th.gray Th.s300), Tw.select_none ] ] [ Html.text "/" ] ]
                )
         )
+
+
+{-| A back-navigation link with a left-arrow icon — suited for leaf pages
+that have a single parent (e.g. content articles, blog posts).
+-}
+viewBack : { label : String, href : String } -> Html msg
+viewBack config =
+    Html.a
+        [ Attr.href config.href
+        , classes
+            [ Tw.inline_flex
+            , Tw.items_center
+            , Tw.gap Th.s1
+            , Tw.type_caption
+            , Tw.text_simple TC.textMuted
+            , Bp.hover [ Tw.text_simple TC.brand ]
+            , Tw.mb Th.s6
+            , Bp.withVariant "motion-safe" [ Tw.transition_colors ]
+            ]
+        ]
+        [ FeatherIcons.arrowLeft
+            |> FeatherIcons.withSize 14
+            |> FeatherIcons.toHtml [ Attr.attribute "aria-hidden" "true" ]
+        , Html.text config.label
+        ]
