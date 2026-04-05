@@ -58,11 +58,11 @@ vendor: ## Init and update all git submodules to their pinned commits
 .PHONY: design-tokens
 design-tokens: ## Regenerate design tokens from vendor/design-guide (requires submodule checkout)
 	cd vendor/design-guide && devenv shell -- $(MAKE) dist
-	rm -rf vendor/design-tokens/src
-	mkdir -p vendor/design-tokens/src
-	cp -r vendor/design-guide/dist/design-tokens-elm/src/* vendor/design-tokens/src/
-	cp vendor/design-guide/dist/design-tokens-elm/elm.json vendor/design-tokens/elm.json
-	@echo "Design tokens updated in vendor/design-tokens/"
+	rm -rf packages/design-tokens/src
+	mkdir -p packages/design-tokens/src
+	cp -r vendor/design-guide/dist/design-tokens-elm/src/* packages/design-tokens/src/
+	cp vendor/design-guide/dist/design-tokens-elm/elm.json packages/design-tokens/elm.json
+	@echo "Design tokens updated in packages/design-tokens/"
 
 # ── Build ────────────────────────────────────────────────────────────────────
 

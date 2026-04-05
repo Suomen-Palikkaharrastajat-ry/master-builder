@@ -116,14 +116,23 @@ Colors, typography, spacing, and motion tokens are defined in `style.css` as Tai
 
 Design tokens are generated from TOML sources in `vendor/design-guide/` and vendored as typed Elm modules in `vendor/design-tokens/`.
 
+### Vendored packages / local packages
+
+The project keeps two internal Elm packages with shared UI and tokens:
+
+- `vendor/design-tokens/` (generated, committed) — typed design tokens as an Elm package.
+- `vendor/ui-components/` (vendored component library) — the `Component.*` modules exposed as an Elm package.
+
+If you prefer a `./packages/` workspace layout (monorepo packages folder), you may place or symlink these packages under `./packages/design-tokens` and `./packages/ui-components` — the build only requires their `src/` directories to be reachable via `elm.json` `source-directories`. The repository currently exposes these packages from `vendor/` by default.
+
 ## Project structure
 
 ```
 app/                Elm page routes (Index, Slug_, Blog/Slug_)
 src/                Shared modules (MarkdownRenderer, Frontmatter, TailwindTokens)
-src/Component/      33 UI components (Accordion, Alert, Badge, Button, Card, …)
+vendor/ui-components/ or packages/ui-components/  34 UI components exposed as a vendored Elm package (Component.*)
 vendor/design-guide/  Git submodule — Haskell token pipeline (TOML → Elm)
-vendor/design-tokens/ Generated Elm package (committed to git)
+vendor/design-tokens/ or packages/design-tokens/ Generated Elm package (committed to git)
 content/            Content repo mount point
 template/           Bundled example content
 public/             Static assets (logos, favicons, fonts)

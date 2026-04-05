@@ -7,10 +7,22 @@ description = "Suomen LEGO-harrastajien yhteisö"
 url         = "https://palikkaharrastajat.fi"
 
 [branding]
+# Horizontal logo paths — light variant for dark surfaces, dark variant for light surfaces.
 logo_light = "/logo/horizontal/svg/horizontal-full.svg"
 logo_dark  = "/logo/horizontal/svg/horizontal-full-dark-bold.svg"
 logo_alt   = "Suomen Palikkaharrastajat ry"
-footer_logo = "/logo/square/svg/square-smile-full-dark-bold.svg"
+
+[navbar]
+# Set to true to make the navbar sticky (fixed at top of viewport on mobile).
+sticky = true
+
+[footer]
+# Square logo shown in the footer.
+logo        = "/logo/square/svg/square-smile-full-dark-bold.svg"
+# Label rendered above the footer link list (typically the organisation name).
+site_label  = "Suomen Palikkaharrastajat ry"
+copyright   = "© 2026 Suomen Palikkaharrastajat ry"
+disclaimer  = "LEGO® on LEGO Groupin rekisteröity tavaramerkki"
 
 [[footer.links]]
 label = "Jäsenfoorumi"
@@ -31,7 +43,3 @@ href  = "https://kalenteri.palikkaharrastajat.fi"
 [[footer.links]]
 label = "Palikkalinkit"
 href  = "https://linkit.palikkaharrastajat.fi"
-
-[footer]
-copyright  = "© 2026 Suomen Palikkaharrastajat ry"
-disclaimer = "LEGO® on LEGO Groupin rekisteröity tavaramerkki"

@@ -32,9 +32,9 @@ by `deploy/fetch-content.sh`. Local development uses `template/` (bundled exampl
 |---|---|
 | `app/` | elm-pages routes (`Route/Index.elm`, `Route/Slug_.elm`, `Route/Blog/Slug_.elm`) |
 | `src/` | Shared modules: `MarkdownRenderer`, `Frontmatter`, `ContentDir`, `SiteMeta`, `TailwindTokens`, `TailwindExtra` |
-| `src/Component/` | 33 UI components (Accordion, Alert, Badge, Button, Card, Dialog, Hero, etc.) |
+| `vendor/ui-components/` or `packages/ui-components/` | 34 UI components exposed as a vendored Elm package (Component.* modules: Accordion, Alert, Badge, Button, Card, Dialog, Hero, etc.) |
 | `vendor/design-guide/` | Git submodule — Haskell pipeline: TOML → W3C Design Tokens JSON + typed Elm package |
-| `vendor/design-tokens/` | Generated Elm package (`DesignTokens.*` modules), committed to git |
+| `vendor/design-tokens/` or `packages/design-tokens/` | Generated Elm package (`DesignTokens.*` modules), committed to git |
 | `content/` | Content repo mount point (Markdown + static assets). Has its own git repo in production |
 | `content/reference/` | Previous design-guide site (elm-pages app) — kept as reference for component implementations |
 | `template/` | Bundled example content for `make dev` |
@@ -102,7 +102,7 @@ classes [ Tw.bg_simple TC.brand, Tw.text_simple TC.textOnDark ]
 
 ## Component library
 
-33 components in `src/Component/`, imported as `Component.*`:
+The UI components are published as an internal Elm package available from `vendor/ui-components/` (or optionally `packages/ui-components/`). Import modules as `Component.*` as before; the import paths are unchanged.
 
 ```elm
 import Component.Card as Card
