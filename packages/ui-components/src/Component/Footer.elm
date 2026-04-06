@@ -70,14 +70,14 @@ viewBrandLayout :
     -> Html msg
 viewBrandLayout config =
     Html.div
-        [ classes [ Tw.grid, Tw.grid_cols_2, Tw.gap Th.s8, Bp.sm [ Tw.items_end ] ] ]
+        [ classes [ Tw.grid, Tw.gap Th.s8, Bp.sm [ Tw.items_end, Tw.grid_cols_2 ] ] ]
         [ Html.div [ classes [ Tw.flex, Tw.items_start, Tw.gap Th.s4 ] ]
             (List.filterMap identity
                 [ Maybe.map
                     (\logoHtml -> Html.div [ classes [ Tw.shrink_0 ] ] [ logoHtml ])
                     config.logo
                 , Just
-                    (Html.div [ classes [ TwEx.space_y Th.s3 ] ]
+                    (Html.div [ classes [ TwEx.space_y Th.s4 ] ]
                         (List.filterMap identity
                             [ Maybe.map
                                 (\label ->
@@ -92,7 +92,7 @@ viewBrandLayout config =
                               else
                                 Just
                                     (Html.ul
-                                        [ classes [ TwEx.space_y Th.s2, Tw.list_none, Tw.m Th.s0, Tw.p Th.s0 ] ]
+                                        [ classes [ TwEx.space_y Th.s2, Tw.list_none, Tw.m Th.s0, Tw.p Th.s0, Tw.grid, Tw.grid_cols_2 ] ]
                                         (List.map viewFlatLink config.links)
                                     )
                             ]
@@ -100,7 +100,7 @@ viewBrandLayout config =
                     )
                 ]
             )
-        , Html.div [ classes [ TwEx.space_y Th.s1, Bp.sm [ Tw.text_right ] ] ]
+        , Html.div [ classes [ TwEx.space_y Th.s1, Tw.pl Th.s4, Bp.sm [ Tw.text_right ] ] ]
             [ Html.div [ classes [ TwEx.space_y Th.s1, Tw.text_xs, TwEx.text_white_50 ] ]
                 (List.filterMap identity
                     [ Just (Html.p [] [ Html.text config.copyright ])
