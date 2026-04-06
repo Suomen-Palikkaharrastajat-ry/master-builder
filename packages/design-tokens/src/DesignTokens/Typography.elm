@@ -1,53 +1,52 @@
 module DesignTokens.Typography exposing
-    ( bodyLineHeight
-    , bodySizePx
-    , bodySizeRem
-    , bodySmallLineHeight
-    , bodySmallSizePx
-    , bodySmallSizeRem
-    , bodySmallWeight
-    , bodyWeight
-    , captionLineHeight
-    , captionSizePx
-    , captionSizeRem
-    , captionWeight
-    , displayLineHeight
+    ( fontFamily
     , displaySizePx
     , displaySizeRem
     , displayWeight
-    , fontFamily
-    , heading1LineHeight
+    , displayLineHeight
     , heading1SizePx
     , heading1SizeRem
     , heading1Weight
-    , heading2LineHeight
+    , heading1LineHeight
     , heading2SizePx
     , heading2SizeRem
     , heading2Weight
-    , heading3LineHeight
+    , heading2LineHeight
     , heading3SizePx
     , heading3SizeRem
     , heading3Weight
-    , heading4LineHeight
+    , heading3LineHeight
     , heading4SizePx
     , heading4SizeRem
     , heading4Weight
-    , monoLineHeight
+    , heading4LineHeight
+    , bodySizePx
+    , bodySizeRem
+    , bodyWeight
+    , bodyLineHeight
+    , bodySmallSizePx
+    , bodySmallSizeRem
+    , bodySmallWeight
+    , bodySmallLineHeight
+    , captionSizePx
+    , captionSizeRem
+    , captionWeight
+    , captionLineHeight
     , monoSizePx
     , monoSizeRem
     , monoWeight
-    , overlineLineHeight
+    , monoLineHeight
     , overlineSizePx
     , overlineSizeRem
     , overlineWeight
+    , overlineLineHeight
     )
 
-{-| Typography tokens — font family and type scale.
--}
+
+{-| Typography tokens — font family and type scale. -}
 
 
-{-| Primary font stack.
--}
+{-| Primary font stack. -}
 fontFamily : List String
 fontFamily =
     [ "Outfit"
@@ -56,8 +55,7 @@ fontFamily =
     ]
 
 
-{-| Hero headlines and landing-page titles only.
--}
+{-| Hero headlines and landing-page titles only. -}
 displaySizePx : Int
 displaySizePx =
     48
@@ -78,8 +76,7 @@ displayLineHeight =
     1.1
 
 
-{-| Page-level headings (one per page).
--}
+{-| Page-level headings (one per page). -}
 heading1SizePx : Int
 heading1SizePx =
     30
@@ -100,8 +97,7 @@ heading1LineHeight =
     1.2
 
 
-{-| Section headings.
--}
+{-| Section headings. -}
 heading2SizePx : Int
 heading2SizePx =
     24
@@ -122,8 +118,7 @@ heading2LineHeight =
     1.3
 
 
-{-| Sub-section headings.
--}
+{-| Sub-section headings. -}
 heading3SizePx : Int
 heading3SizePx =
     20
@@ -144,8 +139,7 @@ heading3LineHeight =
     1.35
 
 
-{-| Card and widget headings. Use below Heading3.
--}
+{-| Card and widget headings. Use below Heading3. -}
 heading4SizePx : Int
 heading4SizePx =
     18
@@ -166,8 +160,7 @@ heading4LineHeight =
     1.4
 
 
-{-| Default body copy. Minimum size for accessible reading.
--}
+{-| Default body copy. Minimum size for accessible reading. -}
 bodySizePx : Int
 bodySizePx =
     16
@@ -188,8 +181,7 @@ bodyLineHeight =
     1.6
 
 
-{-| Secondary labels, UI controls, and form hints.
--}
+{-| Secondary labels, UI controls, and form hints. -}
 bodySmallSizePx : Int
 bodySmallSizePx =
     14
@@ -210,8 +202,7 @@ bodySmallLineHeight =
     1.5
 
 
-{-| Image captions, footnotes, and metadata.
--}
+{-| Image captions, footnotes, and metadata. -}
 captionSizePx : Int
 captionSizePx =
     14
@@ -232,8 +223,7 @@ captionLineHeight =
     1.4
 
 
-{-| Hex values, IDs, and code snippets.
--}
+{-| Hex values, IDs, and code snippets. -}
 monoSizePx : Int
 monoSizePx =
     14
@@ -254,8 +244,7 @@ monoLineHeight =
     1.6
 
 
-{-| Section category labels. Always uppercase.
--}
+{-| Section category labels. Always uppercase. -}
 overlineSizePx : Int
 overlineSizePx =
     12

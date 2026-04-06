@@ -1,11 +1,11 @@
 module DesignTokens.Components exposing
-    ( accordionTokenDeps
+    ( buttonTokenDeps
+    , cardTokenDeps
     , alertTokenDeps
     , badgeTokenDeps
+    , accordionTokenDeps
     , breadcrumbTokenDeps
     , buttonGroupTokenDeps
-    , buttonTokenDeps
-    , cardTokenDeps
     , closeButtonTokenDeps
     , collapseTokenDeps
     , colorSwatchTokenDeps
@@ -27,6 +27,7 @@ module DesignTokens.Components exposing
     , tooltipTokenDeps
     )
 
+
 {-| Component token mappings.
 
 Each value lists the design token paths that the component depends on.
@@ -34,8 +35,7 @@ Each value lists the design token paths that the component depends on.
 -}
 
 
-{-| Action button or link-button. Variants: Primary, Secondary, Ghost, Danger.
--}
+{-| Action button or link-button. Variants: Primary, Secondary, Ghost, Danger. -}
 buttonTokenDeps : List String
 buttonTokenDeps =
     [ "color.semantic.background-accent"
@@ -45,9 +45,7 @@ buttonTokenDeps =
     , "typography.Body"
     ]
 
-
-{-| Content container with optional header, footer, image, shadow.
--}
+{-| Content container with optional header, footer, image, shadow. -}
 cardTokenDeps : List String
 cardTokenDeps =
     [ "color.semantic.border-default"
@@ -55,9 +53,7 @@ cardTokenDeps =
     , "spacing.space-6"
     ]
 
-
-{-| Contextual feedback message. Types: Info, Success, Warning, Error.
--}
+{-| Contextual feedback message. Types: Info, Success, Warning, Error. -}
 alertTokenDeps : List String
 alertTokenDeps =
     [ "color.semantic.text-primary"
@@ -65,9 +61,7 @@ alertTokenDeps =
     , "spacing.space-4"
     ]
 
-
-{-| Small inline label. Colors: Gray, Blue, Green, Yellow, Red, Purple, Indigo.
--}
+{-| Small inline label. Colors: Gray, Blue, Green, Yellow, Red, Purple, Indigo. -}
 badgeTokenDeps : List String
 badgeTokenDeps =
     [ "typography.Caption"
@@ -75,55 +69,41 @@ badgeTokenDeps =
     , "spacing.space-2"
     ]
 
-
-{-| Collapsible sections using native <details>.
--}
+{-| Collapsible sections using native <details>. -}
 accordionTokenDeps : List String
 accordionTokenDeps =
     [ "color.semantic.border-default"
     , "spacing.space-4"
     ]
 
-
-{-| Navigation breadcrumb trail.
--}
+{-| Navigation breadcrumb trail. -}
 breadcrumbTokenDeps : List String
 breadcrumbTokenDeps =
     [ "color.semantic.text-muted"
     , "typography.BodySmall"
     ]
 
-
-{-| Horizontally grouped buttons.
--}
+{-| Horizontally grouped buttons. -}
 buttonGroupTokenDeps : List String
 buttonGroupTokenDeps =
     [ "color.semantic.border-default" ]
 
-
-{-| Accessible close / dismiss button.
--}
+{-| Accessible close / dismiss button. -}
 closeButtonTokenDeps : List String
 closeButtonTokenDeps =
     [ "color.semantic.text-muted" ]
 
-
-{-| Single collapsible section using <details>.
--}
+{-| Single collapsible section using <details>. -}
 collapseTokenDeps : List String
 collapseTokenDeps =
     [ "color.semantic.border-default" ]
 
-
-{-| Color token display with hex, name, description, usage tags.
--}
+{-| Color token display with hex, name, description, usage tags. -}
 colorSwatchTokenDeps : List String
 colorSwatchTokenDeps =
     [ "color.semantic.text-primary" ]
 
-
-{-| Modal dialog overlay.
--}
+{-| Modal dialog overlay. -}
 dialogTokenDeps : List String
 dialogTokenDeps =
     [ "color.semantic.background-page"
@@ -131,25 +111,19 @@ dialogTokenDeps =
     , "spacing.space-6"
     ]
 
-
-{-| Disclosure dropdown using <details>/<summary>.
--}
+{-| Disclosure dropdown using <details>/<summary>. -}
 dropdownTokenDeps : List String
 dropdownTokenDeps =
     [ "color.semantic.border-default"
     , "color.semantic.background-page"
     ]
 
-
-{-| Vertical list with optional active/disabled states.
--}
+{-| Vertical list with optional active/disabled states. -}
 listGroupTokenDeps : List String
 listGroupTokenDeps =
     [ "color.semantic.border-default" ]
 
-
-{-| Top navigation bar with logo and links.
--}
+{-| Top navigation bar with logo and links. -}
 navbarTokenDeps : List String
 navbarTokenDeps =
     [ "color.brand.lego-black"
@@ -157,86 +131,66 @@ navbarTokenDeps =
     , "spacing.space-4"
     ]
 
-
-{-| Page navigation control.
--}
+{-| Page navigation control. -}
 paginationTokenDeps : List String
 paginationTokenDeps =
     [ "color.semantic.text-muted"
     , "color.semantic.border-default"
     ]
 
-
-{-| Animated loading skeleton.
--}
+{-| Animated loading skeleton. -}
 placeholderTokenDeps : List String
 placeholderTokenDeps =
     [ "color.semantic.background-subtle" ]
 
-
-{-| Horizontal progress bar.
--}
+{-| Horizontal progress bar. -}
 progressTokenDeps : List String
 progressTokenDeps =
     [ "color.semantic.background-subtle"
     , "color.semantic.background-accent"
     ]
 
-
-{-| Section heading with optional description.
--}
+{-| Section heading with optional description. -}
 sectionHeaderTokenDeps : List String
 sectionHeaderTokenDeps =
     [ "typography.Heading2"
     , "color.semantic.text-primary"
     ]
 
-
-{-| Loading spinner animation.
--}
+{-| Loading spinner animation. -}
 spinnerTokenDeps : List String
 spinnerTokenDeps =
     [ "motion.duration.base" ]
 
-
-{-| Metric display grid.
--}
+{-| Metric display grid. -}
 statsTokenDeps : List String
 statsTokenDeps =
     [ "color.semantic.text-muted"
     , "typography.Heading3"
     ]
 
-
-{-| Tab navigation strip (stateless — host provides active index).
--}
+{-| Tab navigation strip (stateless — host provides active index). -}
 tabsTokenDeps : List String
 tabsTokenDeps =
     [ "color.semantic.border-brand"
     , "color.semantic.text-muted"
     ]
 
-
-{-| Removable tag / chip label.
--}
+{-| Removable tag / chip label. -}
 tagTokenDeps : List String
 tagTokenDeps =
     [ "typography.Caption"
     , "spacing.space-1"
     ]
 
-
-{-| Vertical timeline for changelogs.
--}
+{-| Vertical timeline for changelogs. -}
 timelineTokenDeps : List String
 timelineTokenDeps =
     [ "color.semantic.border-default"
     , "spacing.space-4"
     ]
 
-
-{-| Notification message bar.
--}
+{-| Notification message bar. -}
 toastTokenDeps : List String
 toastTokenDeps =
     [ "color.semantic.text-primary"
@@ -244,18 +198,14 @@ toastTokenDeps =
     , "motion.duration.base"
     ]
 
-
-{-| On/off toggle switch.
--}
+{-| On/off toggle switch. -}
 toggleTokenDeps : List String
 toggleTokenDeps =
     [ "color.semantic.background-accent"
     , "color.brand.lego-white"
     ]
 
-
-{-| Hover/focus tooltip.
--}
+{-| Hover/focus tooltip. -}
 tooltipTokenDeps : List String
 tooltipTokenDeps =
     [ "color.semantic.background-dark"
