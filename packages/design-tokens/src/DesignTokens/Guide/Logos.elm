@@ -1,8 +1,12 @@
 module DesignTokens.Guide.Logos exposing
     ( LogoVariant
+    , SocialImage
+    , WebIcon
     , horizontalVariants
+    , socialImages
     , squareFullVariants
     , squareVariants
+    , webIcons
     )
 
 {-| Structured logo variant data for brand guide pages.
@@ -26,6 +30,35 @@ type alias LogoVariant =
     , pngUrl : Maybe String
     , webpUrl : Maybe String
     , gifUrl : Maybe String
+    }
+
+
+{-| Default social sharing image metadata.
+-}
+type alias SocialImage =
+    { id : String
+    , description : String
+    , url : String
+    , absoluteUrl : String
+    , alt : String
+    , width : Int
+    , height : Int
+    , mimeType : String
+    , platforms : List String
+    }
+
+
+{-| Web icon and install asset metadata.
+-}
+type alias WebIcon =
+    { id : String
+    , description : String
+    , rel : String
+    , url : String
+    , mimeType : String
+    , sizes : List String
+    , purpose : List String
+    , platforms : List String
     }
 
 
@@ -274,5 +307,132 @@ horizontalVariants =
       , pngUrl = Nothing
       , webpUrl = Just "/logo/horizontal/png/horizontal-full-dark-bold-animated.webp"
       , gifUrl = Just "/logo/horizontal/png/horizontal-full-dark-bold-animated.gif"
+      }
+    ]
+
+
+{-| Default social sharing images for Open Graph and Twitter.
+-}
+socialImages : List SocialImage
+socialImages =
+    [ { id = "open-graph-default"
+      , description = "Oletuskuva Open Graph- ja Twitter-kortteihin."
+      , url = "/og-image.jpg"
+      , absoluteUrl = "https://palikkaharrastajat.fi/og-image.jpg"
+      , alt = "Suomen Palikkaharrastajat ry:n Open Graph -jakokuva."
+      , width = 1200
+      , height = 630
+      , mimeType = "image/jpeg"
+      , platforms =
+            [ "open-graph"
+            , "twitter"
+            ]
+      }
+    ]
+
+
+{-| Favicon, touch icon, and install icon assets.
+-}
+webIcons : List WebIcon
+webIcons =
+    [ { id = "favicon-ico"
+      , description = "Perinteinen favicon laajaa selainyhteensopivuutta varten."
+      , rel = "icon"
+      , url = "/favicon.ico"
+      , mimeType = "image/x-icon"
+      , sizes =
+            [ "16x16"
+            , "32x32"
+            , "48x48"
+            ]
+      , purpose = []
+      , platforms = [ "browser" ]
+      }
+    , { id = "favicon-svg"
+      , description = "Skaalautuva SVG-favicon moderneille selaimille."
+      , rel = "icon"
+      , url = "/favicon.svg"
+      , mimeType = "image/svg+xml"
+      , sizes = [ "any" ]
+      , purpose = []
+      , platforms = [ "browser" ]
+      }
+    , { id = "favicon-16"
+      , description = "PNG-favicon 16x16-kokoisena."
+      , rel = "icon"
+      , url = "/favicon-16x16.png"
+      , mimeType = "image/png"
+      , sizes = [ "16x16" ]
+      , purpose = []
+      , platforms = [ "browser" ]
+      }
+    , { id = "favicon-32"
+      , description = "PNG-favicon 32x32-kokoisena."
+      , rel = "icon"
+      , url = "/favicon-32x32.png"
+      , mimeType = "image/png"
+      , sizes = [ "32x32" ]
+      , purpose = []
+      , platforms = [ "browser" ]
+      }
+    , { id = "favicon-48"
+      , description = "PNG-favicon 48x48-kokoisena."
+      , rel = "icon"
+      , url = "/favicon-48x48.png"
+      , mimeType = "image/png"
+      , sizes = [ "48x48" ]
+      , purpose = []
+      , platforms = [ "browser" ]
+      }
+    , { id = "apple-touch-icon"
+      , description = "Apple touch -ikoni iOS-kotiruutua varten."
+      , rel = "apple-touch-icon"
+      , url = "/apple-touch-icon.png"
+      , mimeType = "image/png"
+      , sizes = [ "180x180" ]
+      , purpose = []
+      , platforms =
+            [ "ios"
+            , "safari"
+            ]
+      }
+    , { id = "android-chrome-192"
+      , description = "Android- ja PWA-asennusikoni 192x192-kokoisena."
+      , rel = "icon"
+      , url = "/android-chrome-192x192.png"
+      , mimeType = "image/png"
+      , sizes = [ "192x192" ]
+      , purpose = []
+      , platforms =
+            [ "android"
+            , "chrome"
+            , "pwa"
+            ]
+      }
+    , { id = "android-chrome-512"
+      , description = "Android- ja PWA-asennusikoni 512x512-kokoisena."
+      , rel = "icon"
+      , url = "/android-chrome-512x512.png"
+      , mimeType = "image/png"
+      , sizes = [ "512x512" ]
+      , purpose = []
+      , platforms =
+            [ "android"
+            , "chrome"
+            , "pwa"
+            ]
+      }
+    , { id = "icon-maskable"
+      , description = "Maskable-ikoni Androidille ja PWA-asennuksiin."
+      , rel = "icon"
+      , url = "/icon-maskable.png"
+      , mimeType = "image/png"
+      , sizes = [ "512x512" ]
+      , purpose = [ "maskable" ]
+      , platforms =
+            [ "android"
+            , "chrome"
+            , "pwa"
+            ]
       }
     ]

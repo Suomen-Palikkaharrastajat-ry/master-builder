@@ -5,6 +5,7 @@ module DesignTokens exposing (version)
 Import sub-modules directly:
 
     import DesignTokens.Colors
+    import DesignTokens.Metadata
     import DesignTokens.Typography
     import DesignTokens.Spacing
     import DesignTokens.Motion
