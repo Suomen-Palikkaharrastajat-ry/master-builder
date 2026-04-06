@@ -24,6 +24,7 @@ dist/
 .vite/
 elm-stuff/
 functions/
+public/site-config.json
 
 # --- Editor & OS ---
 .DS_Store

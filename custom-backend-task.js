@@ -1,6 +1,6 @@
 import { readFile } from "fs/promises";
 import { resolve } from "path";
-import { parse } from "./pkgs/node_modules/smol-toml/dist/index.js";
+import { parse } from "smol-toml";
 
 export async function readToml(path, context) {
   const filePath = resolve(context.cwd, path);

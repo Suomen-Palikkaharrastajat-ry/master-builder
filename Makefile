@@ -86,6 +86,7 @@ dev: node_modules ## Start elm-pages dev server (uses local template/)
 .PHONY: watch
 watch: node_modules ## Start dev server pointed at ./content (CONTENT_DIR=content)
 	$(MAKE) CONTENT_DIR=content sync-assets
+	bash deploy/inject-build-meta.sh
 	$(ELM_TAILWIND) gen
 	CONTENT_DIR=content $(ELM_PAGES) dev
 
@@ -94,6 +95,7 @@ build: node_modules ## Build elm-pages site into dist/ (fetch content first when
 	bash deploy/fetch-content.sh
 	$(MAKE) sync-assets
 	$(MAKE) CONTENT_DIR=content sync-assets
+	bash deploy/inject-build-meta.sh
 	$(ELM_TAILWIND) gen
 	$(ELM_PAGES) build
 
