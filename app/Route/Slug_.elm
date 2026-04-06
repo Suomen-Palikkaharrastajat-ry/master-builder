@@ -17,7 +17,7 @@ import Json.Decode as Decode
 import LanguageTag.Language
 import LanguageTag.Region
 import MarkdownRenderer
-import Pages.Url
+import Metadata
 import PagesMsg exposing (PagesMsg)
 import RouteBuilder exposing (App, StatelessRoute)
 import Shared
@@ -91,24 +91,29 @@ head app =
     let
         fm =
             app.data.frontmatter
+
+        site =
+            app.sharedData.config.site
+
+        pageTitle =
+            fm.title ++ " — " ++ site.title
     in
-    Seo.summary
+    (Seo.summaryLarge
         { canonicalUrlOverride = Nothing
-        , siteName = app.sharedData.config.site.title
-        , image =
-            { url =
-                fm.image
-                    |> Maybe.map Pages.Url.external
-                    |> Maybe.withDefault (Pages.Url.external "")
-            , alt = fm.title
-            , dimensions = Nothing
-            , mimeType = Nothing
-            }
+        , siteName = site.title
+        , image = Metadata.socialImage site.url fm.title fm.image
         , description = fm.description
         , locale = Just ( LanguageTag.Language.fi, LanguageTag.Region.fi )
-        , title = fm.title ++ " — Suomen Palikkaharrastajat ry"
+        , title = pageTitle
         }
         |> Seo.website
+    )
+        ++ [ Metadata.webPageStructuredData
+                { title = pageTitle
+                , description = fm.description
+                , url = Metadata.absoluteUrl site.url app.routeParams.slug
+                }
+           ]
 
 
 view :
@@ -116,7 +121,7 @@ view :
     -> Shared.Model
     -> View (PagesMsg Msg)
 view app _ =
-    { title = app.data.frontmatter.title ++ " — Suomen Palikkaharrastajat ry"
+    { title = app.data.frontmatter.title ++ " — " ++ app.sharedData.config.site.title
     , body =
         [ Breadcrumb.viewBack { label = "Etusivulle", href = "/" }
         , MarkdownRenderer.renderMarkdown app.data.body

@@ -14,6 +14,7 @@ import Json.Decode as Decode
 import LanguageTag.Language
 import LanguageTag.Region
 import MarkdownRenderer
+import Metadata
 import Pages.Url
 import PagesMsg exposing (PagesMsg)
 import RouteBuilder exposing (App, StatelessRoute)
@@ -74,24 +75,26 @@ head app =
     let
         fm =
             app.data.frontmatter
+
+        site =
+            app.sharedData.config.site
     in
-    Seo.summary
+    (Seo.summaryLarge
         { canonicalUrlOverride = Nothing
-        , siteName = app.sharedData.config.site.title
-        , image =
-            { url =
-                fm.image
-                    |> Maybe.map Pages.Url.external
-                    |> Maybe.withDefault (Pages.Url.external "")
-            , alt = fm.title
-            , dimensions = Nothing
-            , mimeType = Nothing
-            }
+        , siteName = site.title
+        , image = Metadata.socialImage site.url fm.title fm.image
         , description = fm.description
         , locale = Just ( LanguageTag.Language.fi, LanguageTag.Region.fi )
         , title = fm.title
         }
         |> Seo.website
+    )
+        ++ [ Metadata.webPageStructuredData
+                { title = fm.title
+                , description = fm.description
+                , url = site.url
+                }
+           ]
 
 
 view :

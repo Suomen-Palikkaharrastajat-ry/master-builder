@@ -200,7 +200,7 @@ view sharedData page model toMsg pageView =
                         ]
                         []
                     , Html.img
-                        [ Attr.src config.branding.logoLight
+                        [ Attr.src config.branding.logoLightMobile
                         , Attr.alt config.branding.logoAlt
                         , classes [ Tw.h s10, Bp.sm [ Tw.h s14 ] ]
                         ]
@@ -300,8 +300,12 @@ view sharedData page model toMsg pageView =
 viewMobileDrawer : UrlPath -> Model -> (SharedMsg -> msg) -> List NavItem -> Html msg
 viewMobileDrawer currentPath model toMsg navItems =
     let
+        isActive : String -> Bool
         isActive slug =
-            UrlPath.toRelative currentPath == slug
+            if slug == "index" then
+                UrlPath.toRelative currentPath == ""
+            else
+                UrlPath.toRelative currentPath == slug
 
         close =
             toMsg CloseMenu

@@ -53,7 +53,7 @@ vendor: ## Init and update all git submodules to their pinned commits
 	@# In CI environments (GitHub Actions, Netlify) SSH access is unavailable;
 	@# rewrite git@github.com: to https://github.com/ so submodules clone via HTTPS.
 	@[ -z "$$CI" ] || git config --global url."https://github.com/".insteadOf "git@github.com:"
-	git submodule update --init --recursive
+	git submodule update --init
 
 .PHONY: design-tokens
 design-tokens: ## Regenerate design tokens from vendor/design-guide (requires submodule checkout)

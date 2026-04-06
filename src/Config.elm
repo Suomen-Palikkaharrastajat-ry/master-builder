@@ -27,7 +27,9 @@ type alias SiteConfig =
 
 type alias BrandingConfig =
     { logoLight : String
+    , logoLightMobile : String
     , logoDark : String
+    , logoDarkMobile : String
     , logoAlt : String
     }
 
@@ -79,9 +81,11 @@ siteDecoder =
 
 brandingDecoder : Decoder BrandingConfig
 brandingDecoder =
-    Decode.map3 BrandingConfig
+    Decode.map5 BrandingConfig
         (Decode.field "logo_light" Decode.string)
+        (Decode.field "logo_light_mobile" Decode.string)
         (Decode.field "logo_dark" Decode.string)
+        (Decode.field "logo_dark_mobile" Decode.string)
         (Decode.field "logo_alt" Decode.string)
 
 
