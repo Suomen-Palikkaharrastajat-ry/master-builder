@@ -30,7 +30,7 @@ fetch-content: ## Sync content/ from external repo (set CONTENT_OWNER, CONTENT_R
 
 .PHONY: sync-assets
 sync-assets: ## Copy non-markdown assets from $(CONTENT_DIR) to public/
-	@find "$(CONTENT_DIR)" -type f -not -name "*.md" -not -path "*/.git/*" -not -path "*/reference/*" | while IFS= read -r f; do \
+	@find "$(CONTENT_DIR)" -type f -not -name "*.md" -not -name "config.toml" -not -path "*/.git/*" -not -path "*/.github/*" -not -path "*/reference/*" | while IFS= read -r f; do \
 		rel="$${f#$(CONTENT_DIR)/}"; \
 		dest="public/$$rel"; \
 		mkdir -p "$$(dirname "$$dest")"; \
