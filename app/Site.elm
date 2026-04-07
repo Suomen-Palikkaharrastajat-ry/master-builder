@@ -89,7 +89,7 @@ head =
                 , Head.nonLoadingNode "link"
                     [ ( "rel", Head.raw "icon" )
                     , ( "href", Head.raw icons.faviconIco )
-                    , ( "type", Head.raw "image/x-icon" )
+                    , ( "sizes", Head.raw "any" )
                     ]
                 , Head.nonLoadingNode "link"
                     [ ( "rel", Head.raw "icon" )
@@ -100,9 +100,15 @@ head =
                 , Head.icon [ ( 16, 16 ) ] MimeType.Png (iconUrl icons.favicon16)
                 , Head.icon [ ( 32, 32 ) ] MimeType.Png (iconUrl icons.favicon32)
                 , Head.icon [ ( 48, 48 ) ] MimeType.Png (iconUrl icons.favicon48)
+                , Head.icon [ ( 64, 64 ) ] MimeType.Png (iconUrl icons.favicon64)
+                , Head.appleTouchIcon (Just 120) (iconUrl icons.appleTouchIcon120)
+                , Head.appleTouchIcon (Just 152) (iconUrl icons.appleTouchIcon152)
+                , Head.appleTouchIcon (Just 167) (iconUrl icons.appleTouchIcon167)
+                , Head.appleTouchIcon (Just icons.appleTouchIconSize) (iconUrl icons.appleTouchIcon)
                 , Head.icon [ ( 192, 192 ) ] MimeType.Png (iconUrl icons.androidChrome192)
                 , Head.icon [ ( 512, 512 ) ] MimeType.Png (iconUrl icons.androidChrome512)
-                , Head.appleTouchIcon (Just icons.appleTouchIconSize) (iconUrl icons.appleTouchIcon)
+                , Head.appleTouchIcon (Just 192) (iconUrl icons.appleTouchIcon192)
+                , Head.appleTouchIcon (Just 512) (iconUrl icons.appleTouchIcon512)
                 , Head.metaName "build-sha" (Head.raw meta.buildSha)
                 , Head.metaName "build-timestamp" (Head.raw meta.buildTimestamp)
                 , Head.metaName "build-run-id" (Head.raw meta.runId)

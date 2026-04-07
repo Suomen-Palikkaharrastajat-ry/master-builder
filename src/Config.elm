@@ -60,8 +60,14 @@ type alias IconConfig =
     , favicon16 : String
     , favicon32 : String
     , favicon48 : String
+    , favicon64 : String
+    , appleTouchIcon120 : String
+    , appleTouchIcon152 : String
+    , appleTouchIcon167 : String
     , appleTouchIcon : String
     , appleTouchIconSize : Int
+    , appleTouchIcon192 : String
+    , appleTouchIcon512 : String
     , androidChrome192 : String
     , androidChrome512 : String
     }
@@ -171,8 +177,14 @@ iconDecoder =
         |> andMap (optionalField "favicon_16" Decode.string "/favicon-16x16.png")
         |> andMap (optionalField "favicon_32" Decode.string "/favicon-32x32.png")
         |> andMap (optionalField "favicon_48" Decode.string "/favicon-48x48.png")
+        |> andMap (optionalField "favicon_64" Decode.string "/favicon-64.png")
+        |> andMap (optionalField "apple_touch_icon_120" Decode.string "/apple-touch-icon-120.png")
+        |> andMap (optionalField "apple_touch_icon_152" Decode.string "/apple-touch-icon-152.png")
+        |> andMap (optionalField "apple_touch_icon_167" Decode.string "/apple-touch-icon-167.png")
         |> andMap (optionalField "apple_touch_icon" Decode.string "/apple-touch-icon.png")
         |> andMap (optionalField "apple_touch_icon_size" Decode.int 180)
+        |> andMap (optionalField "apple_touch_icon_192" Decode.string "/apple-touch-icon-192.png")
+        |> andMap (optionalField "apple_touch_icon_512" Decode.string "/apple-touch-icon-512.png")
         |> andMap (optionalField "android_chrome_192" Decode.string "/android-chrome-192x192.png")
         |> andMap (optionalField "android_chrome_512" Decode.string "/android-chrome-512x512.png")
 
@@ -276,8 +288,14 @@ defaultIconConfig =
     , favicon16 = "/favicon-16x16.png"
     , favicon32 = "/favicon-32x32.png"
     , favicon48 = "/favicon-48x48.png"
+    , favicon64 = "/favicon-64.png"
+    , appleTouchIcon120 = "/apple-touch-icon-120.png"
+    , appleTouchIcon152 = "/apple-touch-icon-152.png"
+    , appleTouchIcon167 = "/apple-touch-icon-167.png"
     , appleTouchIcon = "/apple-touch-icon.png"
     , appleTouchIconSize = 180
+    , appleTouchIcon192 = "/apple-touch-icon-192.png"
+    , appleTouchIcon512 = "/apple-touch-icon-512.png"
     , androidChrome192 = "/android-chrome-192x192.png"
     , androidChrome512 = "/android-chrome-512x512.png"
     }
