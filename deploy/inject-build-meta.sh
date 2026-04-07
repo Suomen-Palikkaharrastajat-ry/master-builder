@@ -46,23 +46,3 @@ cat > public/site-config.json <<EOF
 EOF
 
 echo "site-config.json written: sha=$SHA ts=$TIMESTAMP owner=$OWNER repo=$REPO contentOwner=$CONTENT_OWNER contentRepo=$CONTENT_REPO"
-
-# Also generate a basic Web App Manifest so `site.webmanifest` is always present
-# Values mirror vendor/design-guide/content/meta.toml defaults; override with env vars if needed.
-cat > public/site.webmanifest <<WEOF
-{
-  "name": "Suomen Palikkaharrastajat",
-  "short_name": "Palikkaharrastajat",
-  "start_url": "/",
-  "display": "standalone",
-  "background_color": "#FFFFFF",
-  "theme_color": "#05131D",
-  "icons": [
-    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" },
-    { "src": "/icon-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
-  ]
-}
-WEOF
-
-echo "site.webmanifest written"
