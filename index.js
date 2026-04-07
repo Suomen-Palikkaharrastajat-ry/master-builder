@@ -10,8 +10,8 @@ function setupPullToRefresh() {
     if (!isStandalone) return;
 
     const REVEAL_THRESHOLD = 20;
-    const ARM_THRESHOLD = 108;
-    const MAX_PULL_DISTANCE = 144;
+    const ARM_THRESHOLD = 148;
+    const MAX_PULL_DISTANCE = 196;
     const MENU_HEIGHT = 52;
     let startY = 0;
     let currentY = 0;
@@ -42,7 +42,7 @@ function setupPullToRefresh() {
         'display:flex',
         'align-items:center',
         'justify-content:center',
-        'gap:8px',
+        'gap:12px',
         'width:min(100%, 20rem)',
         `min-height:${MENU_HEIGHT}px`,
         'padding:0 16px',
@@ -50,7 +50,7 @@ function setupPullToRefresh() {
         'background:#FFFFFF',
         'color:var(--color-brand, #05131D)',
         'font-family:var(--font-sans, Outfit, system-ui, sans-serif)',
-        'font-size:0.875rem',
+        'font-size:1.75rem',
         'font-weight:500',
         'line-height:1.5',
         'box-shadow:0 1px 2px rgba(5, 19, 29, 0.08)',
@@ -60,8 +60,8 @@ function setupPullToRefresh() {
 
     const dot = document.createElement('span');
     dot.style.cssText = [
-        'width:8px',
-        'height:8px',
+        'width:16px',
+        'height:16px',
         'border-radius:999px',
         'flex-shrink:0',
         'background:#FAC80A',
@@ -116,7 +116,7 @@ function setupPullToRefresh() {
 
         indicator.style.transform = `translateY(${translateY}%)`;
         indicator.style.opacity = '1';
-        action.style.transform = `translateY(${Math.max(0, 8 - (progress * 8))}px)`;
+        action.style.transform = `translateY(${Math.max(0, 10 - (progress * 10))}px)`;
 
         if (isArmed) {
             action.style.background = '#F3F4F6';
