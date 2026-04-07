@@ -13,10 +13,12 @@ function setupPullToRefresh() {
     const ARM_THRESHOLD = 148;
     const MAX_PULL_DISTANCE = 196;
     const MENU_HEIGHT = 52;
+    const IMMEDIATE_REARM_MS = 400;
     let startY = 0;
     let currentY = 0;
     let isPulling = false;
     let isReloading = false;
+    let allowPullUntil = 0;
 
     const indicator = document.createElement('div');
     indicator.setAttribute('aria-hidden', 'true');
@@ -34,7 +36,7 @@ function setupPullToRefresh() {
         'user-select:none',
         'transform:translateY(-100%)',
         'opacity:0',
-        'margin-top: 2rem',
+        'margin-top:2rem',
     ].join(';');
 
     const action = document.createElement('div');
@@ -50,7 +52,7 @@ function setupPullToRefresh() {
         'font-size:1.75rem',
         'font-weight:500',
         'line-height:1.5',
-        'opacity:0.35',
+        'opacity:0.3',
         'border-bottom:2px solid transparent',
         'transform:translateY(0)',
     ].join(';');
@@ -68,23 +70,15 @@ function setupPullToRefresh() {
         currentY = 0;
         indicator.style.transform = 'translateY(-100%)';
         indicator.style.opacity = '0';
-        action.style.opacity = '0.5';
+        action.style.opacity = '0.3';
         action.style.borderBottomColor = 'transparent';
         action.style.transform = 'translateY(0)';
-    }
-
-    function navigateForRefresh() {
-        isReloading = true;
-        window.location.reload();
     }
 
     function updateIndicator(delta) {
         if (delta <= REVEAL_THRESHOLD) {
             indicator.style.transform = 'translateY(-100%)';
             indicator.style.opacity = '0';
-            action.style.transform = 'translateY(0)';
-            action.style.opacity = '0.5';
-            action.style.borderBottomColor = 'transparent';
             return;
         }
 
@@ -92,7 +86,7 @@ function setupPullToRefresh() {
             (delta - REVEAL_THRESHOLD) / (MAX_PULL_DISTANCE - REVEAL_THRESHOLD),
             1
         );
-        const translateY = Math.round((-100 + (100 * progress)) * 10) / 10;
+        const translateY = -100 + 100 * progress;
         const isArmed = delta >= ARM_THRESHOLD;
 
         indicator.style.transform = `translateY(${translateY}%)`;
@@ -103,7 +97,7 @@ function setupPullToRefresh() {
             action.style.opacity = '1';
             action.style.borderBottomColor = '#000000';
         } else {
-            action.style.opacity = '0.5';
+            action.style.opacity = '0.3';
             action.style.borderBottomColor = 'transparent';
         }
     }
@@ -115,7 +109,10 @@ function setupPullToRefresh() {
             return;
         }
 
-        if (window.scrollY === 0) {
+        const isAtTop = window.scrollY === 0;
+        const isWithinRearmWindow = performance.now() <= allowPullUntil;
+
+        if (isAtTop || isWithinRearmWindow) {
             startY = e.touches[0].clientY;
             currentY = startY;
             isPulling = true;
@@ -136,13 +133,18 @@ function setupPullToRefresh() {
     document.addEventListener('touchend', function () {
         if (!isPulling) return;
         const delta = currentY - startY;
+        allowPullUntil = performance.now() + IMMEDIATE_REARM_MS;
         clearPullState();
         if (delta >= ARM_THRESHOLD && !isReloading) {
-            setTimeout(navigateForRefresh, 150);
+            isReloading = true;
+            setTimeout(() => window.location.reload(), 0);
         }
     }, { passive: true });
 
-    document.addEventListener('touchcancel', clearPullState, { passive: true });
+    document.addEventListener('touchcancel', function () {
+        allowPullUntil = performance.now() + IMMEDIATE_REARM_MS;
+        clearPullState();
+    }, { passive: true });
 }
 
 const config = {
