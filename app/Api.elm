@@ -19,12 +19,19 @@ import Route exposing (Route)
 import UrlPath
 
 
+-- Must match [site].url in content/config.toml.
+-- Manifest.generator requires a plain String so this cannot be read from config at build time.
+siteUrl : String
+siteUrl =
+    "https://logo.palikkaharrastajat.fi"
+
+
 routes :
     BackendTask FatalError (List Route)
     -> (Maybe { indent : Int, newLines : Bool } -> Html Never -> String)
     -> List (ApiRoute ApiRoute.Response)
 routes getStaticRoutes htmlToString =
-    [ Manifest.generator "https://palikkaharrastajat.fi" manifestConfig
+    [ Manifest.generator siteUrl manifestConfig
     ]
 
 

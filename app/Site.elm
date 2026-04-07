@@ -56,7 +56,6 @@ head =
                         Pages.Url.external path
                 in
                 [ Head.rootLanguage rootLanguage
-                , Head.nonLoadingNode "meta" [ ( "charset", Head.raw "UTF-8" ) ]
                 , Head.metaName "viewport" (Head.raw "width=device-width,initial-scale=1")
                 , Head.metaProperty "og:locale" (Head.raw metadata.locale)
                 , Head.metaName "theme-color" (Head.raw metadata.themeColor)
@@ -84,7 +83,6 @@ head =
                         )
                     )
                 , Head.sitemapLink "/sitemap.xml"
-                , Head.manifestLink pwa.manifestPath
                 , Head.nonLoadingNode "link"
                     [ ( "rel", Head.raw "icon" )
                     , ( "href", Head.raw icons.faviconIco )
