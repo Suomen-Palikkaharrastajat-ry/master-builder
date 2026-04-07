@@ -64,6 +64,8 @@ viewItem config =
                 , Tw.text_color (Th.gray Th.s600)
                 , Tw.border_t
                 , Tw.border_color (Th.gray Th.s100)
+                , TwEx.p_my_0
+                , TwEx.p_text_inherit
                 ]
             ]
             config.body

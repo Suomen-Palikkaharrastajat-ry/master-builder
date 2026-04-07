@@ -22,7 +22,7 @@ view config =
         [ classes [ Tw.bg_simple Th.white, Tw.py Th.s16, Bp.sm [ Tw.py Th.s24 ] ] ]
         [ Html.div
             [ classes [ Tw.mx_auto, TwEx.max_w_4xl, Tw.px Th.s6, Bp.lg [ Tw.px Th.s8 ], Tw.text_center ] ]
-            [ Html.h1
+            [ Html.p
                 [ classes [ Tw.type_display, Tw.tracking_tight, Tw.text_simple TC.textPrimary ] ]
                 [ Html.text config.title ]
             , case config.subtitle of

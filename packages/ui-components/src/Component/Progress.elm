@@ -23,7 +23,7 @@ view config =
         pct =
             toFloat config.value / toFloat config.max * 100 |> round |> clamp 0 100
     in
-    Html.div [ classes [ TwEx.space_y Th.s1 ] ]
+    Html.div [ classes [ TwEx.space_y Th.s1, Tw.mb Th.s4 ] ]
         (case config.label of
             Just lbl ->
                 [ Html.div [ classes [ Tw.flex, Tw.justify_between, Tw.text_sm, Tw.text_color (Th.gray Th.s600) ] ]

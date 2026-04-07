@@ -59,7 +59,7 @@ viewItem config =
                     [ classes [ Tw.type_body_small, Tw.text_simple TC.brand ] ]
                     [ Html.text config.title ]
                 , Html.div
-                    [ classes [ Tw.mt Th.s1, Tw.text_sm, TwEx.leading_6, Tw.text_color (Th.gray Th.s600) ] ]
+                    [ classes [ Tw.mt Th.s1, Tw.text_sm, TwEx.leading_6, Tw.text_color (Th.gray Th.s600), TwEx.p_my_0, TwEx.p_text_inherit ] ]
                     config.children
                 ]
             , case config.image of

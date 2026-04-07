@@ -6,6 +6,7 @@ module Component.SectionHeader exposing (view, viewSub)
 import Html exposing (Html)
 import Tailwind as Tw exposing (classes)
 import Tailwind.Theme as Th
+import TailwindExtra as TwEx
 import TailwindTokens as TC
 
 
@@ -13,7 +14,7 @@ import TailwindTokens as TC
 -}
 view : { title : String, description : Maybe String } -> Html msg
 view { title, description } =
-    Html.div [ classes [ Tw.mb Th.s6 ] ]
+    Html.div [ classes [ Tw.mb Th.s6, TwEx.not_prose ] ]
         (Html.h2 [ classes [ Tw.type_h2, Tw.text_simple TC.brand ] ] [ Html.text title ]
             :: (case description of
                     Just desc ->
@@ -29,7 +30,7 @@ view { title, description } =
 -}
 viewSub : { title : String, description : Maybe String } -> Html msg
 viewSub { title, description } =
-    Html.div [ classes [ Tw.mb Th.s4 ] ]
+    Html.div [ classes [ Tw.mb Th.s4, TwEx.not_prose ] ]
         (Html.h3 [ classes [ Tw.type_h4, Tw.text_simple TC.brand ] ] [ Html.text title ]
             :: (case description of
                     Just desc ->

@@ -29,6 +29,11 @@ module TailwindExtra exposing
     , left_0_5
     , left_2
     , left_half
+    , li_before_content_check
+    , li_before_text_brand_yellow
+    , li_flex
+    , li_gap_2
+    , li_items_center
     , max_w_2xl
     , max_w_4xl
     , max_w_5xl
@@ -70,6 +75,10 @@ module TailwindExtra exposing
     , type_h4
     , type_mono
     , type_overline
+    , ul_list_none
+    , ul_my_0
+    , ul_pl_0
+    , ul_space_y_2
     , w_35
     )
 
@@ -366,6 +375,69 @@ p_text_inherit =
 p_my_0 : Tailwind
 p_my_0 =
     Tailwind "[&_p]:my-0"
+
+
+{-| Removes bullets from nested unordered lists via arbitrary variant.
+-}
+ul_list_none : Tailwind
+ul_list_none =
+    Tailwind "[&_ul]:list-none"
+
+
+{-| Removes left padding from nested unordered lists via arbitrary variant.
+-}
+ul_pl_0 : Tailwind
+ul_pl_0 =
+    Tailwind "[&_ul]:pl-0"
+
+
+{-| Removes outer vertical margin from nested unordered lists via arbitrary variant.
+-}
+ul_my_0 : Tailwind
+ul_my_0 =
+    Tailwind "[&_ul]:my-0"
+
+
+{-| Adds vertical spacing between nested list items via arbitrary variant.
+-}
+ul_space_y_2 : Tailwind
+ul_space_y_2 =
+    Tailwind "[&_ul]:space-y-2"
+
+
+{-| Makes nested list items flex containers via arbitrary variant.
+-}
+li_flex : Tailwind
+li_flex =
+    Tailwind "[&_li]:flex"
+
+
+{-| Vertically centers nested list item contents via arbitrary variant.
+-}
+li_items_center : Tailwind
+li_items_center =
+    Tailwind "[&_li]:items-center"
+
+
+{-| Adds horizontal gap between nested list marker and text via arbitrary variant.
+-}
+li_gap_2 : Tailwind
+li_gap_2 =
+    Tailwind "[&_li]:gap-2"
+
+
+{-| Prepends a checkmark to nested list items via arbitrary variant.
+-}
+li_before_content_check : Tailwind
+li_before_content_check =
+    Tailwind "[&_li]:before:content-['✓']"
+
+
+{-| Colors nested list item checkmarks with brand yellow via arbitrary variant.
+-}
+li_before_text_brand_yellow : Tailwind
+li_before_text_brand_yellow =
+    Tailwind "[&_li]:before:text-brand-yellow"
 
 
 {-| Sets all inset edges to 0 (position: absolute fill).

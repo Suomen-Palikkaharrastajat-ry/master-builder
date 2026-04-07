@@ -4,6 +4,7 @@ module Component.FeatureGrid exposing (Feature, view)
 -}
 
 import Html exposing (Html)
+import Html.Attributes as Attr
 import Tailwind as Tw exposing (classes)
 import Tailwind.Breakpoints as Bp
 import Tailwind.Theme as Th
@@ -12,7 +13,8 @@ import TailwindTokens as TC
 
 
 type alias Feature msg =
-    { icon : Maybe String
+    { icon : Maybe (Html msg)
+    , href : Maybe String
     , title : String
     , description : List (Html msg)
     }
@@ -30,35 +32,43 @@ view config =
 
 viewFeature : Feature msg -> Html msg
 viewFeature feature =
-    Html.div
-        [ classes [ Tw.flex, Tw.flex_col ] ]
-        [ case feature.icon of
-            Just ico ->
-                Html.div
-                    [ classes
-                        [ Tw.mb Th.s4
-                        , Tw.flex
-                        , Tw.h Th.s10
-                        , Tw.w Th.s10
-                        , Tw.items_center
-                        , Tw.justify_center
-                        , Tw.rounded_lg
-                        , Tw.bg_simple TC.brandYellow
-                        , Tw.text_simple TC.brand
-                        , Tw.type_h4
+    let
+        content =
+            [ case feature.icon of
+                Just ico ->
+                    Html.div
+                        [ classes
+                            [ Tw.mb Th.s4
+                            , Tw.flex
+                            , Tw.h Th.s10
+                            , Tw.w Th.s10
+                            , Tw.items_center
+                            , Tw.justify_center
+                            , Tw.rounded_lg
+                            , Tw.bg_simple TC.brandYellow
+                            , Tw.text_simple TC.brand
+                            ]
                         ]
-                    ]
-                    [ Html.text ico ]
+                        [ ico ]
 
-            Nothing ->
-                Html.text ""
-        , Html.h3
-            [ classes [ Tw.type_h4, TwEx.leading_7, Tw.text_simple TC.textPrimary ] ]
-            [ Html.text feature.title ]
-        , Html.div
-            [ classes [ Tw.mt Th.s2, Tw.type_caption, TwEx.leading_7, Tw.text_simple TC.textMuted ] ]
-            feature.description
-        ]
+                Nothing ->
+                    Html.text ""
+            , Html.h3
+                [ classes [ Tw.type_h4, TwEx.leading_7, Tw.text_simple TC.textPrimary ] ]
+                [ Html.text feature.title ]
+            , Html.div
+                [ classes [ Tw.mt Th.s2, Tw.type_caption, TwEx.leading_7, Tw.text_simple TC.textMuted, TwEx.p_my_0, TwEx.p_text_inherit ] ]
+                feature.description
+            ]
+    in
+    case feature.href of
+        Just url ->
+            Html.a
+                [ Attr.href url, classes [ Tw.flex, Tw.flex_col, Tw.no_underline ] ]
+                content
+
+        Nothing ->
+            Html.div [ classes [ Tw.flex, Tw.flex_col ] ] content
 
 
 gridTw : Int -> List Tw.Tailwind
