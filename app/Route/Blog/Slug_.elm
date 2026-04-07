@@ -14,8 +14,6 @@ import Head
 import Head.Seo as Seo
 import Html
 import Json.Decode as Decode
-import LanguageTag.Language
-import LanguageTag.Region
 import MarkdownRenderer
 import Metadata
 import PagesMsg exposing (PagesMsg)
@@ -93,23 +91,55 @@ head app =
         site =
             app.sharedData.config.site
 
-        pageTitle =
+        metadata =
+            app.sharedData.config.metadata
+
+        seoTitle =
             fm.title ++ " — " ++ site.title
+
+        seoDescription =
+            fm.description
+
+        canonicalUrl =
+            Metadata.pageCanonicalUrl site.url ("blog/" ++ app.routeParams.slug)
+
+        pageAuthor =
+            case fm.author of
+                Just author ->
+                    Just author
+
+                Nothing ->
+                    metadata.author
+
+        baseSeo =
+            { canonicalUrlOverride = Just canonicalUrl
+            , siteName = site.title
+            , image =
+                Metadata.socialImage
+                    { defaultImageAlt = metadata.defaultSocialImageAlt
+                    , defaultImagePath = metadata.defaultSocialImage
+                    , maybeImageAlt = fm.imageAlt
+                    , maybeImagePath = fm.image
+                    , siteUrl = site.url
+                    }
+            , description = seoDescription
+            , locale = Nothing
+            , title = seoTitle
+            }
     in
-    (Seo.summaryLarge
-        { canonicalUrlOverride = Nothing
-        , siteName = site.title
-        , image = Metadata.socialImage site.url fm.title fm.image
-        , description = fm.description
-        , locale = Just ( LanguageTag.Language.fi, LanguageTag.Region.fi )
-        , title = pageTitle
-        }
+    ((if metadata.twitterCard == "summary" then
+        Seo.summary baseSeo
+
+      else
+        Seo.summaryLarge baseSeo
+     )
         |> Seo.website
     )
+        ++ Metadata.maybeMetaName "author" pageAuthor
         ++ [ Metadata.webPageStructuredData
-                { title = pageTitle
-                , description = fm.description
-                , url = Metadata.absoluteUrl site.url ("blog/" ++ app.routeParams.slug)
+                { title = seoTitle
+                , description = seoDescription
+                , url = canonicalUrl
                 }
            ]
 

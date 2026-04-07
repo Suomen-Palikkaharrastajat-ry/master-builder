@@ -1,6 +1,7 @@
 module Metadata exposing
     ( absoluteUrl
-    , defaultSocialImagePath
+    , maybeMetaName
+    , pageCanonicalUrl
     , socialImage
     , webPageStructuredData
     , websiteStructuredData
@@ -15,13 +16,6 @@ import Json.Encode as Encode
 import MimeType
 import Pages.Url
 import String
-
-
-{-| Default Open Graph and Twitter image path.
--}
-defaultSocialImagePath : String
-defaultSocialImagePath =
-    "/og-image.png"
 
 
 {-| Join a site URL and path into an absolute URL. Absolute URLs are passed through unchanged.
@@ -55,24 +49,42 @@ trimTrailingSlashes value =
         value
 
 
+{-| Resolve the canonical URL for a route from the site URL and route path.
+-}
+pageCanonicalUrl : String -> String -> String
+pageCanonicalUrl siteUrl path =
+    absoluteUrl siteUrl path
+
+
 {-| Resolve a frontmatter image path or fall back to the default social image.
 -}
-socialImage : String -> String -> Maybe String -> Seo.Image
-socialImage siteUrl alt maybeImagePath =
+socialImage :
+    { defaultImageAlt : String
+    , defaultImagePath : String
+    , maybeImageAlt : Maybe String
+    , maybeImagePath : Maybe String
+    , siteUrl : String
+    }
+    -> Seo.Image
+socialImage config =
     let
         resolvedPath : String
         resolvedPath =
-            Maybe.withDefault defaultSocialImagePath maybeImagePath
+            Maybe.withDefault config.defaultImagePath config.maybeImagePath
+
+        resolvedAlt : String
+        resolvedAlt =
+            Maybe.withDefault config.defaultImageAlt config.maybeImageAlt
 
         isDefaultImage : Bool
         isDefaultImage =
             resolvedPath
-                == defaultSocialImagePath
-                || absoluteUrl siteUrl resolvedPath
-                == absoluteUrl siteUrl defaultSocialImagePath
+                == config.defaultImagePath
+                || absoluteUrl config.siteUrl resolvedPath
+                == absoluteUrl config.siteUrl config.defaultImagePath
     in
-    { url = Pages.Url.external (absoluteUrl siteUrl resolvedPath)
-    , alt = alt
+    { url = Pages.Url.external (absoluteUrl config.siteUrl resolvedPath)
+    , alt = resolvedAlt
     , dimensions =
         if isDefaultImage then
             Just { width = 1200, height = 630 }
@@ -88,10 +100,23 @@ socialImage siteUrl alt maybeImagePath =
     }
 
 
+{-| Render a meta tag only when the value is present.
+-}
+maybeMetaName : String -> Maybe String -> List Head.Tag
+maybeMetaName name maybeValue =
+    case maybeValue of
+        Just value ->
+            [ Head.metaName name (Head.raw value) ]
+
+        Nothing ->
+            []
+
+
 {-| Structured data for the website as a whole and its publisher organization.
 -}
 websiteStructuredData :
     { description : String
+    , logoPath : String
     , name : String
     , url : String
     }
@@ -110,7 +135,7 @@ websiteStructuredData site =
         , ( "@type", Encode.string "Organization" )
         , ( "name", Encode.string site.name )
         , ( "url", Encode.string site.url )
-        , ( "logo", Encode.string (absoluteUrl site.url "/logo/square/png/square-basic.png") )
+        , ( "logo", Encode.string (absoluteUrl site.url site.logoPath) )
         ]
         |> Head.structuredData
     ]

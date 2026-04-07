@@ -5,7 +5,6 @@ module Site exposing (config)
 
 import BackendTask exposing (BackendTask)
 import Config
-import DesignTokens.Metadata as MetadataTokens
 import FatalError exposing (FatalError)
 import Head
 import LanguageTag
@@ -34,6 +33,15 @@ head =
                     siteUrl =
                         config_.site.url
 
+                    metadata =
+                        config_.metadata
+
+                    icons =
+                        config_.icons
+
+                    pwa =
+                        config_.pwa
+
                     subtags =
                         LanguageTag.emptySubtags
 
@@ -50,26 +58,26 @@ head =
                 [ Head.rootLanguage rootLanguage
                 , Head.nonLoadingNode "meta" [ ( "charset", Head.raw "UTF-8" ) ]
                 , Head.metaName "viewport" (Head.raw "width=device-width,initial-scale=1")
-                , Head.metaName "robots" (Head.raw MetadataTokens.robots)
-                , Head.metaName "author" (Head.raw MetadataTokens.author)
-                , Head.metaName "theme-color" (Head.raw MetadataTokens.themeColor)
-                , Head.metaName "color-scheme" (Head.raw MetadataTokens.colorScheme)
-                , Head.metaName "format-detection" (Head.raw MetadataTokens.formatDetection)
-                , Head.metaName "application-name" (Head.raw MetadataTokens.applicationName)
+                , Head.metaName "robots" (Head.raw metadata.robots)
+                , Head.metaProperty "og:locale" (Head.raw metadata.locale)
+                , Head.metaName "theme-color" (Head.raw metadata.themeColor)
+                , Head.metaName "color-scheme" (Head.raw metadata.colorScheme)
+                , Head.metaName "format-detection" (Head.raw metadata.formatDetection)
+                , Head.metaName "application-name" (Head.raw pwa.applicationName)
                 , Head.metaName "apple-mobile-web-app-capable"
                     (Head.raw
-                        (if MetadataTokens.appleMobileWebAppCapable then
+                        (if pwa.appleMobileWebAppCapable then
                             "yes"
 
                          else
                             "no"
                         )
                     )
-                , Head.metaName "apple-mobile-web-app-status-bar-style" (Head.raw MetadataTokens.appleMobileWebAppStatusBarStyle)
-                , Head.metaName "apple-mobile-web-app-title" (Head.raw MetadataTokens.appleMobileWebAppTitle)
+                , Head.metaName "apple-mobile-web-app-status-bar-style" (Head.raw pwa.appleMobileWebAppStatusBarStyle)
+                , Head.metaName "apple-mobile-web-app-title" (Head.raw pwa.appleMobileWebAppTitle)
                 , Head.metaName "mobile-web-app-capable"
                     (Head.raw
-                        (if MetadataTokens.mobileWebAppCapable then
+                        (if pwa.mobileWebAppCapable then
                             "yes"
 
                          else
@@ -77,31 +85,34 @@ head =
                         )
                     )
                 , Head.sitemapLink "/sitemap.xml"
-                , Head.manifestLink MetadataTokens.manifestUrl
+                , Head.manifestLink pwa.manifestPath
                 , Head.nonLoadingNode "link"
                     [ ( "rel", Head.raw "icon" )
-                    , ( "href", Head.raw "/favicon.ico" )
+                    , ( "href", Head.raw icons.faviconIco )
                     , ( "type", Head.raw "image/x-icon" )
                     ]
                 , Head.nonLoadingNode "link"
                     [ ( "rel", Head.raw "icon" )
-                    , ( "href", Head.raw "/favicon.svg" )
+                    , ( "href", Head.raw icons.faviconSvg )
                     , ( "type", Head.raw "image/svg+xml" )
                     , ( "sizes", Head.raw "any" )
                     ]
-                , Head.icon [ ( 16, 16 ) ] MimeType.Png (iconUrl "/favicon-16x16.png")
-                , Head.icon [ ( 32, 32 ) ] MimeType.Png (iconUrl "/favicon-32x32.png")
-                , Head.icon [ ( 48, 48 ) ] MimeType.Png (iconUrl "/favicon-48x48.png")
-                , Head.icon [ ( 192, 192 ) ] MimeType.Png (iconUrl "/android-chrome-192x192.png")
-                , Head.icon [ ( 512, 512 ) ] MimeType.Png (iconUrl "/android-chrome-512x512.png")
-                , Head.appleTouchIcon (Just 180) (iconUrl "/apple-touch-icon.png")
+                , Head.icon [ ( 16, 16 ) ] MimeType.Png (iconUrl icons.favicon16)
+                , Head.icon [ ( 32, 32 ) ] MimeType.Png (iconUrl icons.favicon32)
+                , Head.icon [ ( 48, 48 ) ] MimeType.Png (iconUrl icons.favicon48)
+                , Head.icon [ ( 192, 192 ) ] MimeType.Png (iconUrl icons.androidChrome192)
+                , Head.icon [ ( 512, 512 ) ] MimeType.Png (iconUrl icons.androidChrome512)
+                , Head.appleTouchIcon (Just icons.appleTouchIconSize) (iconUrl icons.appleTouchIcon)
                 , Head.metaName "build-sha" (Head.raw meta.buildSha)
                 , Head.metaName "build-timestamp" (Head.raw meta.buildTimestamp)
                 , Head.metaName "build-run-id" (Head.raw meta.runId)
                 ]
+                    ++ Metadata.maybeMetaName "author" metadata.author
+                    ++ Metadata.maybeMetaName "twitter:site" metadata.twitterSite
                     ++ Metadata.websiteStructuredData
                         { name = config_.site.title
                         , description = config_.site.description
+                        , logoPath = config_.footer.footerLogo
                         , url = siteUrl
                         }
             )
