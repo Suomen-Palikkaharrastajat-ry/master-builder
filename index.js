@@ -1,15 +1,32 @@
 import './style.css';
 
 function setupPullToRefresh() {
+    if (window.__pullToRefreshSetup) return;
+    window.__pullToRefreshSetup = true;
+
     const isStandalone =
         window.matchMedia('(display-mode: standalone)').matches ||
         window.navigator.standalone === true;
     if (!isStandalone) return;
 
     const THRESHOLD = 64;
+    const RELOAD_THRESHOLD = THRESHOLD * 1.5;
+    const RELOAD_COOLDOWN_MS = 4000;
+    const RELOAD_KEY = 'pwa-pull-to-refresh-reload-at';
     let startY = 0;
     let currentY = 0;
     let isPulling = false;
+    let isReloading = false;
+    let reloadCooldownUntil = 0;
+
+    try {
+        const previousReloadAt = Number(window.sessionStorage.getItem(RELOAD_KEY) || '0');
+        if (Number.isFinite(previousReloadAt) && previousReloadAt > 0) {
+            reloadCooldownUntil = previousReloadAt + RELOAD_COOLDOWN_MS;
+        }
+    } catch (_error) {
+        reloadCooldownUntil = 0;
+    }
 
     const indicator = document.createElement('div');
     indicator.setAttribute('aria-hidden', 'true');
@@ -23,10 +40,10 @@ function setupPullToRefresh() {
         'display:flex',
         'align-items:center',
         'justify-content:center',
-        'background:#05131D',
-        'color:#fff',
+        'background:#fff',
+        'color:#05131D',
         'font-family:system-ui,sans-serif',
-        'font-size:0.875rem',
+        'font-size:1.75rem',
         'z-index:9999',
         'transition:height 0.15s ease',
         'pointer-events:none',
@@ -34,7 +51,24 @@ function setupPullToRefresh() {
     ].join(';');
     document.body.prepend(indicator);
 
+    function clearPullState() {
+        isPulling = false;
+        startY = 0;
+        currentY = 0;
+        indicator.style.height = '0';
+    }
+
+    function isCoolingDown() {
+        return Date.now() < reloadCooldownUntil;
+    }
+
     document.addEventListener('touchstart', function (e) {
+        if (isReloading || isCoolingDown()) return;
+        if (e.touches.length !== 1) {
+            clearPullState();
+            return;
+        }
+
         if (window.scrollY === 0) {
             startY = e.touches[0].clientY;
             currentY = startY;
@@ -49,21 +83,33 @@ function setupPullToRefresh() {
         if (delta > 0) {
             const h = Math.min(delta * 0.5, THRESHOLD);
             indicator.style.height = h + 'px';
-            indicator.textContent = delta > THRESHOLD * 1.5
+            indicator.textContent = delta > RELOAD_THRESHOLD
                 ? '↻ Päivitä sivu'
                 : '↓ Vedä päivittääksesi';
+        } else {
+            clearPullState();
         }
     }, { passive: true });
 
     document.addEventListener('touchend', function () {
         if (!isPulling) return;
-        isPulling = false;
         const delta = currentY - startY;
-        indicator.style.height = '0';
-        if (delta > THRESHOLD * 1.5) {
-            setTimeout(function () { location.reload(); }, 150);
+        clearPullState();
+        if (delta > RELOAD_THRESHOLD && !isReloading && !isCoolingDown()) {
+            isReloading = true;
+            reloadCooldownUntil = Date.now() + RELOAD_COOLDOWN_MS;
+
+            try {
+                window.sessionStorage.setItem(RELOAD_KEY, String(Date.now()));
+            } catch (_error) {
+                // Ignore sessionStorage failures; the in-memory guard still prevents rapid loops.
+            }
+
+            setTimeout(function () { window.location.reload(); }, 150);
         }
     }, { passive: true });
+
+    document.addEventListener('touchcancel', clearPullState, { passive: true });
 }
 
 const config = {
