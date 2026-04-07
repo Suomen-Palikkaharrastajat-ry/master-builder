@@ -88,7 +88,7 @@ pkgs.stdenv.mkDerivation {
       "$out/lib/node_modules/elm-tailwind-classes/vite-plugin/index.js" \
       --replace-fail \
       "const bundledReviewConfig = path.resolve(__dirname, '..', 'extractor');" \
-      "const bundledReviewConfig = (() => { const src = path.resolve(__dirname, '..', 'extractor'); const dst = path.join(process.env.TMPDIR || '/tmp', 'elm-tailwind-extractor'); try { fs.cpSync(src, dst, { recursive: true, force: true }); } catch(e) {} return dst; })();"
+      "const bundledReviewConfig = (() => { const src = path.resolve(__dirname, '..', 'extractor'); const base = process.env.TMPDIR || '/tmp'; const dst = fs.mkdtempSync(path.join(base, 'elm-tailwind-extractor-')); try { fs.cpSync(src, dst, { recursive: true, force: true }); } catch(e) {} return dst; })();"
 
     # Patch elm-pages: elm-review tries to mkdir 'suppressed/' inside the
     # bundled review config dirs (in the read-only Nix store) and gets EACCES.
