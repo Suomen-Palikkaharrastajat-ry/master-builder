@@ -113,6 +113,9 @@ head app =
                 Nothing ->
                     metadata.author
 
+        pageRobots =
+            Maybe.withDefault metadata.robots fm.robots
+
         baseSeo =
             { canonicalUrlOverride = Just canonicalUrl
             , siteName = site.title
@@ -137,7 +140,7 @@ head app =
      )
         |> Seo.website
     )
-        ++ Metadata.maybeMetaName "author" pageAuthor
+        ++ (Head.metaName "robots" (Head.raw pageRobots) :: Metadata.maybeMetaName "author" pageAuthor)
         ++ [ Metadata.webPageStructuredData
                 { title = seoTitle
                 , description = seoDescription

@@ -39,6 +39,7 @@ Field usage:
   - `image` overrides the default social sharing image for Open Graph and Twitter cards
   - `imageAlt` provides alt text for the social sharing image
   - `author` overrides the site-wide author meta tag for this page
+  - `robots` overrides the site-wide robots meta tag for this page (e.g. `noindex, nofollow`)
 
 -}
 type alias Frontmatter =
@@ -52,6 +53,7 @@ type alias Frontmatter =
     , image : Maybe String
     , imageAlt : Maybe String
     , author : Maybe String
+    , robots : Maybe String
     }
 
 
@@ -68,6 +70,7 @@ decoder =
         |> andMap (Decode.maybe (Decode.field "image" Decode.string))
         |> andMap (Decode.maybe (Decode.field "imageAlt" Decode.string))
         |> andMap (Decode.maybe (Decode.field "author" Decode.string))
+        |> andMap (Decode.maybe (Decode.field "robots" Decode.string))
 
 
 navDecoder : Decoder NavVisibility

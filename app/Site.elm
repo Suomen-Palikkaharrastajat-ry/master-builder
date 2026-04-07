@@ -58,7 +58,6 @@ head =
                 [ Head.rootLanguage rootLanguage
                 , Head.nonLoadingNode "meta" [ ( "charset", Head.raw "UTF-8" ) ]
                 , Head.metaName "viewport" (Head.raw "width=device-width,initial-scale=1")
-                , Head.metaName "robots" (Head.raw metadata.robots)
                 , Head.metaProperty "og:locale" (Head.raw metadata.locale)
                 , Head.metaName "theme-color" (Head.raw metadata.themeColor)
                 , Head.metaName "color-scheme" (Head.raw metadata.colorScheme)
