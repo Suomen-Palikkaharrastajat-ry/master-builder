@@ -7,8 +7,8 @@ published: true
 
 <hero title="Build beautiful sites with elm-pages" subtitle="A reusable component library powered by Tailwind CSS, with custom markdown extensions for rich content authoring.">
 
-<button-link href="/components" variant="primary">View Components</button-link>
-<button-link href="/about" variant="secondary">Learn More</button-link>
+<button-link href="/components" variant="primary" label="View Components"/>
+<button-link href="/about" variant="secondary" label="Learn More"/>
 
 </hero>
 

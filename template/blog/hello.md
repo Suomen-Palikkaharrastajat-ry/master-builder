@@ -57,4 +57,4 @@ All components are standard Elm functions in `src/Components/`. You can import a
 
 Browse the [Component Showcase](/components) for a full reference with copy-paste examples of every tag.
 
-<button-link href="/components" variant="primary">View all components</button-link>
+<button-link href="/components" variant="primary" label="View all components"/>
