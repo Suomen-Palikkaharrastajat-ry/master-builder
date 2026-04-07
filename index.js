@@ -13,22 +13,11 @@ function setupPullToRefresh() {
     const RELOAD_THRESHOLD = THRESHOLD * 1.5;
     const RELOAD_COOLDOWN_MS = 10000;
     const RELOAD_KEY = 'pwa-pull-to-refresh-reload-at';
-    const RELOAD_PARAM = 'pwa-refresh';
     let startY = 0;
     let currentY = 0;
     let isPulling = false;
     let isReloading = false;
     let reloadCooldownUntil = 0;
-
-    try {
-        const currentUrl = new URL(window.location.href);
-        if (currentUrl.searchParams.has(RELOAD_PARAM)) {
-            currentUrl.searchParams.delete(RELOAD_PARAM);
-            window.history.replaceState(null, '', currentUrl.toString());
-        }
-    } catch (_error) {
-        // Ignore URL parsing issues and continue with the current location.
-    }
 
     try {
         const previousReloadAt = Number(window.sessionStorage.getItem(RELOAD_KEY) || '0');
@@ -84,9 +73,7 @@ function setupPullToRefresh() {
             // Ignore sessionStorage failures; the in-memory guard still prevents rapid loops.
         }
 
-        const currentUrl = new URL(window.location.href);
-        currentUrl.searchParams.set(RELOAD_PARAM, String(refreshAt));
-        window.location.replace(currentUrl.toString());
+        window.location.reload();
     }
 
     document.addEventListener('touchstart', function (e) {
