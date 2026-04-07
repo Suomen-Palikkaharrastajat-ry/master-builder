@@ -386,10 +386,10 @@ webIcons =
         , "safari"
         ]
         }
-  , { id = "android-chrome-192"
-        , description = "Android- ja PWA-asennusikoni 192x192-kokoisena."
+  , { id = "icon-192"
+        , description = "PWA-asennusikoni 192x192-kokoisena."
         , rel = "icon"
-        , url = "/android-chrome-192x192.png"
+        , url = "/icon-192.png"
         , mimeType = "image/png"
         , sizes = [ "192x192" ]
         , purpose = []
@@ -398,10 +398,10 @@ webIcons =
         , "pwa"
         ]
         }
-  , { id = "android-chrome-512"
-        , description = "Android- ja PWA-asennusikoni 512x512-kokoisena."
+  , { id = "icon-512"
+        , description = "PWA-asennusikoni 512x512-kokoisena."
         , rel = "icon"
-        , url = "/android-chrome-512x512.png"
+        , url = "/icon-512.png"
         , mimeType = "image/png"
         , sizes = [ "512x512" ]
         , purpose = []
