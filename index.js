@@ -11,13 +11,24 @@ function setupPullToRefresh() {
 
     const THRESHOLD = 64;
     const RELOAD_THRESHOLD = THRESHOLD * 1.5;
-    const RELOAD_COOLDOWN_MS = 4000;
+    const RELOAD_COOLDOWN_MS = 10000;
     const RELOAD_KEY = 'pwa-pull-to-refresh-reload-at';
+    const RELOAD_PARAM = 'pwa-refresh';
     let startY = 0;
     let currentY = 0;
     let isPulling = false;
     let isReloading = false;
     let reloadCooldownUntil = 0;
+
+    try {
+        const currentUrl = new URL(window.location.href);
+        if (currentUrl.searchParams.has(RELOAD_PARAM)) {
+            currentUrl.searchParams.delete(RELOAD_PARAM);
+            window.history.replaceState(null, '', currentUrl.toString());
+        }
+    } catch (_error) {
+        // Ignore URL parsing issues and continue with the current location.
+    }
 
     try {
         const previousReloadAt = Number(window.sessionStorage.getItem(RELOAD_KEY) || '0');
@@ -62,6 +73,22 @@ function setupPullToRefresh() {
         return Date.now() < reloadCooldownUntil;
     }
 
+    function navigateForRefresh() {
+        const refreshAt = Date.now();
+        reloadCooldownUntil = refreshAt + RELOAD_COOLDOWN_MS;
+        isReloading = true;
+
+        try {
+            window.sessionStorage.setItem(RELOAD_KEY, String(refreshAt));
+        } catch (_error) {
+            // Ignore sessionStorage failures; the in-memory guard still prevents rapid loops.
+        }
+
+        const currentUrl = new URL(window.location.href);
+        currentUrl.searchParams.set(RELOAD_PARAM, String(refreshAt));
+        window.location.replace(currentUrl.toString());
+    }
+
     document.addEventListener('touchstart', function (e) {
         if (isReloading || isCoolingDown()) return;
         if (e.touches.length !== 1) {
@@ -84,7 +111,7 @@ function setupPullToRefresh() {
             const h = Math.min(delta * 0.5, THRESHOLD);
             indicator.style.height = h + 'px';
             indicator.textContent = delta > RELOAD_THRESHOLD
-                ? '↻ Päivitä sivu'
+                ? '✓ Vapauta päivittymään'
                 : '↓ Vedä päivittääksesi';
         } else {
             clearPullState();
@@ -96,16 +123,7 @@ function setupPullToRefresh() {
         const delta = currentY - startY;
         clearPullState();
         if (delta > RELOAD_THRESHOLD && !isReloading && !isCoolingDown()) {
-            isReloading = true;
-            reloadCooldownUntil = Date.now() + RELOAD_COOLDOWN_MS;
-
-            try {
-                window.sessionStorage.setItem(RELOAD_KEY, String(Date.now()));
-            } catch (_error) {
-                // Ignore sessionStorage failures; the in-memory guard still prevents rapid loops.
-            }
-
-            setTimeout(function () { window.location.reload(); }, 150);
+            setTimeout(navigateForRefresh, 150);
         }
     }, { passive: true });
 
