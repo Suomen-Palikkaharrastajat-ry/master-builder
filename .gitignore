@@ -37,6 +37,9 @@ Thumbs.db
 *.swp
 *.swo
 
+# --- Content repo (separate repo, mounted here) ---
+content/
+
 # --- Misc / local ---
 .agents/
 .claude/
