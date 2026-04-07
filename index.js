@@ -9,8 +9,10 @@ function setupPullToRefresh() {
         window.navigator.standalone === true;
     if (!isStandalone) return;
 
-    const THRESHOLD = 64;
-    const RELOAD_THRESHOLD = THRESHOLD * 1.5;
+    const HINT_THRESHOLD = 24;
+    const RELEASE_THRESHOLD = 128;
+    const MAX_INDICATOR_HEIGHT = 72;
+    const MIN_INDICATOR_HEIGHT = 44;
     let startY = 0;
     let currentY = 0;
     let isPulling = false;
@@ -70,10 +72,21 @@ function setupPullToRefresh() {
         currentY = e.touches[0].clientY;
         const delta = currentY - startY;
         if (delta > 0) {
-            const h = Math.min(delta * 0.5, THRESHOLD);
-            indicator.style.height = h + 'px';
-            indicator.textContent = delta > RELOAD_THRESHOLD
-                ? '✓ Vapauta päivittymään'
+            if (delta <= HINT_THRESHOLD) {
+                indicator.style.height = '0';
+                indicator.textContent = '';
+                return;
+            }
+
+            const progress = Math.min(
+                (delta - HINT_THRESHOLD) / (RELEASE_THRESHOLD - HINT_THRESHOLD),
+                1
+            );
+            const height = MIN_INDICATOR_HEIGHT + ((MAX_INDICATOR_HEIGHT - MIN_INDICATOR_HEIGHT) * progress);
+
+            indicator.style.height = height + 'px';
+            indicator.textContent = delta >= RELEASE_THRESHOLD
+                ? '✓ Vapauta päivittämään'
                 : '↓ Vedä päivittääksesi';
         } else {
             clearPullState();
@@ -84,7 +97,7 @@ function setupPullToRefresh() {
         if (!isPulling) return;
         const delta = currentY - startY;
         clearPullState();
-        if (delta > RELOAD_THRESHOLD && !isReloading) {
+        if (delta >= RELEASE_THRESHOLD && !isReloading) {
             setTimeout(navigateForRefresh, 150);
         }
     }, { passive: true });
