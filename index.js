@@ -35,7 +35,6 @@ function setupPullToRefresh() {
         'transform:translateY(-100%)',
         'opacity:0',
         'margin-top: 2rem',
-        'transition:transform 0.18s ease, opacity 0.18s ease',
     ].join(';');
 
     const action = document.createElement('div');
@@ -51,14 +50,13 @@ function setupPullToRefresh() {
         'font-size:1.75rem',
         'font-weight:500',
         'line-height:1.5',
-        'opacity:0.5',
+        'opacity:0.35',
         'border-bottom:2px solid transparent',
-        'transition:opacity 0.15s ease, border-color 0.15s ease, transform 0.15s ease',
         'transform:translateY(0)',
     ].join(';');
 
     const label = document.createElement('span');
-    label.textContent = 'Päivitä';
+    label.textContent = '⟳ Päivitä sivu';
 
     action.appendChild(label);
     indicator.appendChild(action);
