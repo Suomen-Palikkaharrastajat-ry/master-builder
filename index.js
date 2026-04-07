@@ -22,7 +22,7 @@ function setupPullToRefresh() {
     indicator.setAttribute('aria-hidden', 'true');
     indicator.style.cssText = [
         'position:fixed',
-        'top:2rem',
+        'top:0',
         'left:0',
         'right:0',
         'height:72px',
@@ -34,6 +34,7 @@ function setupPullToRefresh() {
         'user-select:none',
         'transform:translateY(-100%)',
         'opacity:0',
+        'margin-top: 2rem',
         'transition:transform 0.18s ease, opacity 0.18s ease',
     ].join(';');
 
@@ -42,37 +43,23 @@ function setupPullToRefresh() {
         'display:flex',
         'align-items:center',
         'justify-content:center',
-        'gap:12px',
         'width:min(100%, 20rem)',
         `min-height:${MENU_HEIGHT}px`,
         'padding:0 16px',
-        'border-radius:12px',
-        'background:#FFFFFF',
-        'color:var(--color-brand, #05131D)',
+        'color:#000000',
         'font-family:var(--font-sans, Outfit, system-ui, sans-serif)',
         'font-size:1.75rem',
         'font-weight:500',
         'line-height:1.5',
-        'box-shadow:0 1px 2px rgba(5, 19, 29, 0.08)',
-        'transition:background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease',
+        'opacity:0.5',
+        'border-bottom:2px solid transparent',
+        'transition:opacity 0.15s ease, border-color 0.15s ease, transform 0.15s ease',
         'transform:translateY(0)',
-    ].join(';');
-
-    const dot = document.createElement('span');
-    dot.style.cssText = [
-        'width:16px',
-        'height:16px',
-        'border-radius:999px',
-        'flex-shrink:0',
-        'background:#FAC80A',
-        'opacity:0',
-        'transition:opacity 0.15s ease',
     ].join(';');
 
     const label = document.createElement('span');
     label.textContent = 'Päivitä';
 
-    action.appendChild(dot);
     action.appendChild(label);
     indicator.appendChild(action);
     document.documentElement.appendChild(indicator);
@@ -83,11 +70,9 @@ function setupPullToRefresh() {
         currentY = 0;
         indicator.style.transform = 'translateY(-100%)';
         indicator.style.opacity = '0';
-        action.style.background = '#FFFFFF';
-        action.style.boxShadow = '0 1px 2px rgba(5, 19, 29, 0.08)';
-        action.style.color = 'var(--color-brand, #05131D)';
+        action.style.opacity = '0.5';
+        action.style.borderBottomColor = 'transparent';
         action.style.transform = 'translateY(0)';
-        dot.style.opacity = '0';
     }
 
     function navigateForRefresh() {
@@ -100,10 +85,8 @@ function setupPullToRefresh() {
             indicator.style.transform = 'translateY(-100%)';
             indicator.style.opacity = '0';
             action.style.transform = 'translateY(0)';
-            action.style.background = '#FFFFFF';
-            action.style.boxShadow = '0 1px 2px rgba(5, 19, 29, 0.08)';
-            action.style.color = 'var(--color-brand, #05131D)';
-            dot.style.opacity = '0';
+            action.style.opacity = '0.5';
+            action.style.borderBottomColor = 'transparent';
             return;
         }
 
@@ -119,15 +102,11 @@ function setupPullToRefresh() {
         action.style.transform = `translateY(${Math.max(0, 10 - (progress * 10))}px)`;
 
         if (isArmed) {
-            action.style.background = '#F3F4F6';
-            action.style.boxShadow = '0 0 0 1px rgba(5, 19, 29, 0.08)';
-            action.style.color = 'var(--color-brand, #05131D)';
-            dot.style.opacity = '1';
+            action.style.opacity = '1';
+            action.style.borderBottomColor = '#000000';
         } else {
-            action.style.background = '#FFFFFF';
-            action.style.boxShadow = '0 1px 2px rgba(5, 19, 29, 0.08)';
-            action.style.color = 'var(--color-brand, #05131D)';
-            dot.style.opacity = '0';
+            action.style.opacity = '0.5';
+            action.style.borderBottomColor = 'transparent';
         }
     }
 
