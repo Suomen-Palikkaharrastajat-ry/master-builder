@@ -22,7 +22,7 @@ function setupPullToRefresh() {
     indicator.setAttribute('aria-hidden', 'true');
     indicator.style.cssText = [
         'position:fixed',
-        'top:0',
+        'top:2rem',
         'left:0',
         'right:0',
         'height:72px',
