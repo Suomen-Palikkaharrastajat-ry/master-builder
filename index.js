@@ -11,22 +11,10 @@ function setupPullToRefresh() {
 
     const THRESHOLD = 64;
     const RELOAD_THRESHOLD = THRESHOLD * 1.5;
-    const RELOAD_COOLDOWN_MS = 10000;
-    const RELOAD_KEY = 'pwa-pull-to-refresh-reload-at';
     let startY = 0;
     let currentY = 0;
     let isPulling = false;
     let isReloading = false;
-    let reloadCooldownUntil = 0;
-
-    try {
-        const previousReloadAt = Number(window.sessionStorage.getItem(RELOAD_KEY) || '0');
-        if (Number.isFinite(previousReloadAt) && previousReloadAt > 0) {
-            reloadCooldownUntil = previousReloadAt + RELOAD_COOLDOWN_MS;
-        }
-    } catch (_error) {
-        reloadCooldownUntil = 0;
-    }
 
     const indicator = document.createElement('div');
     indicator.setAttribute('aria-hidden', 'true');
@@ -58,26 +46,13 @@ function setupPullToRefresh() {
         indicator.style.height = '0';
     }
 
-    function isCoolingDown() {
-        return Date.now() < reloadCooldownUntil;
-    }
-
     function navigateForRefresh() {
-        const refreshAt = Date.now();
-        reloadCooldownUntil = refreshAt + RELOAD_COOLDOWN_MS;
         isReloading = true;
-
-        try {
-            window.sessionStorage.setItem(RELOAD_KEY, String(refreshAt));
-        } catch (_error) {
-            // Ignore sessionStorage failures; the in-memory guard still prevents rapid loops.
-        }
-
         window.location.reload();
     }
 
     document.addEventListener('touchstart', function (e) {
-        if (isReloading || isCoolingDown()) return;
+        if (isReloading) return;
         if (e.touches.length !== 1) {
             clearPullState();
             return;
@@ -109,7 +84,7 @@ function setupPullToRefresh() {
         if (!isPulling) return;
         const delta = currentY - startY;
         clearPullState();
-        if (delta > RELOAD_THRESHOLD && !isReloading && !isCoolingDown()) {
+        if (delta > RELOAD_THRESHOLD && !isReloading) {
             setTimeout(navigateForRefresh, 150);
         }
     }, { passive: true });
