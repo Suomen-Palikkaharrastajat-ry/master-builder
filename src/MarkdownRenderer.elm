@@ -246,6 +246,15 @@ viewOrderedList startingIndex items =
 
 viewCodeBlock : { body : String, language : Maybe String } -> Html msg
 viewCodeBlock { body, language } =
+    let
+        codeBody =
+            case language of
+                Just "html" ->
+                    decodeHtmlEntities body
+
+                _ ->
+                    body
+    in
     Html.div [ classes [ Tw.my s6, Tw.rounded_lg, Tw.overflow_hidden ] ]
         [ case language of
             Just lang ->
@@ -256,8 +265,16 @@ viewCodeBlock { body, language } =
                 Html.text ""
         , Html.pre
             [ classes [ Tw.bg_simple TC.brand, TwEx.text_white_90, Tw.p s4, Tw.overflow_x_auto, Tw.type_mono, Tw.leading_relaxed ] ]
-            [ Html.code [] [ Html.text body ] ]
+            [ Html.code [] [ Html.text codeBody ] ]
         ]
+
+
+decodeHtmlEntities : String -> String
+decodeHtmlEntities raw =
+    raw
+        |> String.replace "&lt;" "<"
+        |> String.replace "&gt;" ">"
+        |> String.replace "&amp;" "&"
 
 
 htmlRenderer : Markdown.Html.Renderer (List (Html msg) -> Html msg)
@@ -316,25 +333,36 @@ htmlRenderer =
                     children
             )
             |> Markdown.Html.withOptionalAttribute "columns"
-        , -- <feature title="…" icon="…">…</feature>
+        , -- <feature title="…" icon="…" href="…">…</feature>
           Markdown.Html.tag "feature"
-            (\title icon children ->
-                Html.div [ classes [ Tw.flex, Tw.flex_col ] ]
-                    [ case icon of
-                        Just ico ->
-                            Html.div
-                                [ classes [ Tw.mb s4, Tw.flex, Tw.h s10, Tw.w s10, Tw.items_center, Tw.justify_center, Tw.rounded_lg, Tw.bg_simple TC.brandYellow, Tw.text_simple TC.brand, Tw.type_h4 ] ]
-                                [ Html.text ico ]
+            (\title icon href children ->
+                let
+                    renderedIcon =
+                        icon
+                            |> Maybe.map
+                                (\name ->
+                                    Html.div
+                                        [ classes [ Tw.mb s4, Tw.flex, Tw.h s10, Tw.w s10, Tw.items_center, Tw.justify_center, Tw.rounded_lg, Tw.bg_simple TC.brandYellow, Tw.text_simple TC.brand ] ]
+                                        [ resolveIcon name |> FeatherIcons.withSize 22 |> FeatherIcons.toHtml [ Attr.attribute "aria-hidden" "true" ] ]
+                                )
 
-                        Nothing ->
-                            Html.text ""
-                    , Html.h3 [ classes [ Tw.type_h4, TwEx.leading_7, Tw.text_simple TC.textPrimary ] ]
-                        [ Html.text title ]
-                    , Html.div [ classes [ Tw.mt s2, Tw.type_caption, TwEx.leading_7, Tw.text_simple TC.textMuted ] ] children
-                    ]
+                    content =
+                        [ Maybe.withDefault (Html.text "") renderedIcon
+                        , Html.h3 [ classes [ Tw.type_h4, TwEx.leading_7, Tw.text_simple TC.textPrimary ] ]
+                            [ Html.text title ]
+                        , Html.div [ classes [ Tw.mt s2, Tw.type_caption, TwEx.leading_7, Tw.text_simple TC.textMuted, TwEx.p_my_0, TwEx.p_text_inherit ] ] children
+                        ]
+                in
+                case href of
+                    Just url ->
+                        Html.a [ Attr.href url, classes [ Tw.flex, Tw.flex_col, Tw.no_underline ] ] content
+
+                    Nothing ->
+                        Html.div [ classes [ Tw.flex, Tw.flex_col ] ] content
             )
             |> Markdown.Html.withAttribute "title"
             |> Markdown.Html.withOptionalAttribute "icon"
+            |> Markdown.Html.withOptionalAttribute "href"
         , -- <pricing-table highlighted="Tier Name">…</pricing-table>
           Markdown.Html.tag "pricing-table"
             (\_ children ->
@@ -365,29 +393,46 @@ htmlRenderer =
                                 Nothing ->
                                     Html.text ""
                             ]
-                        , Html.div [ classes [ Tw.mt s8, Tw.type_caption, Tw.text_simple TC.textPrimary ] ] children
+                        , Html.div
+                            [ classes
+                                [ Tw.mt s8
+                                , Tw.type_caption
+                                , Tw.text_simple TC.textPrimary
+                                , TwEx.ul_list_none
+                                , TwEx.ul_pl_0
+                                , TwEx.ul_my_0
+                                , TwEx.ul_space_y_2
+                                , TwEx.li_flex
+                                , TwEx.li_items_center
+                                , TwEx.li_gap_2
+                                , TwEx.li_before_content_check
+                                , TwEx.li_before_text_brand_yellow
+                                ]
+                            ]
+                            children
                         ]
                     ]
             )
             |> Markdown.Html.withAttribute "name"
             |> Markdown.Html.withAttribute "price"
             |> Markdown.Html.withOptionalAttribute "period"
-        , -- <button-link href="…" variant="primary|secondary|ghost">label</button-link>
+        , -- <button-link href="…" variant="primary|secondary|ghost" label="…"/>
           Markdown.Html.tag "button-link"
-            (\href variant children ->
+            (\href variant label _ ->
                 Html.a
                     [ Attr.href href
                     , classes (buttonLinkClasses variant)
                     ]
-                    children
+                    [ Html.text label ]
             )
             |> Markdown.Html.withAttribute "href"
             |> Markdown.Html.withOptionalAttribute "variant"
+            |> Markdown.Html.withAttribute "label"
         , -- <card title="…">body</card>
           Markdown.Html.tag "card"
             (\title children ->
                 Card.view
-                    { header = Maybe.map (\t -> Html.span [ classes [ Tw.type_body_small, Tw.text_simple TC.textPrimary ] ] [ Html.text t ]) title
+                    { header = Maybe.map (\t -> Html.span [ classes [ Tw.type_h4, Tw.text_simple TC.brand ] ] [ Html.text t ]) title
                     , body = children
                     , footer = Nothing
                     , image = Nothing
@@ -395,12 +440,13 @@ htmlRenderer =
                     }
             )
             |> Markdown.Html.withOptionalAttribute "title"
-        , -- <badge color="gray|blue|green|yellow|red|purple|indigo">label</badge>
+        , -- <badge color="gray|blue|green|yellow|red|purple|indigo" label="…"/>
           Markdown.Html.tag "badge"
-            (\color children ->
-                Html.span [ classes (badgeClasses color) ] children
+            (\color label _ ->
+                Html.span [ classes (badgeClasses color) ] [ Html.text label ]
             )
             |> Markdown.Html.withOptionalAttribute "color"
+            |> Markdown.Html.withAttribute "label"
         , -- <accordion><accordion-item summary="…">…</accordion-item></accordion>
           Markdown.Html.tag "accordion"
             (\children -> Accordion.view children)
@@ -546,6 +592,58 @@ htmlRenderer =
                 Tag.view { label = label, onRemove = Nothing }
             )
             |> Markdown.Html.withAttribute "label"
+        , -- <tab-group name="…"><preview>…</preview><example>…</example></tab-group>
+          Markdown.Html.tag "tab-group"
+            (\name children ->
+                Html.div
+                    [ Attr.class "tab-group not-prose my-8 rounded-lg border overflow-hidden"
+                    , Attr.style "border-color" "var(--color-border-default)"
+                    ]
+                    ([ Html.input
+                        [ Attr.type_ "radio"
+                        , Attr.id (name ++ "-p")
+                        , Attr.name name
+                        , Attr.attribute "checked" ""
+                        ]
+                        []
+                     , Html.input
+                        [ Attr.type_ "radio"
+                        , Attr.id (name ++ "-c")
+                        , Attr.name name
+                        ]
+                        []
+                     , Html.div
+                        [ Attr.class "tab-bar flex"
+                        , Attr.style "border-bottom" "1px solid var(--color-border-default)"
+                        ]
+                        [ Html.label
+                            [ Attr.for (name ++ "-p")
+                            , Attr.class "tab-preview-label cursor-pointer px-4 py-2.5 text-sm font-medium border-b-2 border-transparent"
+                            , Attr.style "color" "var(--color-text-muted)"
+                            ]
+                            [ Html.text "Preview" ]
+                        , Html.label
+                            [ Attr.for (name ++ "-c")
+                            , Attr.class "tab-code-label cursor-pointer px-4 py-2.5 text-sm font-medium border-b-2 border-transparent"
+                            , Attr.style "color" "var(--color-text-muted)"
+                            ]
+                            [ Html.text "Example" ]
+                        ]
+                     ]
+                        ++ children
+                    )
+            )
+            |> Markdown.Html.withAttribute "name"
+        , -- <preview>…</preview> (used inside <tab-group>)
+          Markdown.Html.tag "preview"
+            (\children ->
+                Html.div [ Attr.class "tab-panel-preview p-6 space-y-4" ] children
+            )
+        , -- <example>…</example> (used inside <tab-group>)
+          Markdown.Html.tag "example"
+            (\children ->
+                Html.div [ Attr.class "tab-panel-code" ] children
+            )
         ]
 
 
@@ -615,8 +713,6 @@ buttonLinkClasses variant =
             , Tw.py s2
             , Tw.mr s2
             , Tw.mb s2
-            , TwEx.p_text_inherit
-            , TwEx.p_my_0
             ]
     in
     base
@@ -770,6 +866,39 @@ resolveIcon name =
 
         "zap" ->
             FeatherIcons.zap
+
+        "code" ->
+            FeatherIcons.code
+
+        "cpu" ->
+            FeatherIcons.cpu
+
+        "edit" ->
+            FeatherIcons.edit
+
+        "git-branch" ->
+            FeatherIcons.gitBranch
+
+        "globe" ->
+            FeatherIcons.globe
+
+        "layers" ->
+            FeatherIcons.layers
+
+        "lock" ->
+            FeatherIcons.lock
+
+        "package" ->
+            FeatherIcons.package
+
+        "rss" ->
+            FeatherIcons.rss
+
+        "shield" ->
+            FeatherIcons.shield
+
+        "trending-up" ->
+            FeatherIcons.trendingUp
 
         _ ->
             FeatherIcons.circle

@@ -136,3 +136,43 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ── CSS-only tab component ───────────────────────────────────────────────── */
+
+.tab-group > input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.tab-panel-preview,
+.tab-panel-code {
+  display: none;
+}
+
+.tab-preview-label,
+.tab-code-label {
+  transition: color 150ms, border-color 150ms;
+}
+
+.tab-preview-label:hover,
+.tab-code-label:hover {
+  color: var(--color-brand);
+}
+
+.tab-group > input:first-of-type:checked ~ .tab-bar .tab-preview-label,
+.tab-group > input:last-of-type:checked ~ .tab-bar .tab-code-label {
+  border-bottom-color: var(--color-brand);
+  color: var(--color-brand);
+}
+
+.tab-group > input:first-of-type:checked ~ .tab-panel-preview { display: block; }
+.tab-group > input:last-of-type:checked ~ .tab-panel-code { display: block; }
+
+.tab-panel-code > div:first-child {
+  margin-top: 0;
+  margin-bottom: 0;
+  border-radius: 0;
+}
