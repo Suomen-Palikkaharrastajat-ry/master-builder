@@ -90,31 +90,31 @@ Use `<progress-bar value="…" max="…">` to render a progress indicator. `valu
 
 ## Info Panel
 
-Use `<info-panel>` to render a tinted panel for contextual notes. The `color` attribute accepts `amber` (default), `blue`, `green`, or `red`. The optional `title` renders as a bold heading.
+Use `<info-panel>` to render a tinted panel for contextual notes. The `color` attribute accepts `amber` (default), `blue`, `green`, or `red`. The optional `title` renders as a bold heading. The optional `icon` attribute accepts a Feather icon name and renders it alongside the title.
 
 <tab-group name="info-panel">
 
 <preview>
 
-<info-panel color="amber" title="Before you begin">
+<info-panel color="amber" title="Before you begin" icon="alert-triangle">
 
 Make sure you have committed all unsaved changes. Deploying with uncommitted files may produce unexpected results.
 
 </info-panel>
 
-<info-panel color="blue" title="Did you know?">
+<info-panel color="blue" title="Did you know?" icon="info">
 
 You can nest any standard Markdown inside an info panel — including **bold**, `code spans`, and lists.
 
 </info-panel>
 
-<info-panel color="green" title="All systems operational">
+<info-panel color="green" title="All systems operational" icon="check-circle">
 
 The deployment pipeline is healthy. Builds are completing in under 10 seconds.
 
 </info-panel>
 
-<info-panel color="red" title="Action required">
+<info-panel color="red" title="Action required" icon="x-circle">
 
 Your API token expires in 3 days. Rotate it in the settings panel to avoid service interruption.
 
@@ -125,12 +125,16 @@ Your API token expires in 3 days. Rotate it in the settings panel to avoid servi
 <example>
 
 ```html
-&lt;info-panel color="amber" title="Before you begin"&gt;
+&lt;info-panel color="amber" title="Before you begin" icon="alert-triangle"&gt;
 Important context for the reader.
 &lt;/info-panel&gt;
 
-&lt;info-panel color="blue"&gt;
-A note without a title.
+&lt;info-panel color="blue" title="Did you know?" icon="info"&gt;
+A note with an icon and title.
+&lt;/info-panel&gt;
+
+&lt;info-panel color="green"&gt;
+A panel without a title or icon.
 &lt;/info-panel&gt;
 ```
 
@@ -194,26 +198,30 @@ Content here.
 
 ---
 
-## Asset Gallery
+## Gallery
 
-Use `<asset-gallery source="…">` to render a gallery of downloadable logo assets. The `source` attribute accepts `logos-square`, `logos-square-full`, or `logos-horizontal`. Optional `title` and `description` appear above the grid.
+Use `<gallery source="…">` to render a gallery of downloadable logo assets. The `source` attribute accepts `logos-square`, `logos-square-full`, or `logos-horizontal`. Optional `title` and `description` appear above the grid.
 
-<tab-group name="asset-gallery">
+<tab-group name="gallery">
 
 <preview>
 
-<asset-gallery source="logos-square" title="Square logos" description="Compact square variants for avatars, favicons, and app icons."/>
+<gallery source="logos-square" title="Square logos" description="Compact square variants for avatars, favicons, and app icons."/>
+
+<gallery source="logos-square-full" title="Full square logos" description="Square variants with the full wordmark."/>
+
+<gallery source="logos-horizontal" title="Horizontal logos" description="Wide variants for headers and banners."/>
 
 </preview>
 
 <example>
 
 ```html
-&lt;asset-gallery source="logos-square" title="Square logos" description="Optional description."/&gt;
+&lt;gallery source="logos-square" title="Square logos" description="Optional description."/&gt;
 
-&lt;asset-gallery source="logos-square-full"/&gt;
+&lt;gallery source="logos-square-full" title="Full square logos"/&gt;
 
-&lt;asset-gallery source="logos-horizontal" title="Horizontal logos"/&gt;
+&lt;gallery source="logos-horizontal" title="Horizontal logos"/&gt;
 ```
 
 </example>
@@ -231,6 +239,10 @@ Use `<color-grid source="…">` to render a palette of colour swatches. The `sou
 <preview>
 
 <color-grid source="brand" title="Brand colours" description="The primary palette used across all logo variants and UI components."/>
+
+<color-grid source="skin-tones" title="Skin tones" description="Inclusive skin tone palette for illustrated characters."/>
+
+<color-grid source="rainbow" title="Rainbow palette" description="Vibrant full-spectrum colours used in decorative contexts."/>
 
 </preview>
 

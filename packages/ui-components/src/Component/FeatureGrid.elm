@@ -64,7 +64,19 @@ viewFeature feature =
     case feature.href of
         Just url ->
             Html.a
-                [ Attr.href url, classes [ Tw.flex, Tw.flex_col, Tw.no_underline ] ]
+                [ Attr.href url
+                , classes
+                    [ Tw.flex
+                    , Tw.flex_col
+                    , Tw.no_underline
+                    , Tw.rounded_lg
+                    , Tw.p Th.s3
+                    , Bp.withVariant "motion-safe" [ Tw.transition_colors ]
+                    , Bp.hover [ TwEx.bg_brand_5 ]
+                    , Bp.focus [ Tw.outline_none ]
+                    , Bp.focus_visible [ Tw.ring_2, Tw.ring_offset_2, TwEx.ring_brand ]
+                    ]
+                ]
                 content
 
         Nothing ->

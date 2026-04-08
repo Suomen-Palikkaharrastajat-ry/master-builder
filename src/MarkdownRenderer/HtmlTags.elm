@@ -17,8 +17,6 @@ import Component.Stats as Stats
 import Component.Tag as Tag
 import Component.Timeline as Timeline
 import Component.Toast as Toast
-import DesignTokens.Guide.Colors as Colors
-import DesignTokens.Guide.Logos as Logos
 import FeatherIcons
 import Html exposing (Html)
 import Html.Attributes as Attr
@@ -109,7 +107,23 @@ htmlRenderer =
                 in
                 case href of
                     Just url ->
-                        Html.a ([ Attr.href url, classes [ Tw.flex, Tw.flex_col, Tw.no_underline ] ] ++ Helpers.externalLinkAttrs url) content
+                        Html.a
+                            ([ Attr.href url
+                             , classes
+                                [ Tw.flex
+                                , Tw.flex_col
+                                , Tw.no_underline
+                                , Tw.rounded_lg
+                                , Tw.p s3
+                                , Bp.withVariant "motion-safe" [ Tw.transition_colors ]
+                                , Bp.hover [ TwEx.bg_brand_5 ]
+                                , Bp.focus [ Tw.outline_none ]
+                                , Bp.focus_visible [ Tw.ring_2, Tw.ring_offset_2, TwEx.ring_brand ]
+                                ]
+                             ]
+                                ++ Helpers.externalLinkAttrs url
+                            )
+                            content
 
                     Nothing ->
                         Html.div [ classes [ Tw.flex, Tw.flex_col ] ] content
@@ -235,29 +249,82 @@ htmlRenderer =
             |> Markdown.Html.withAttribute "title"
             |> Markdown.Html.withOptionalAttribute "icon"
             |> Markdown.Html.withOptionalAttribute "image"
-        , -- <asset-gallery source="logos-square|logos-square-full|logos-horizontal" title="…" description="…"/>
-          Markdown.Html.tag "asset-gallery"
-            (\source title description _ ->
-                viewAssetGallery source title description
+        , -- <gallery title="…" description="…" columns="2|3|4|2-wide">…</gallery>
+          Markdown.Html.tag "gallery"
+            (\title description columns children ->
+                Gallery.view
+                    { title = title
+                    , description = description
+                    , columns = parseGalleryColumns columns
+                    , items = children
+                    }
             )
-            |> Markdown.Html.withAttribute "source"
-            |> Markdown.Html.withOptionalAttribute "title"
+            |> Markdown.Html.withAttribute "title"
             |> Markdown.Html.withOptionalAttribute "description"
-        , -- <color-grid source="brand|skin-tones|rainbow" title="…" description="…"/>
+            |> Markdown.Html.withOptionalAttribute "columns"
+        , -- <gallery-item id="…" description="…" ... />
+          Markdown.Html.tag "gallery-item"
+            (\id description theme animated withText bold highlight svg png webp gif _ ->
+                LogoCard.view
+                    { id = id
+                    , description = description
+                    , theme = Maybe.withDefault "light" theme
+                    , animated = parseBoolAttribute animated
+                    , withText = parseBoolAttribute withText
+                    , bold = parseBoolAttribute bold
+                    , highlight = parseBoolAttribute highlight
+                    , svgUrl = svg
+                    , pngUrl = png
+                    , webpUrl = webp
+                    , gifUrl = gif
+                    }
+            )
+            |> Markdown.Html.withAttribute "id"
+            |> Markdown.Html.withAttribute "description"
+            |> Markdown.Html.withOptionalAttribute "theme"
+            |> Markdown.Html.withOptionalAttribute "animated"
+            |> Markdown.Html.withOptionalAttribute "with-text"
+            |> Markdown.Html.withOptionalAttribute "bold"
+            |> Markdown.Html.withOptionalAttribute "highlight"
+            |> Markdown.Html.withOptionalAttribute "svg"
+            |> Markdown.Html.withOptionalAttribute "png"
+            |> Markdown.Html.withOptionalAttribute "webp"
+            |> Markdown.Html.withOptionalAttribute "gif"
+        , -- <color-grid title="…" description="…" columns="2|3|4">…</color-grid>
           Markdown.Html.tag "color-grid"
-            (\source title description _ ->
-                viewColorGrid source title description
+            (\title description columns children ->
+                Gallery.view
+                    { title = title
+                    , description = description
+                    , columns = parseGalleryColumns columns
+                    , items = children
+                    }
             )
-            |> Markdown.Html.withAttribute "source"
-            |> Markdown.Html.withOptionalAttribute "title"
+            |> Markdown.Html.withAttribute "title"
             |> Markdown.Html.withOptionalAttribute "description"
-        , -- <info-panel color="amber|blue|green|red" title="…">…</info-panel>
+            |> Markdown.Html.withOptionalAttribute "columns"
+        , -- <color-grid-item name="…" hex="#…" description="…" usage="a,b,c"/>
+          Markdown.Html.tag "color-grid-item"
+            (\name hex description usage _ ->
+                ColorSwatch.view
+                    { hex = hex
+                    , name = name
+                    , description = Maybe.withDefault "" description
+                    , usageTags = parseUsageTags usage
+                    }
+            )
+            |> Markdown.Html.withAttribute "name"
+            |> Markdown.Html.withAttribute "hex"
+            |> Markdown.Html.withOptionalAttribute "description"
+            |> Markdown.Html.withOptionalAttribute "usage"
+        , -- <info-panel color="amber|blue|green|red" title="…" icon="…">…</info-panel>
           Markdown.Html.tag "info-panel"
-            (\color title children ->
-                viewInfoPanel color title children
+            (\color title icon children ->
+                viewInfoPanel color title icon children
             )
             |> Markdown.Html.withOptionalAttribute "color"
             |> Markdown.Html.withOptionalAttribute "title"
+            |> Markdown.Html.withOptionalAttribute "icon"
         , -- <with-image src="…" alt="…" side="left|right" caption="…" maxwidth="lg|2xl|3xl|4xl">…</with-image>
           Markdown.Html.tag "with-image"
             (\src alt side caption maxwidth children ->
@@ -529,80 +596,84 @@ buttonLinkClasses variant =
            )
 
 
-viewAssetGallery : String -> Maybe String -> Maybe String -> Html msg
-viewAssetGallery source maybeTitle maybeDescription =
-    let
-        cols =
-            if source == "logos-horizontal" then
-                Gallery.TwoWide
+parseGalleryColumns : Maybe String -> Gallery.Columns
+parseGalleryColumns maybeColumns =
+    case maybeColumns of
+        Just "2" ->
+            Gallery.Two
 
-            else
-                Gallery.Four
-    in
-    Gallery.view
-        { title = Maybe.withDefault "" maybeTitle
-        , description = maybeDescription
-        , columns = cols
-        , items = List.map LogoCard.view (logoItemsFromSource source)
-        }
+        Just "3" ->
+            Gallery.Three
 
-
-logoItemsFromSource : String -> List LogoCard.LogoVariant
-logoItemsFromSource source =
-    case source of
-        "logos-square" ->
-            Logos.squareVariants
-
-        "logos-square-full" ->
-            Logos.squareFullVariants
-
-        "logos-horizontal" ->
-            Logos.horizontalVariants
+        Just "2-wide" ->
+            Gallery.TwoWide
 
         _ ->
-            []
+            Gallery.Four
 
 
-viewColorGrid : String -> Maybe String -> Maybe String -> Html msg
-viewColorGrid source maybeTitle maybeDescription =
-    Gallery.view
-        { title = Maybe.withDefault "" maybeTitle
-        , description = maybeDescription
-        , columns = Gallery.Four
-        , items = List.map ColorSwatch.view (colorItemsFromSource source)
-        }
+parseBoolAttribute : Maybe String -> Bool
+parseBoolAttribute maybeValue =
+    case maybeValue of
+        Just "true" ->
+            True
 
+        Just "1" ->
+            True
 
-colorItemsFromSource : String -> List ColorSwatch.ColorSwatchConfig
-colorItemsFromSource source =
-    case source of
-        "brand" ->
-            List.map (\c -> { hex = c.hex, name = c.name, description = c.description, usageTags = c.usage }) Colors.brandColors
-
-        "skin-tones" ->
-            List.map (\c -> { hex = c.hex, name = c.name, description = c.description, usageTags = [] }) Colors.skinTones
-
-        "rainbow" ->
-            List.map (\c -> { hex = c.hex, name = c.name, description = c.description, usageTags = [] }) Colors.rainbowColors
+        Just "yes" ->
+            True
 
         _ ->
-            []
+            False
 
 
-viewInfoPanel : Maybe String -> Maybe String -> List (Html msg) -> Html msg
-viewInfoPanel maybeColor maybeTitle children =
+parseUsageTags : Maybe String -> List String
+parseUsageTags maybeTags =
+    maybeTags
+        |> Maybe.map
+            (\tags ->
+                tags
+                    |> String.split ","
+                    |> List.map String.trim
+                    |> List.filter (\tag -> not (String.isEmpty tag))
+            )
+        |> Maybe.withDefault []
+
+
+viewInfoPanel : Maybe String -> Maybe String -> Maybe String -> List (Html msg) -> Html msg
+viewInfoPanel maybeColor maybeTitle maybeIcon children =
     let
         ( bgClass, borderClass, textClass ) =
             infoPanelColors (Maybe.withDefault "amber" maybeColor)
+
+        iconEl =
+            case maybeIcon of
+                Just iconName ->
+                    resolveIcon iconName
+                        |> FeatherIcons.withSize 18
+                        |> FeatherIcons.toHtml [ Attr.attribute "aria-hidden" "true" ]
+
+                Nothing ->
+                    Html.text ""
+
+        headerEl t =
+            Html.div [ classes [ Tw.flex, Tw.items_center, Tw.gap s2, Tw.font_semibold ] ]
+                [ iconEl, Html.span [] [ Html.text t ] ]
     in
     Html.div
         [ classes [ TwEx.not_prose, bgClass, Tw.border, borderClass, Tw.rounded_lg, Tw.p s4, Tw.text_sm, textClass, TwEx.space_y s2 ] ]
         (case maybeTitle of
             Just t ->
-                Html.p [ classes [ Tw.font_semibold ] ] [ Html.text t ] :: children
+                headerEl t :: children
 
             Nothing ->
-                children
+                case maybeIcon of
+                    Just _ ->
+                        Html.div [ classes [ Tw.flex, Tw.items_center ] ] [ iconEl ] :: children
+
+                    Nothing ->
+                        children
         )
 
 
@@ -687,6 +758,90 @@ resolveIcon name =
 
         "trending-up" ->
             FeatherIcons.trendingUp
+
+        "alert-circle" ->
+            FeatherIcons.alertCircle
+
+        "alert-triangle" ->
+            FeatherIcons.alertTriangle
+
+        "bell" ->
+            FeatherIcons.bell
+
+        "bookmark" ->
+            FeatherIcons.bookmark
+
+        "database" ->
+            FeatherIcons.database
+
+        "download" ->
+            FeatherIcons.download
+
+        "external-link" ->
+            FeatherIcons.externalLink
+
+        "eye" ->
+            FeatherIcons.eye
+
+        "file" ->
+            FeatherIcons.file
+
+        "hash" ->
+            FeatherIcons.hash
+
+        "heart" ->
+            FeatherIcons.heart
+
+        "home" ->
+            FeatherIcons.home
+
+        "info" ->
+            FeatherIcons.info
+
+        "key" ->
+            FeatherIcons.key
+
+        "link" ->
+            FeatherIcons.link
+
+        "mail" ->
+            FeatherIcons.mail
+
+        "message-circle" ->
+            FeatherIcons.messageCircle
+
+        "search" ->
+            FeatherIcons.search
+
+        "send" ->
+            FeatherIcons.send
+
+        "server" ->
+            FeatherIcons.server
+
+        "settings" ->
+            FeatherIcons.settings
+
+        "tag" ->
+            FeatherIcons.tag
+
+        "terminal" ->
+            FeatherIcons.terminal
+
+        "tool" ->
+            FeatherIcons.tool
+
+        "trash" ->
+            FeatherIcons.trash
+
+        "upload" ->
+            FeatherIcons.upload
+
+        "user" ->
+            FeatherIcons.user
+
+        "x-circle" ->
+            FeatherIcons.xCircle
 
         _ ->
             FeatherIcons.circle

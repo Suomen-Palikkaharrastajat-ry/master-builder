@@ -114,7 +114,7 @@ Use `<button-link href="…" variant="…" label="…"/>` to render a styled anc
 
 ## Feature Grid
 
-Use `<feature-grid columns="2|3">` to wrap `<feature>` items in a responsive grid. The optional `columns` attribute accepts `2`, `3`, or `4` (default is `3`). The `icon` attribute accepts a Feather icon name (`zap`, `check`, `globe`, `edit`, `layers`, `git-branch`, `rss`, `calendar`, `shield`, `lock`, `code`, `cpu`, `package`, `trending-up`, etc.). The optional `href` attribute wraps the feature in a link.
+Use `<feature-grid columns="2|3">` to wrap `<feature>` items in a responsive grid. The optional `columns` attribute accepts `2`, `3`, or `4` (default is `3`). The `icon` attribute accepts a Feather icon name (`zap`, `check`, `globe`, `edit`, `layers`, `git-branch`, `rss`, `calendar`, `shield`, `lock`, `code`, `cpu`, `package`, `trending-up`, `info`, `alert-triangle`, `settings`, `user`, `server`, `terminal`, etc.). The optional `href` attribute wraps the feature in a link — linked features gain a hover background and keyboard focus ring automatically.
 
 <tab-group name="feature-grid">
 
