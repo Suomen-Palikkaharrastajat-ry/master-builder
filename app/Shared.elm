@@ -4,7 +4,6 @@ module Shared exposing (Data, Model, Msg(..), SharedMsg(..), template)
 -}
 
 import BackendTask exposing (BackendTask)
-import BackendTask.File as File
 import BackendTask.Glob as Glob
 import Browser.Events
 import Component.Footer as Footer
@@ -12,6 +11,7 @@ import Component.MobileDrawer as MobileDrawer
 import Component.Navbar as Navbar
 import Config exposing (Config)
 import ContentDir
+import ContentMarkdown
 import Effect exposing (Effect)
 import FatalError exposing (FatalError)
 import FeatherIcons
@@ -142,12 +142,10 @@ navItemsTask =
                     |> BackendTask.andThen
                         (\slugs ->
                             slugs
+                                |> List.filter (\slug -> not (ContentMarkdown.isPartialSlug slug))
                                 |> List.map
                                     (\slug ->
-                                        File.bodyWithFrontmatter
-                                            (\_ -> Frontmatter.decoder)
-                                            (dir ++ "/" ++ slug ++ ".md")
-                                            |> BackendTask.allowFatal
+                                        ContentMarkdown.loadFrontmatter (dir ++ "/" ++ slug ++ ".md")
                                     )
                                 |> BackendTask.combine
                         )
@@ -304,6 +302,7 @@ viewMobileDrawer currentPath model toMsg navItems =
         isActive slug =
             if slug == "index" then
                 UrlPath.toRelative currentPath == ""
+
             else
                 UrlPath.toRelative currentPath == slug
 

@@ -4,13 +4,12 @@ module Route.Index exposing (ActionData, Data, Model, Msg, route)
 -}
 
 import BackendTask exposing (BackendTask)
-import BackendTask.File as File
 import ContentDir
+import ContentMarkdown
 import FatalError exposing (FatalError)
 import Frontmatter exposing (Frontmatter)
 import Head
 import Head.Seo as Seo
-import Json.Decode as Decode
 import MarkdownRenderer
 import Metadata
 import PagesMsg exposing (PagesMsg)
@@ -55,13 +54,7 @@ data =
     ContentDir.backendTask
         |> BackendTask.andThen
             (\dir ->
-                File.bodyWithFrontmatter
-                    (\body ->
-                        Frontmatter.decoder
-                            |> Decode.map (\fm -> { frontmatter = fm, body = body })
-                    )
-                    (dir ++ "/index.md")
-                    |> BackendTask.allowFatal
+                ContentMarkdown.loadPage dir (dir ++ "/index.md")
             )
 
 

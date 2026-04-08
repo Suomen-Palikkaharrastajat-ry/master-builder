@@ -19,8 +19,11 @@ import Route exposing (Route)
 import UrlPath
 
 
+
 -- Must match [site].url in content/config.toml.
 -- Manifest.generator requires a plain String so this cannot be read from config at build time.
+
+
 siteUrl : String
 siteUrl =
     "https://logo.palikkaharrastajat.fi"
@@ -111,7 +114,14 @@ hexToRgb : String -> Maybe ( Int, Int, Int )
 hexToRgb hex =
     let
         normalized =
-            String.dropLeft (if String.startsWith "#" hex then 1 else 0) hex
+            String.dropLeft
+                (if String.startsWith "#" hex then
+                    1
+
+                 else
+                    0
+                )
+                hex
     in
     if String.length normalized == 6 then
         Maybe.map3

@@ -4,16 +4,15 @@ module Route.Blog.Slug_ exposing (ActionData, Data, Model, Msg, route)
 -}
 
 import BackendTask exposing (BackendTask)
-import BackendTask.File as File
 import BackendTask.Glob as Glob
 import Component.Breadcrumb as Breadcrumb
 import ContentDir
+import ContentMarkdown
 import FatalError exposing (FatalError)
 import Frontmatter exposing (Frontmatter)
 import Head
 import Head.Seo as Seo
 import Html
-import Json.Decode as Decode
 import MarkdownRenderer
 import Metadata
 import PagesMsg exposing (PagesMsg)
@@ -64,6 +63,7 @@ pages =
                     |> Glob.capture Glob.wildcard
                     |> Glob.match (Glob.literal ".md")
                     |> Glob.toBackendTask
+                    |> BackendTask.map (List.filter (\p -> not (ContentMarkdown.isPartialSlug p.slug)))
             )
 
 
@@ -72,13 +72,7 @@ data routeParams =
     ContentDir.backendTask
         |> BackendTask.andThen
             (\dir ->
-                File.bodyWithFrontmatter
-                    (\body ->
-                        Frontmatter.decoder
-                            |> Decode.map (\fm -> { frontmatter = fm, body = body })
-                    )
-                    (dir ++ "/blog/" ++ routeParams.slug ++ ".md")
-                    |> BackendTask.allowFatal
+                ContentMarkdown.loadPage dir (dir ++ "/blog/" ++ routeParams.slug ++ ".md")
             )
 
 
