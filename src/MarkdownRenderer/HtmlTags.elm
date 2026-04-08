@@ -273,7 +273,7 @@ htmlRenderer =
                     imgBlock =
                         case caption of
                             Just cap ->
-                                Html.figure [ classes [ Tw.m s1 ] ]
+                                Html.figure [ classes [ Tw.m Th.s0 ] ]
                                     [ imgEl
                                     , Html.figcaption
                                         [ classes [ Tw.mt s2, Tw.type_caption, Tw.text_center, Tw.text_simple TC.textMuted ] ]

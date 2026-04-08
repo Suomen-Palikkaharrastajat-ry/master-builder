@@ -148,7 +148,7 @@ Use `<with-image src="…">` to place an image beside a block of content in a tw
 
 <preview>
 
-<with-image src="/logo-blue.svg" alt="Logo on a light background" side="right">
+<with-image src="/logo/square/svg/square-smile.svg" alt="Square smile logo" side="right">
 
 ### Image on the right
 
@@ -156,7 +156,7 @@ Pair an image with descriptive copy to create rich editorial layouts without wri
 
 </with-image>
 
-<with-image src="/logo-blue.svg" alt="Logo on a light background" side="left" caption="The logo on a light background." maxwidth="3xl">
+<with-image src="/logo/square/svg/square-smile.svg" alt="Square smile logo" side="left" caption="Square smile logo variant." maxwidth="3xl">
 
 ### Image on the left, with caption and max-width
 
