@@ -142,7 +142,7 @@ A note without a title.
 
 ## Image + Text
 
-Use `<with-image src="…">` to place an image beside a block of content in a two-column layout. The `side` attribute controls which side the image appears on — `right` (default) or `left`. Use `alt` for an accessible description.
+Use `<with-image src="…">` to place an image beside a block of content in a two-column layout. The `side` attribute controls which side the image appears on — `right` (default) or `left`. Use `alt` for an accessible description. The optional `caption` attribute renders a centred caption below the image. The optional `maxwidth` attribute constrains the component width — accepts `lg`, `2xl`, `3xl`, or `4xl`.
 
 <tab-group name="with-image">
 
@@ -156,11 +156,11 @@ Pair an image with descriptive copy to create rich editorial layouts without wri
 
 </with-image>
 
-<with-image src="/logo-blue.svg" alt="Logo on a light background" side="left">
+<with-image src="/logo-blue.svg" alt="Logo on a light background" side="left" caption="The logo on a light background." maxwidth="3xl">
 
-### Image on the left
+### Image on the left, with caption and max-width
 
-Flip the image to the left by setting `side="left"`. Alternate the layout across sections to create visual rhythm on long-form pages.
+Use `caption` to add a label below the image. Use `maxwidth` to stop the layout from stretching to full container width — useful for portrait images or tighter editorial compositions.
 
 </with-image>
 
@@ -174,6 +174,16 @@ Flip the image to the left by setting `side="left"`. Alternate the layout across
 ### Your heading
 
 Your description text goes here.
+
+&lt;/with-image&gt;
+
+&lt;with-image src="/images/photo.jpg" alt="Photo" side="left"
+  caption="Optional caption below the image."
+  maxwidth="3xl"&gt;
+
+### Constrained width
+
+Content here.
 
 &lt;/with-image&gt;
 ```
