@@ -35,6 +35,7 @@ module TailwindExtra exposing
     , li_gap_2
     , li_items_center
     , max_w_2xl
+    , max_w_3xl
     , max_w_4xl
     , max_w_5xl
     , max_w_7xl
@@ -133,6 +134,13 @@ divide_color color =
 max_w_2xl : Tailwind
 max_w_2xl =
     Tailwind "max-w-2xl"
+
+
+{-| Caps width at Tailwind's `3xl` container size (48 rem / 768 px).
+-}
+max_w_3xl : Tailwind
+max_w_3xl =
+    Tailwind "max-w-3xl"
 
 
 {-| Caps width at Tailwind's `4xl` container size (56 rem / 896 px).

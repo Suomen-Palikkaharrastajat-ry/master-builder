@@ -258,9 +258,9 @@ htmlRenderer =
             )
             |> Markdown.Html.withOptionalAttribute "color"
             |> Markdown.Html.withOptionalAttribute "title"
-        , -- <with-image src="…" alt="…" side="left|right">…</with-image>
+        , -- <with-image src="…" alt="…" side="left|right" caption="…" maxwidth="lg|2xl|3xl|4xl">…</with-image>
           Markdown.Html.tag "with-image"
-            (\src alt side children ->
+            (\src alt side caption maxwidth children ->
                 let
                     imgEl =
                         Html.img
@@ -270,21 +270,53 @@ htmlRenderer =
                             ]
                             []
 
+                    imgBlock =
+                        case caption of
+                            Just cap ->
+                                Html.figure [ classes [ Tw.m s1 ] ]
+                                    [ imgEl
+                                    , Html.figcaption
+                                        [ classes [ Tw.mt s2, Tw.type_caption, Tw.text_center, Tw.text_simple TC.textMuted ] ]
+                                        [ Html.text cap ]
+                                    ]
+
+                            Nothing ->
+                                imgEl
+
                     isRight =
                         Maybe.withDefault "right" side == "right"
+
+                    maxWidthTw =
+                        case maxwidth of
+                            Just "lg" ->
+                                [ TwEx.max_w_lg, Tw.mx_auto ]
+
+                            Just "2xl" ->
+                                [ TwEx.max_w_2xl, Tw.mx_auto ]
+
+                            Just "3xl" ->
+                                [ TwEx.max_w_3xl, Tw.mx_auto ]
+
+                            Just "4xl" ->
+                                [ TwEx.max_w_4xl, Tw.mx_auto ]
+
+                            _ ->
+                                []
                 in
                 Html.div
-                    [ classes [ TwEx.not_prose, Tw.grid, Tw.grid_cols_1, Bp.md [ Tw.grid_cols_2 ], Tw.gap s8, Tw.items_center, Tw.my s8 ] ]
+                    [ classes ([ TwEx.not_prose, Tw.grid, Tw.grid_cols_1, Bp.md [ Tw.grid_cols_2 ], Tw.gap s8, Tw.items_center, Tw.my s8 ] ++ maxWidthTw) ]
                     (if isRight then
-                        [ Html.div [] children, Html.div [] [ imgEl ] ]
+                        [ Html.div [] children, Html.div [] [ imgBlock ] ]
 
                      else
-                        [ Html.div [] [ imgEl ], Html.div [] children ]
+                        [ Html.div [] [ imgBlock ], Html.div [] children ]
                     )
             )
             |> Markdown.Html.withAttribute "src"
             |> Markdown.Html.withOptionalAttribute "alt"
             |> Markdown.Html.withOptionalAttribute "side"
+            |> Markdown.Html.withOptionalAttribute "caption"
+            |> Markdown.Html.withOptionalAttribute "maxwidth"
         , -- <spinner size="small|medium|large" label="…"/>
           Markdown.Html.tag "spinner"
             (\size label _ ->
