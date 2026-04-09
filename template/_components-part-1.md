@@ -1,6 +1,6 @@
 ## Callout / Alert
 
-Use `<callout type="…">` for attention-grabbing notices. The `type` attribute accepts `info`, `success`, `warning`, or `error`.
+Use `<callout type="…">` for attention-grabbing notices. The `type` attribute accepts `info`, `success`, `warning`, or `error`. The optional `icon` attribute overrides the default type icon with any Feather icon name (`star`, `zap`, `heart`, `bell`, `book`, `gift`, `key`, `map`, `phone`, `shield`, `tool`, `trash`, `wifi`, etc.).
 
 <tab-group name="callout">
 
@@ -42,6 +42,8 @@ This is an **error** callout. Use it to call out a known problem or breaking cha
 &lt;callout type="warning"&gt;Your warning message here.&lt;/callout&gt;
 
 &lt;callout type="error"&gt;Your error message here.&lt;/callout&gt;
+
+&lt;callout type="info" icon="star"&gt;Custom icon — overrides the default info icon.&lt;/callout&gt;
 ```
 
 </example>
@@ -186,7 +188,7 @@ Another feature description. No href — renders as a plain div.
 
 ## Pricing Table
 
-Use `<pricing-table>` to wrap `<pricing-tier>` cards in a grid. Each tier has required `name` and `price` attributes and an optional `period`.
+Use `<pricing-table>` to wrap `<pricing-tier>` cards in a grid. Each tier has required `name` and `price` attributes, an optional `period`, and an optional `href` — linked tiers gain a hover highlight and keyboard focus ring automatically.
 
 <tab-group name="pricing">
 
