@@ -19,7 +19,7 @@ type AlertType
     | Error
 
 
-view : { alertType : AlertType, title : Maybe String, body : List (Html msg), onDismiss : Maybe msg } -> Html msg
+view : { alertType : AlertType, title : Maybe String, body : List (Html msg), onDismiss : Maybe msg, customIcon : Maybe (Html msg) } -> Html msg
 view config =
     Html.div
         (List.filterMap identity
@@ -31,7 +31,7 @@ view config =
             [ Just
                 (Html.div [ classes [ Tw.flex ] ]
                     [ Html.div [ classes [ Tw.shrink_0, Tw.leading_none ] ]
-                        [ icon config.alertType ]
+                        [ Maybe.withDefault (icon config.alertType) config.customIcon ]
                     , Html.div [ classes [ Tw.ml Th.s3 ] ]
                         (List.filterMap identity
                             [ Maybe.map

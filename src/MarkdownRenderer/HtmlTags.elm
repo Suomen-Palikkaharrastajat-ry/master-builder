@@ -32,17 +32,26 @@ import TailwindTokens as TC
 htmlRenderer : Markdown.Html.Renderer (List (Html msg) -> Html msg)
 htmlRenderer =
     Markdown.Html.oneOf
-        [ -- <callout type="info|success|warning|error">…</callout>
+        [ -- <callout type="info|success|warning|error" icon="…">…</callout>
           Markdown.Html.tag "callout"
-            (\calloutType children ->
+            (\calloutType iconName children ->
                 Alert.view
                     { alertType = parseAlertType calloutType
                     , title = Nothing
                     , body = children
                     , onDismiss = Nothing
+                    , customIcon =
+                        Maybe.map
+                            (\name ->
+                                resolveIcon name
+                                    |> FeatherIcons.withSize 18
+                                    |> FeatherIcons.toHtml [ Attr.attribute "aria-hidden" "true" ]
+                            )
+                            iconName
                     }
             )
             |> Markdown.Html.withAttribute "type"
+            |> Markdown.Html.withOptionalAttribute "icon"
         , -- <hero title="…" subtitle="…">…</hero>
           Markdown.Html.tag "hero"
             (\title subtitle children ->
@@ -139,51 +148,79 @@ htmlRenderer =
                     children
             )
             |> Markdown.Html.withOptionalAttribute "highlighted"
-        , -- <pricing-tier name="…" price="…" period="…">…</pricing-tier>
+        , -- <pricing-tier name="…" price="…" period="…" href="…">…</pricing-tier>
           Markdown.Html.tag "pricing-tier"
-            (\name price period children ->
-                Html.div
-                    [ classes [ Tw.rounded_2xl, Tw.border, Tw.border_simple TC.borderDefault, Tw.bg_simple white, Tw.shadow_sm, Tw.overflow_hidden ] ]
-                    [ Html.div [ classes [ Tw.p s8 ] ]
-                        [ Html.h3
-                            [ classes [ Tw.type_h4, Tw.text_simple TC.textPrimary ] ]
-                            [ Html.text name ]
-                        , Html.div [ classes [ Tw.mt s4, Tw.flex, Tw.items_baseline, Tw.gap_x s2 ] ]
-                            [ Html.span
-                                [ classes [ Tw.type_display, Tw.tracking_tight, Tw.text_simple TC.textPrimary ] ]
-                                [ Html.text price ]
-                            , case period of
-                                Just p ->
-                                    Html.span
-                                        [ classes [ Tw.type_body_small, Tw.text_simple TC.textMuted ] ]
-                                        [ Html.text ("/ " ++ p) ]
+            (\name price period href children ->
+                let
+                    inner =
+                        Html.div [ classes [ Tw.p s8 ] ]
+                            [ Html.h3
+                                [ classes [ Tw.type_h4, Tw.text_simple TC.textPrimary ] ]
+                                [ Html.text name ]
+                            , Html.div [ classes [ Tw.mt s4, Tw.flex, Tw.items_baseline, Tw.gap_x s2 ] ]
+                                [ Html.span
+                                    [ classes [ Tw.type_display, Tw.tracking_tight, Tw.text_simple TC.textPrimary ] ]
+                                    [ Html.text price ]
+                                , case period of
+                                    Just p ->
+                                        Html.span
+                                            [ classes [ Tw.type_body_small, Tw.text_simple TC.textMuted ] ]
+                                            [ Html.text ("/ " ++ p) ]
 
-                                Nothing ->
-                                    Html.text ""
-                            ]
-                        , Html.div
-                            [ classes
-                                [ Tw.mt s8
-                                , Tw.type_caption
-                                , Tw.text_simple TC.textPrimary
-                                , TwEx.ul_list_none
-                                , TwEx.ul_pl_0
-                                , TwEx.ul_my_0
-                                , TwEx.ul_space_y_2
-                                , TwEx.li_flex
-                                , TwEx.li_items_center
-                                , TwEx.li_gap_2
-                                , TwEx.li_before_content_check
-                                , TwEx.li_before_text_brand_yellow
+                                    Nothing ->
+                                        Html.text ""
                                 ]
+                            , Html.div
+                                [ classes
+                                    [ Tw.mt s8
+                                    , Tw.type_caption
+                                    , Tw.text_simple TC.textPrimary
+                                    , TwEx.ul_list_none
+                                    , TwEx.ul_pl_0
+                                    , TwEx.ul_my_0
+                                    , TwEx.ul_space_y_2
+                                    , TwEx.li_flex
+                                    , TwEx.li_items_center
+                                    , TwEx.li_gap_2
+                                    , TwEx.li_before_content_check
+                                    , TwEx.li_before_text_brand_yellow
+                                    ]
+                                ]
+                                children
                             ]
-                            children
-                        ]
-                    ]
+                in
+                case href of
+                    Just url ->
+                        Html.a
+                            ([ Attr.href url
+                             , classes
+                                [ Tw.block
+                                , Tw.no_underline
+                                , Tw.rounded_2xl
+                                , Tw.border
+                                , Tw.border_simple TC.borderDefault
+                                , Tw.bg_simple white
+                                , Tw.shadow_sm
+                                , Tw.overflow_hidden
+                                , Bp.withVariant "motion-safe" [ Tw.transition_colors ]
+                                , Bp.hover [ TwEx.bg_brand_5, Tw.border_simple TC.brand ]
+                                , Bp.focus [ Tw.outline_none ]
+                                , Bp.focus_visible [ Tw.ring_2, Tw.ring_offset_2, TwEx.ring_brand ]
+                                ]
+                             ]
+                                ++ Helpers.externalLinkAttrs url
+                            )
+                            [ inner ]
+
+                    Nothing ->
+                        Html.div
+                            [ classes [ Tw.rounded_2xl, Tw.border, Tw.border_simple TC.borderDefault, Tw.bg_simple white, Tw.shadow_sm, Tw.overflow_hidden ] ]
+                            [ inner ]
             )
             |> Markdown.Html.withAttribute "name"
             |> Markdown.Html.withAttribute "price"
             |> Markdown.Html.withOptionalAttribute "period"
+            |> Markdown.Html.withOptionalAttribute "href"
         , -- <button-link href="…" variant="primary|secondary|ghost" label="…"/>
           Markdown.Html.tag "button-link"
             (\href variant label _ ->
