@@ -7,7 +7,7 @@ import BackendTask exposing (BackendTask)
 import BackendTask.Glob as Glob
 import Component.Breadcrumb as Breadcrumb
 import ContentDir
-import ContentMarkdown
+import ContentMarkdown exposing (TocNode)
 import FatalError exposing (FatalError)
 import Frontmatter exposing (Frontmatter)
 import Head
@@ -37,6 +37,7 @@ type alias RouteParams =
 type alias Data =
     { frontmatter : Frontmatter
     , body : String
+    , childPages : List TocNode
     }
 
 
@@ -59,12 +60,23 @@ pages =
     ContentDir.backendTask
         |> BackendTask.andThen
             (\dir ->
-                Glob.succeed (\slug -> { slug = slug })
-                    |> Glob.match (Glob.literal (dir ++ "/"))
-                    |> Glob.capture Glob.wildcard
-                    |> Glob.match (Glob.literal ".md")
-                    |> Glob.toBackendTask
-                    |> BackendTask.map (List.filter (\p -> p.slug /= "index" && not (ContentMarkdown.isPartialSlug p.slug)))
+                let
+                    flatPages =
+                        Glob.succeed (\slug -> { slug = slug })
+                            |> Glob.match (Glob.literal (dir ++ "/"))
+                            |> Glob.capture Glob.wildcard
+                            |> Glob.match (Glob.literal ".md")
+                            |> Glob.toBackendTask
+                            |> BackendTask.map (List.filter (\p -> p.slug /= "index" && not (ContentMarkdown.isPartialSlug p.slug)))
+
+                    sectionIndexes =
+                        Glob.succeed (\section -> { slug = section })
+                            |> Glob.match (Glob.literal (dir ++ "/"))
+                            |> Glob.capture Glob.wildcard
+                            |> Glob.match (Glob.literal "/index.md")
+                            |> Glob.toBackendTask
+                in
+                BackendTask.map2 (++) flatPages sectionIndexes
             )
 
 
@@ -73,7 +85,18 @@ data routeParams =
     ContentDir.backendTask
         |> BackendTask.andThen
             (\dir ->
-                ContentMarkdown.loadPage dir (dir ++ "/" ++ routeParams.slug ++ ".md")
+                ContentMarkdown.loadPageOrSectionIndex dir routeParams.slug
+                    |> BackendTask.andThen
+                        (\pageData ->
+                            ContentMarkdown.loadTocTree dir routeParams.slug
+                                |> BackendTask.map
+                                    (\tree ->
+                                        { frontmatter = pageData.frontmatter
+                                        , body = pageData.body
+                                        , childPages = tree
+                                        }
+                                    )
+                        )
             )
 
 
@@ -149,7 +172,12 @@ view :
 view app _ =
     { title = app.data.frontmatter.title ++ " — " ++ app.sharedData.config.site.title
     , body =
-        [ Breadcrumb.viewBack { label = "Etusivulle", href = "/" }
-        , MarkdownRenderer.renderMarkdown app.data.body
+        [ Breadcrumb.view
+            [ { label = "Etusivu", href = Just "/" }
+            , { label = app.data.frontmatter.title, href = Nothing }
+            ]
+        , MarkdownRenderer.renderMarkdown
+            { childPages = app.data.childPages, sectionSlug = Just app.routeParams.slug }
+            app.data.body
         ]
     }

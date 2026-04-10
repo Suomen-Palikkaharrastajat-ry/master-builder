@@ -148,7 +148,10 @@ view :
 view app _ =
     { title = app.data.frontmatter.title ++ " — " ++ app.sharedData.config.site.title
     , body =
-        [ Breadcrumb.viewBack { label = "Etusivulle", href = "/" }
-        , MarkdownRenderer.renderMarkdown app.data.body
+        [ Breadcrumb.view
+            [ { label = "Etusivu", href = Just "/" }
+            , { label = app.data.frontmatter.title, href = Nothing }
+            ]
+        , MarkdownRenderer.renderMarkdown { childPages = [], sectionSlug = Nothing } app.data.body
         ]
     }

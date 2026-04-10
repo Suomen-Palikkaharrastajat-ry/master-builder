@@ -27,7 +27,7 @@ import Route exposing (Route(..))
 import SharedTemplate exposing (SharedTemplate)
 import Tailwind as Tw exposing (classes)
 import Tailwind.Breakpoints as Bp
-import Tailwind.Theme exposing (s0, s1, s10, s14, s2, s4, s6, white)
+import Tailwind.Theme exposing (s0, s1, s10, s14, s2, s4, s6, s8, white)
 import TailwindExtra as TwEx
 import TailwindTokens as TC
 import UrlPath exposing (UrlPath)
@@ -47,7 +47,7 @@ template =
 
 type alias NavItem =
     { title : String
-    , slug : String
+    , path : String
     , order : Int
     , mobileOnly : Bool
     }
@@ -134,28 +134,69 @@ navItemsTask =
     ContentDir.backendTask
         |> BackendTask.andThen
             (\dir ->
-                Glob.succeed identity
-                    |> Glob.match (Glob.literal (dir ++ "/"))
-                    |> Glob.capture Glob.wildcard
-                    |> Glob.match (Glob.literal ".md")
-                    |> Glob.toBackendTask
-                    |> BackendTask.andThen
-                        (\slugs ->
-                            slugs
-                                |> List.filter (\slug -> not (ContentMarkdown.isPartialSlug slug))
-                                |> List.map
-                                    (\slug ->
-                                        ContentMarkdown.loadFrontmatter (dir ++ "/" ++ slug ++ ".md")
-                                    )
-                                |> BackendTask.combine
-                        )
+                let
+                    flatFrontmatters =
+                        Glob.succeed identity
+                            |> Glob.match (Glob.literal (dir ++ "/"))
+                            |> Glob.capture Glob.wildcard
+                            |> Glob.match (Glob.literal ".md")
+                            |> Glob.toBackendTask
+                            |> BackendTask.andThen
+                                (\slugs ->
+                                    slugs
+                                        |> List.filter (\slug -> not (ContentMarkdown.isPartialSlug slug))
+                                        |> List.map
+                                            (\slug ->
+                                                ContentMarkdown.loadFrontmatter (dir ++ "/" ++ slug ++ ".md")
+                                                    |> BackendTask.map
+                                                        (\fm ->
+                                                            { frontmatter = fm
+                                                            , path =
+                                                                if slug == "index" then
+                                                                    "/"
+
+                                                                else
+                                                                    "/" ++ slug
+                                                            }
+                                                        )
+                                            )
+                                        |> BackendTask.combine
+                                )
+
+                    sectionFrontmatters =
+                        Glob.succeed identity
+                            |> Glob.match (Glob.literal (dir ++ "/"))
+                            |> Glob.capture Glob.wildcard
+                            |> Glob.match (Glob.literal "/index.md")
+                            |> Glob.toBackendTask
+                            |> BackendTask.andThen
+                                (\sections ->
+                                    sections
+                                        |> List.map
+                                            (\section ->
+                                                ContentMarkdown.loadFrontmatter (dir ++ "/" ++ section ++ "/index.md")
+                                                    |> BackendTask.map
+                                                        (\fm ->
+                                                            { frontmatter = fm
+                                                            , path = "/" ++ section
+                                                            }
+                                                        )
+                                            )
+                                        |> BackendTask.combine
+                                )
+                in
+                BackendTask.map2 (++) flatFrontmatters sectionFrontmatters
             )
         |> BackendTask.map
-            (List.filter (\fm -> fm.nav /= NavHidden)
+            (List.filter (\item -> item.frontmatter.nav /= NavHidden)
                 >> List.map
-                    (\fm ->
+                    (\item ->
+                        let
+                            fm =
+                                item.frontmatter
+                        in
                         { title = Maybe.withDefault fm.title fm.navTitle
-                        , slug = fm.slug
+                        , path = item.path
                         , order = fm.order
                         , mobileOnly = fm.nav == NavMobileOnly
                         }
@@ -184,31 +225,60 @@ view sharedData page model toMsg pageView =
         config =
             sharedData.config
 
+        isCompact =
+            config.navbar.variant == "compact"
+
         logoHtml =
-            Html.a
-                [ Attr.href "/"
-                , classes [ Bp.focus [ Tw.outline_none, Tw.ring_2, TwEx.ring_brand_yellow ], Tw.rounded ]
-                , Html.Events.onClick (toMsg (SharedMsg CloseMenu))
-                ]
-                [ Html.node "picture"
-                    []
-                    [ Html.node "source"
-                        [ Attr.attribute "media" "(min-width: 640px)"
-                        , Attr.attribute "srcset" config.branding.logoDark
-                        ]
-                        []
-                    , Html.img
-                        [ Attr.src config.branding.logoLightMobile
-                        , Attr.alt config.branding.logoAlt
-                        , classes [ Tw.h s10, Bp.sm [ Tw.h s14 ] ]
-                        ]
-                        []
+            if isCompact then
+                Html.a
+                    [ Attr.href "/"
+                    , classes [ Tw.flex, Tw.items_center, Tw.gap s2, Bp.focus [ Tw.outline_none, Tw.ring_2, TwEx.ring_brand_yellow ], Tw.rounded ]
+                    , Html.Events.onClick (toMsg (SharedMsg CloseMenu))
                     ]
-                ]
+                    [ Html.img
+                        [ Attr.src config.branding.logoSquare
+                        , Attr.alt ""
+                        , Attr.attribute "aria-hidden" "true"
+                        , classes [ Tw.h s8, Tw.w s8 ]
+                        ]
+                        []
+                    , Html.span
+                        [ classes [ Tw.type_h4, Tw.text_simple white ] ]
+                        [ Html.text config.site.title ]
+                    ]
+
+            else
+                Html.a
+                    [ Attr.href "/"
+                    , classes [ Bp.focus [ Tw.outline_none, Tw.ring_2, TwEx.ring_brand_yellow ], Tw.rounded ]
+                    , Html.Events.onClick (toMsg (SharedMsg CloseMenu))
+                    ]
+                    [ Html.node "picture"
+                        []
+                        [ Html.node "source"
+                            [ Attr.attribute "media" "(min-width: 640px)"
+                            , Attr.attribute "srcset" config.branding.logoDark
+                            ]
+                            []
+                        , Html.img
+                            [ Attr.src config.branding.logoLightMobile
+                            , Attr.alt config.branding.logoAlt
+                            , classes [ Tw.h s10, Bp.sm [ Tw.h s14 ] ]
+                            ]
+                            []
+                        ]
+                    ]
+
+        hamburgerBreakpointHidden =
+            if isCompact then
+                Bp.md [ Tw.hidden ]
+
+            else
+                Bp.sm [ Tw.hidden ]
 
         hamburgerHtml =
             Html.button
-                [ classes [ Bp.sm [ Tw.hidden ], Tw.text_simple white, Tw.p s2, Tw.ml s2, Tw.rounded, Bp.focus [ Tw.outline_none, Tw.ring_2, TwEx.ring_brand_yellow ], Tw.cursor_pointer ]
+                [ classes [ hamburgerBreakpointHidden, Tw.text_simple white, Tw.p s2, Tw.ml s2, Tw.rounded, Bp.focus [ Tw.outline_none, Tw.ring_2, TwEx.ring_brand_yellow ], Tw.cursor_pointer ]
                 , Html.Events.onClick (toMsg (SharedMsg ToggleMenu))
                 , Attr.attribute "aria-label"
                     (if model.menuOpen then
@@ -233,18 +303,29 @@ view sharedData page model toMsg pageView =
                     FeatherIcons.menu |> FeatherIcons.withSize 24 |> FeatherIcons.toHtml []
                 ]
 
+        isActivePath : String -> Bool
+        isActivePath path =
+            if path == "/" then
+                UrlPath.toRelative page.path == ""
+
+            else
+                let
+                    currentPathStr =
+                        UrlPath.toRelative page.path
+
+                    relativePath =
+                        String.dropLeft 1 path
+                in
+                currentPathStr == relativePath || String.startsWith (relativePath ++ "/") currentPathStr
+
         navLinks =
             sharedData.navItems
                 |> List.map
                     (\item ->
                         { label = item.title
-                        , href =
-                            if item.slug == "index" then
-                                "/"
-
-                            else
-                                "/" ++ item.slug
+                        , href = item.path
                         , mobileOnly = item.mobileOnly
+                        , isActive = isActivePath item.path
                         }
                     )
     in
@@ -267,7 +348,12 @@ view sharedData page model toMsg pageView =
                         , mobileMenuToggle = Just hamburgerHtml
                         , action = Nothing
                         , sticky = config.navbar.sticky
-                        , variant = Navbar.Dark
+                        , variant =
+                            if isCompact then
+                                Navbar.Compact
+
+                            else
+                                Navbar.Dark
                         }
                     , Html.main_ [ Attr.id "main-content", classes [ Tw.flex_1, TwEx.max_w_5xl, Tw.mx_auto, Tw.px s6, Tw.py s10, Tw.w_full ] ] pageView.body
                     , Footer.view
@@ -287,24 +373,31 @@ view sharedData page model toMsg pageView =
                         , copyright = config.footer.copyright
                         , disclaimer = Just config.footer.disclaimer
                         }
-                    , MobileDrawer.viewOverlay { isOpen = model.menuOpen, onClose = toMsg (SharedMsg CloseMenu), breakpoint = MobileDrawer.Sm }
-                    , viewMobileDrawer page.path model (toMsg << SharedMsg) sharedData.navItems
+                    , MobileDrawer.viewOverlay { isOpen = model.menuOpen, onClose = toMsg (SharedMsg CloseMenu), breakpoint = if isCompact then MobileDrawer.Md else MobileDrawer.Sm }
+                    , viewMobileDrawer page.path model (toMsg << SharedMsg) sharedData.navItems (if isCompact then MobileDrawer.Md else MobileDrawer.Sm)
                     ]
                 ]
             , title = pageView.title
             }
 
 
-viewMobileDrawer : UrlPath -> Model -> (SharedMsg -> msg) -> List NavItem -> Html msg
-viewMobileDrawer currentPath model toMsg navItems =
+viewMobileDrawer : UrlPath -> Model -> (SharedMsg -> msg) -> List NavItem -> MobileDrawer.Breakpoint -> Html msg
+viewMobileDrawer currentPath model toMsg navItems breakpoint =
     let
         isActive : String -> Bool
-        isActive slug =
-            if slug == "index" then
+        isActive path =
+            if path == "/" then
                 UrlPath.toRelative currentPath == ""
 
             else
-                UrlPath.toRelative currentPath == slug
+                let
+                    currentPathStr =
+                        UrlPath.toRelative currentPath
+
+                    relativePath =
+                        String.dropLeft 1 path
+                in
+                currentPathStr == relativePath || String.startsWith (relativePath ++ "/") currentPathStr
 
         close =
             toMsg CloseMenu
@@ -313,24 +406,16 @@ viewMobileDrawer currentPath model toMsg navItems =
         { isOpen = model.menuOpen
         , id = "mobile-nav"
         , onClose = close
-        , breakpoint = MobileDrawer.Sm
+        , breakpoint = breakpoint
         , content =
             [ Html.nav [ classes [ Tw.p s4 ] ]
                 [ Html.ul [ classes [ Tw.flex, Tw.flex_col, Tw.gap s1, Tw.list_none, Tw.m s0, Tw.p s0 ] ]
                     (List.map
                         (\item ->
-                            let
-                                href =
-                                    if item.slug == "index" then
-                                        "/"
-
-                                    else
-                                        "/" ++ item.slug
-                            in
                             MobileDrawer.viewNavLink
-                                { href = href
+                                { href = item.path
                                 , label = item.title
-                                , isActive = isActive item.slug
+                                , isActive = isActive item.path
                                 , onClose = close
                                 }
                         )

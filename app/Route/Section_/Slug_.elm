@@ -1,15 +1,18 @@
-module Route.Index exposing (ActionData, Data, Model, Msg, route)
+module Route.Section_.Slug_ exposing (ActionData, Data, Model, Msg, route)
 
-{-| Route for the site index page (/).
+{-| Route for section sub-pages at /:section/:slug.
 -}
 
 import BackendTask exposing (BackendTask)
+import BackendTask.Glob as Glob
+import Component.Breadcrumb as Breadcrumb
 import ContentDir
-import ContentMarkdown exposing (TocNode)
+import ContentMarkdown
 import FatalError exposing (FatalError)
 import Frontmatter exposing (Frontmatter)
 import Head
 import Head.Seo as Seo
+import Html
 import MarkdownRenderer
 import Metadata
 import PagesMsg exposing (PagesMsg)
@@ -27,13 +30,15 @@ type alias Msg =
 
 
 type alias RouteParams =
-    {}
+    { section : String
+    , slug : String
+    }
 
 
 type alias Data =
     { frontmatter : Frontmatter
     , body : String
-    , childPages : List TocNode
+    , sectionFrontmatter : Frontmatter
     }
 
 
@@ -43,33 +48,55 @@ type alias ActionData =
 
 route : StatelessRoute RouteParams Data ActionData
 route =
-    RouteBuilder.single
+    RouteBuilder.preRender
         { head = head
+        , pages = pages
         , data = data
         }
         |> RouteBuilder.buildNoState { view = view }
 
 
-data : BackendTask FatalError Data
-data =
+pages : BackendTask FatalError (List RouteParams)
+pages =
+    ContentDir.backendTask
+        |> BackendTask.andThen
+            (\dir ->
+                Glob.succeed (\section slug -> { section = section, slug = slug })
+                    |> Glob.match (Glob.literal (dir ++ "/"))
+                    |> Glob.capture Glob.wildcard
+                    |> Glob.match (Glob.literal "/")
+                    |> Glob.capture Glob.wildcard
+                    |> Glob.match (Glob.literal ".md")
+                    |> Glob.toBackendTask
+                    |> BackendTask.map
+                        (List.filter
+                            (\p -> p.slug /= "index" && not (ContentMarkdown.isPartialSlug p.slug))
+                        )
+            )
+
+
+data : RouteParams -> BackendTask FatalError Data
+data routeParams =
     ContentDir.backendTask
         |> BackendTask.andThen
             (\dir ->
                 BackendTask.map2
-                    (\pageData children ->
+                    (\pageData sectionFm ->
                         { frontmatter = pageData.frontmatter
                         , body = pageData.body
-                        , childPages = children
+                        , sectionFrontmatter = sectionFm
                         }
                     )
-                    (ContentMarkdown.loadPage dir (dir ++ "/index.md"))
-                    (ContentMarkdown.loadTocTree dir "")
+                    (ContentMarkdown.loadPage dir
+                        (dir ++ "/" ++ routeParams.section ++ "/" ++ routeParams.slug ++ ".md")
+                    )
+                    (ContentMarkdown.loadFrontmatter
+                        (dir ++ "/" ++ routeParams.section ++ "/index.md")
+                    )
             )
 
 
-head :
-    App Data ActionData RouteParams
-    -> List Head.Tag
+head : App Data ActionData RouteParams -> List Head.Tag
 head app =
     let
         fm =
@@ -82,13 +109,14 @@ head app =
             app.sharedData.config.metadata
 
         seoTitle =
-            fm.title
+            fm.title ++ " — " ++ site.title
 
         seoDescription =
             fm.description
 
         canonicalUrl =
-            Metadata.pageCanonicalUrl site.url "/"
+            Metadata.pageCanonicalUrl site.url
+                (app.routeParams.section ++ "/" ++ app.routeParams.slug)
 
         pageAuthor =
             case fm.author of
@@ -139,6 +167,23 @@ view :
     -> Shared.Model
     -> View (PagesMsg Msg)
 view app _ =
-    { title = app.data.frontmatter.title
-    , body = [ MarkdownRenderer.renderMarkdown { childPages = app.data.childPages, sectionSlug = Just "" } app.data.body ]
+    let
+        sectionFm =
+            app.data.sectionFrontmatter
+
+        breadcrumbItems =
+            [ { label = "Etusivu", href = Just "/" }
+            , { label = Maybe.withDefault sectionFm.title sectionFm.navTitle
+              , href = Just ("/" ++ app.routeParams.section)
+              }
+            , { label = app.data.frontmatter.title, href = Nothing }
+            ]
+    in
+    { title = app.data.frontmatter.title ++ " — " ++ app.sharedData.config.site.title
+    , body =
+        [ Breadcrumb.view breadcrumbItems
+        , MarkdownRenderer.renderMarkdown
+            { childPages = [], sectionSlug = Nothing }
+            app.data.body
+        ]
     }
