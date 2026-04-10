@@ -9,6 +9,7 @@
         "Component.Alert",
         "Component.Badge",
         "Component.Breadcrumb",
+        "Component.Toc",
         "Component.Button",
         "Component.ButtonGroup",
         "Component.Card",
