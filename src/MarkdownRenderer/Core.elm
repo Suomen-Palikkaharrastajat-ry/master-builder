@@ -3,6 +3,7 @@ module MarkdownRenderer.Core exposing (renderer)
 {-| Core markdown block renderer configuration.
 -}
 
+import ContentMarkdown exposing (TocNode)
 import Html exposing (Html)
 import Html.Attributes as Attr
 import Markdown.Block as Block
@@ -16,8 +17,8 @@ import TailwindExtra as TwEx
 import TailwindTokens as TC
 
 
-renderer : Markdown.Renderer.Renderer (Html msg)
-renderer =
+renderer : { childPages : List TocNode, sectionSlug : Maybe String } -> Markdown.Renderer.Renderer (Html msg)
+renderer context =
     { heading = viewHeading
     , paragraph = Html.p [ classes [ Tw.my s4, TwEx.leading_7, Tw.text_simple TC.textPrimary ] ]
     , hardLineBreak = Html.br [] []
@@ -51,7 +52,7 @@ renderer =
     , tableCell =
         \_ children ->
             Html.td [ classes [ Tw.px s4, Tw.py s2, Tw.text_simple TC.textPrimary ] ] children
-    , html = HtmlTags.htmlRenderer
+    , html = HtmlTags.htmlRenderer context
     }
 
 

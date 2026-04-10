@@ -17,6 +17,8 @@ import Component.Stats as Stats
 import Component.Tag as Tag
 import Component.Timeline as Timeline
 import Component.Toast as Toast
+import Component.Toc as Toc
+import ContentMarkdown exposing (TocNode)
 import FeatherIcons
 import Html exposing (Html)
 import Html.Attributes as Attr
@@ -29,8 +31,8 @@ import TailwindExtra as TwEx
 import TailwindTokens as TC
 
 
-htmlRenderer : Markdown.Html.Renderer (List (Html msg) -> Html msg)
-htmlRenderer =
+htmlRenderer : { childPages : List TocNode, sectionSlug : Maybe String } -> Markdown.Html.Renderer (List (Html msg) -> Html msg)
+htmlRenderer context =
     Markdown.Html.oneOf
         [ -- <callout type="info|success|warning|error" icon="…">…</callout>
           Markdown.Html.tag "callout"
@@ -536,6 +538,56 @@ htmlRenderer =
             (\children ->
                 Html.div [ Attr.class "tab-panel-code" ] children
             )
+        , -- <toc depth="N" /> — auto-generated table of contents (default: all levels)
+          Markdown.Html.tag "toc"
+            (\depthAttr _ ->
+                let
+                    maxDepth =
+                        depthAttr
+                            |> Maybe.andThen String.toInt
+                            |> Maybe.withDefault 99
+                in
+                case context.sectionSlug of
+                    Just section ->
+                        let
+                            nodeHref fm =
+                                if String.isEmpty section then
+                                    "/" ++ fm.slug
+
+                                else
+                                    "/" ++ section ++ "/" ++ fm.slug
+
+                            toTocItem node =
+                                let
+                                    fm =
+                                        node.frontmatter
+
+                                    selfHref =
+                                        nodeHref fm
+                                in
+                                { title = fm.title
+                                , href = selfHref
+                                , description = fm.description
+                                , children =
+                                    if maxDepth <= 1 then
+                                        []
+
+                                    else
+                                        List.map
+                                            (\childFm ->
+                                                { title = childFm.title
+                                                , href = selfHref ++ "/" ++ childFm.slug
+                                                }
+                                            )
+                                            node.sectionChildren
+                                }
+                        in
+                        Toc.view (List.map toTocItem context.childPages)
+
+                    Nothing ->
+                        Html.text ""
+            )
+            |> Markdown.Html.withOptionalAttribute "depth"
         ]
 
 

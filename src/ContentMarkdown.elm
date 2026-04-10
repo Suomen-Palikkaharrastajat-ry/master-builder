@@ -1,10 +1,11 @@
-module ContentMarkdown exposing (PageData, isPartialSlug, loadFrontmatter, loadPage)
+module ContentMarkdown exposing (PageData, TocNode, isPartialSlug, loadFrontmatter, loadPage, loadPageOrSectionIndex, loadSectionChildren, loadTocTree)
 
 {-| Utilities for loading markdown content with frontmatter and include expansion.
 -}
 
 import BackendTask exposing (BackendTask)
 import BackendTask.File as File
+import BackendTask.Glob as Glob
 import FatalError exposing (FatalError)
 import Frontmatter exposing (Frontmatter)
 import Json.Decode as Decode
@@ -16,6 +17,16 @@ import Regex
 type alias PageData =
     { frontmatter : Frontmatter
     , body : String
+    }
+
+
+{-| A content node with its immediate section children, used to build the `<toc />` tree.
+`sectionChildren` is the list of pages directly inside this item's directory slug.
+For leaf pages and pages with no sub-directory, it is [].
+-}
+type alias TocNode =
+    { frontmatter : Frontmatter
+    , sectionChildren : List Frontmatter
     }
 
 
@@ -44,6 +55,131 @@ loadFrontmatter : String -> BackendTask FatalError Frontmatter
 loadFrontmatter filePath =
     File.bodyWithFrontmatter (\_ -> Frontmatter.decoder) filePath
         |> BackendTask.allowFatal
+
+
+{-| Like loadPage, but tries `<slug>.md` first; if not found, falls back to `<slug>/index.md`.
+Used so that Route/Slug\_ can serve both flat pages and section index pages.
+-}
+loadPageOrSectionIndex : String -> String -> BackendTask FatalError PageData
+loadPageOrSectionIndex dir slug =
+    let
+        flatPath =
+            dir ++ "/" ++ slug ++ ".md"
+
+        indexPath =
+            dir ++ "/" ++ slug ++ "/index.md"
+
+        loadFrom filePath =
+            File.bodyWithFrontmatter
+                (\body ->
+                    Frontmatter.decoder
+                        |> Decode.map (\fm -> ( { frontmatter = fm, body = body }, filePath ))
+                )
+                filePath
+    in
+    loadFrom flatPath
+        |> BackendTask.onError (\_ -> loadFrom indexPath)
+        |> BackendTask.allowFatal
+        |> BackendTask.andThen
+            (\( pageData, filePath ) ->
+                expandIncludes
+                    { contentRoot = dir
+                    , currentFile = filePath
+                    , stack = [ filePath ]
+                    }
+                    pageData.body
+                    |> BackendTask.map (\expandedBody -> { pageData | body = expandedBody })
+            )
+
+
+{-| Load frontmatters of top-level pages for the root index `<toc />`.
+Includes both flat pages (content/slug.md) and section indexes (content/section/index.md),
+filtered by nav visibility, sorted by order.
+-}
+loadRootChildren : String -> BackendTask FatalError (List Frontmatter)
+loadRootChildren dir =
+    let
+        flatPages =
+            Glob.succeed identity
+                |> Glob.match (Glob.literal (dir ++ "/"))
+                |> Glob.capture Glob.wildcard
+                |> Glob.match (Glob.literal ".md")
+                |> Glob.toBackendTask
+                |> BackendTask.andThen
+                    (\slugs ->
+                        slugs
+                            |> List.filter (\s -> s /= "index" && not (isPartialSlug s))
+                            |> List.map (\s -> loadFrontmatter (dir ++ "/" ++ s ++ ".md"))
+                            |> BackendTask.combine
+                    )
+
+        sectionIndexes =
+            Glob.succeed identity
+                |> Glob.match (Glob.literal (dir ++ "/"))
+                |> Glob.capture Glob.wildcard
+                |> Glob.match (Glob.literal "/index.md")
+                |> Glob.toBackendTask
+                |> BackendTask.andThen
+                    (\sections ->
+                        sections
+                            |> List.map (\s -> loadFrontmatter (dir ++ "/" ++ s ++ "/index.md"))
+                            |> BackendTask.combine
+                    )
+    in
+    BackendTask.map2 (++) flatPages sectionIndexes
+        |> BackendTask.map (List.sortBy .order)
+
+
+{-| Load frontmatters of all non-index, non-partial pages inside a section directory,
+sorted by their `order` field. Returns [] when the directory doesn't exist.
+-}
+loadSectionChildren : String -> String -> BackendTask FatalError (List Frontmatter)
+loadSectionChildren dir section =
+    Glob.succeed identity
+        |> Glob.match (Glob.literal (dir ++ "/" ++ section ++ "/"))
+        |> Glob.capture Glob.wildcard
+        |> Glob.match (Glob.literal ".md")
+        |> Glob.toBackendTask
+        |> BackendTask.andThen
+            (\slugs ->
+                slugs
+                    |> List.filter (\s -> s /= "index" && not (isPartialSlug s))
+                    |> List.map (\s -> loadFrontmatter (dir ++ "/" ++ section ++ "/" ++ s ++ ".md"))
+                    |> BackendTask.combine
+            )
+        |> BackendTask.map (List.sortBy .order)
+
+
+{-| Load a TocNode list for a given section (or "" for root).
+Each node contains the page frontmatter and the frontmatters of its direct sub-pages.
+Used to feed the `<toc />` tag with depth-aware data.
+-}
+loadTocTree : String -> String -> BackendTask FatalError (List TocNode)
+loadTocTree dir section =
+    let
+        parentLoader =
+            if String.isEmpty section then
+                loadRootChildren dir
+
+            else
+                loadSectionChildren dir section
+    in
+    parentLoader
+        |> BackendTask.andThen
+            (\frontmatters ->
+                frontmatters
+                    |> List.map
+                        (\fm ->
+                            loadSectionChildren dir fm.slug
+                                |> BackendTask.map
+                                    (\children ->
+                                        { frontmatter = fm
+                                        , sectionChildren = children
+                                        }
+                                    )
+                        )
+                    |> BackendTask.combine
+            )
 
 
 isPartialSlug : String -> Bool

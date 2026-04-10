@@ -103,11 +103,13 @@ type alias BrandingConfig =
     , logoDark : String
     , logoDarkMobile : String
     , logoAlt : String
+    , logoSquare : String
     }
 
 
 type alias NavbarConfig =
     { sticky : Bool
+    , variant : String
     }
 
 
@@ -217,18 +219,20 @@ pwaIconDecoder =
 
 brandingDecoder : Decoder BrandingConfig
 brandingDecoder =
-    Decode.map5 BrandingConfig
-        (Decode.field "logo_light" Decode.string)
-        (Decode.field "logo_light_mobile" Decode.string)
-        (Decode.field "logo_dark" Decode.string)
-        (Decode.field "logo_dark_mobile" Decode.string)
-        (Decode.field "logo_alt" Decode.string)
+    Decode.succeed BrandingConfig
+        |> andMap (Decode.field "logo_light" Decode.string)
+        |> andMap (Decode.field "logo_light_mobile" Decode.string)
+        |> andMap (Decode.field "logo_dark" Decode.string)
+        |> andMap (Decode.field "logo_dark_mobile" Decode.string)
+        |> andMap (Decode.field "logo_alt" Decode.string)
+        |> andMap (optionalField "logo_square" Decode.string "/logo/square/svg/square-smile.svg")
 
 
 navbarDecoder : Decoder NavbarConfig
 navbarDecoder =
-    Decode.map NavbarConfig
-        (Decode.field "sticky" Decode.bool)
+    Decode.succeed NavbarConfig
+        |> andMap (Decode.field "sticky" Decode.bool)
+        |> andMap (optionalField "variant" Decode.string "standard")
 
 
 footerDecoder : Decoder FooterConfig
