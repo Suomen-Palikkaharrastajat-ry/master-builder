@@ -1,15 +1,20 @@
-// SECURITY: Never log `token` or `window.__gh*` variables.
-// Entry point for the standalone admin app.
+// SECURITY: Never log GitHub tokens. This app is static and stores tokens only
+// in sessionStorage unless the editor explicitly chooses "remember this browser".
 
-import { mountEditor, setContent } from './Editor.js';
+import "../style.css";
+import { insertSnippet, mountEditor, setContent } from './Editor.js';
+import { createMultiFileCommit, githubJson } from './GitHubCommit.mjs';
+
+const SESSION_TOKEN_KEY = 'admin-gh-token-session';
+const LOCAL_TOKEN_KEY = 'admin-gh-token-local';
 
 async function boot() {
   let cfg = {};
   try {
-    const res = await fetch('/site-config.json');
+    const res = await fetch('/site-config.json', { cache: 'no-store' });
     cfg = await res.json();
   } catch (_) {
-    // boot with empty config; Elm will show login UI regardless
+    // Boot with empty config; Elm will render the disabled/login state.
   }
 
   const app = window.Elm.Main.init({
@@ -23,269 +28,124 @@ async function boot() {
 boot();
 
 function wireAdminPorts(app) {
-  const STORAGE_KEY = 'gh_token';
-  const DRAFT_PREFIX = 'draft:';
-  let draftSaveTimer = null;
-
-  // ── loadTokenFromStorage ────────────────────────────────────────────────────
-  app.ports.loadTokenFromStorage.subscribe(() => {
-    const token = localStorage.getItem(STORAGE_KEY);
-    app.ports.tokenLoadedFromStorage.send(token);
+  app.ports.loadToken.subscribe(() => {
+    const sessionToken = sessionStorage.getItem(SESSION_TOKEN_KEY);
+    const localToken = localStorage.getItem(LOCAL_TOKEN_KEY);
+    if (sessionToken) {
+      app.ports.tokenLoaded.send({ token: sessionToken, remember: false });
+    } else if (localToken) {
+      app.ports.tokenLoaded.send({ token: localToken, remember: true });
+    } else {
+      app.ports.tokenLoaded.send(null);
+    }
   });
 
-  // ── storeToken ─────────────────────────────────────────────────────────────
-  app.ports.storeToken.subscribe((token) => {
-    localStorage.setItem(STORAGE_KEY, token);
+  app.ports.storeToken.subscribe(({ token, remember }) => {
+    sessionStorage.removeItem(SESSION_TOKEN_KEY);
+    localStorage.removeItem(LOCAL_TOKEN_KEY);
+    if (remember) {
+      localStorage.setItem(LOCAL_TOKEN_KEY, token);
+    } else {
+      sessionStorage.setItem(SESSION_TOKEN_KEY, token);
+    }
   });
 
-  // ── clearToken ─────────────────────────────────────────────────────────────
   app.ports.clearToken.subscribe(() => {
-    localStorage.removeItem(STORAGE_KEY);
+    sessionStorage.removeItem(SESSION_TOKEN_KEY);
+    localStorage.removeItem(LOCAL_TOKEN_KEY);
   });
 
-  // clientId and proxyUrl are stored here so startPolling can use them
-  let oauthClientId = '';
-  let oauthProxyUrl = '';
-
-  // ── requestDeviceCode ──────────────────────────────────────────────────────
-  app.ports.requestDeviceCode.subscribe(async ({ clientId, proxyUrl }) => {
-    oauthClientId = clientId;
-    oauthProxyUrl = proxyUrl || 'https://github.com';
-    const base = oauthProxyUrl;
+  app.ports.listFiles.subscribe(async ({ token, owner, repo, branch, contentPath }) => {
     try {
-      const res = await fetch(`${base}/login/device/code`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'application/json' },
-        body: new URLSearchParams({ client_id: clientId, scope: 'public_repo' }),
-      });
-      const json = await res.json();
-      if (json.error) throw new Error(json.error_description || json.error);
-      app.ports.deviceCodeReceived.send({
-        userCode: json.user_code,
-        verificationUri: json.verification_uri,
-        deviceCode: json.device_code,
-        interval: json.interval ?? 5,
-      });
+      const root = normalizePrefix(contentPath);
+      const res = await githubJson(
+        token,
+        `https://api.github.com/repos/${owner}/${repo}/git/trees/${encodeURIComponent(branch)}?recursive=1`
+      );
+      const files = (res.tree || [])
+        .filter(item => item.type === 'blob')
+        .filter(item => item.path.endsWith('.md'))
+        .filter(item => !root || item.path === root.slice(0, -1) || item.path.startsWith(root))
+        .map(item => ({
+          path: item.path,
+          name: item.path.split('/').pop(),
+          sha: item.sha,
+        }))
+        .sort((a, b) => a.path.localeCompare(b.path));
+      app.ports.filesListed.send({ files });
     } catch (err) {
-      console.error('requestDeviceCode error', err.message);
-      app.ports.deviceCodeReceived.send({ error: err.message });
+      app.ports.filesListed.send({ error: err.message });
     }
   });
 
-  // ── startPolling ───────────────────────────────────────────────────────────
-  app.ports.startPolling.subscribe(async ({ deviceCode, interval }) => {
-    const base = oauthProxyUrl || 'https://github.com';
-    const intervalMs = (interval ?? 5) * 1000;
-    const timeout = Date.now() + 15 * 60 * 1000;
-
-    const poll = async () => {
-      if (Date.now() > timeout) {
-        app.ports.tokenReceived.send({ error: 'Timed out' });
-        return;
-      }
-      try {
-        const res = await fetch(`${base}/login/oauth/access_token`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'application/json' },
-          body: new URLSearchParams({
-            client_id: oauthClientId,
-            device_code: deviceCode,
-            grant_type: 'urn:ietf:params:oauth:grant-type:device_code',
-          }),
-        });
-        const json = await res.json();
-        if (json.access_token) {
-          app.ports.tokenReceived.send({ token: json.access_token });
-        } else if (json.error === 'authorization_pending') {
-          setTimeout(poll, intervalMs);
-        } else if (json.error === 'slow_down') {
-          setTimeout(poll, intervalMs + 5000);
-        } else {
-          app.ports.tokenReceived.send({ error: json.error_description || json.error });
-        }
-      } catch (err) {
-        app.ports.tokenReceived.send({ error: err.message });
-      }
-    };
-
-    setTimeout(poll, intervalMs);
-  });
-
-  // ── listFiles ──────────────────────────────────────────────────────────────
-  app.ports.listFiles.subscribe(async ({ token, owner, repo, path }) => {
+  app.ports.fetchFile.subscribe(async ({ token, owner, repo, branch, path }) => {
     try {
-      const res = await fetch(
-        `https://api.github.com/repos/${owner}/${repo}/contents/${path}`,
-        { headers: apiHeaders(token) }
+      const item = await githubJson(
+        token,
+        `https://api.github.com/repos/${owner}/${repo}/contents/${encodePath(path)}?ref=${encodeURIComponent(branch)}`
       );
-      if (!res.ok) throw new Error(`GitHub API ${res.status}`);
-      const items = await res.json();
-      const mdFiles = items
-        .filter(i => i.type === 'file' && i.name.endsWith('.md'))
-        .map(i => ({ path: i.path, name: i.name, sha: i.sha }));
-      app.ports.filesListed.send(mdFiles);
-    } catch (err) {
-      console.error('listFiles error', err.message);
-      app.ports.filesListed.send([]);
-    }
-  });
-
-  // ── fetchFile ──────────────────────────────────────────────────────────────
-  app.ports.fetchFile.subscribe(async ({ token, owner, repo, path }) => {
-    window.__currentEditPath = path;
-    try {
-      const res = await fetch(
-        `https://api.github.com/repos/${owner}/${repo}/contents/${path}`,
-        { headers: apiHeaders(token) }
-      );
-      if (!res.ok) throw new Error(`GitHub API ${res.status}`);
-      const item = await res.json();
-      const content = atob(item.content.replace(/\n/g, ''));
       app.ports.fileLoaded.send({
         meta: { path: item.path, name: item.name, sha: item.sha },
-        content,
+        content: decodeBase64(item.content || ''),
       });
     } catch (err) {
-      console.error('fetchFile error', err.message);
+      app.ports.fileLoaded.send({ error: err.message });
     }
   });
 
-  // ── mountEditor ────────────────────────────────────────────────────────────
   app.ports.mountEditor.subscribe(() => {
     requestAnimationFrame(() => {
       mountEditor((newContent) => {
         app.ports.editorContentChanged.send(newContent);
-        // Auto-save draft with debounce
-        clearTimeout(draftSaveTimer);
-        draftSaveTimer = setTimeout(() => {
-          const path = window.__currentEditPath;
-          if (path) localStorage.setItem(DRAFT_PREFIX + path, newContent);
-        }, 1000);
       });
     });
   });
 
-  // ── setEditorContent ───────────────────────────────────────────────────────
   app.ports.setEditorContent.subscribe((content) => {
     setContent(content);
   });
 
-  // ── saveDraft ──────────────────────────────────────────────────────────────
-  app.ports.saveDraft.subscribe(({ path, content }) => {
-    localStorage.setItem(DRAFT_PREFIX + path, content);
+  app.ports.insertSnippet.subscribe((snippet) => {
+    insertSnippet(snippet);
   });
 
-  // ── loadDraft ──────────────────────────────────────────────────────────────
-  app.ports.loadDraft.subscribe((path) => {
-    const draft = localStorage.getItem(DRAFT_PREFIX + path);
-    app.ports.draftLoaded.send(draft);
-  });
-
-  // ── clearDraft ─────────────────────────────────────────────────────────────
-  app.ports.clearDraft.subscribe((path) => {
-    localStorage.removeItem(DRAFT_PREFIX + path);
-    window.__currentEditPath = null;
-  });
-
-  // ── commitFile ─────────────────────────────────────────────────────────────
-  app.ports.commitFile.subscribe(async ({ token, owner, repo, path, content, sha, message }) => {
+  app.ports.loadWorkspace.subscribe((key) => {
     try {
-      const encoded = btoa(unescape(encodeURIComponent(content)));
-      const res = await fetch(
-        `https://api.github.com/repos/${owner}/${repo}/contents/${path}`,
-        {
-          method: 'PUT',
-          headers: apiHeaders(token, { 'Content-Type': 'application/json' }),
-          body: JSON.stringify({ message, content: encoded, sha }),
-        }
-      );
-      const json = await res.json();
-      if (!res.ok) {
-        throw new Error(json.message || `GitHub API ${res.status}`);
-      }
-      app.ports.commitDone.send({ sha: json.commit.sha });
-    } catch (err) {
-      console.debug('commitFile: error', err.message);
-      app.ports.commitDone.send({ error: err.message });
+      app.ports.workspaceLoaded.send(JSON.parse(localStorage.getItem(key) || '[]'));
+    } catch (_) {
+      app.ports.workspaceLoaded.send([]);
     }
   });
 
-  // ── startBuildPolling ──────────────────────────────────────────────────────
-  app.ports.startBuildPolling.subscribe(async ({
-    commitSha, token, owner, repo, pageUrl,
-    actionsIntervalMs, pageIntervalMs, timeoutMs,
-  }) => {
-    const deadline = Date.now() + timeoutMs;
+  app.ports.saveWorkspace.subscribe(({ key, drafts }) => {
+    localStorage.setItem(key, JSON.stringify(drafts));
+  });
 
-    const emit = (event, extra = {}) =>
-      app.ports.buildStatusUpdate.send({ event, ...extra });
-
-    const pollActions = async () => {
-      while (Date.now() < deadline) {
-        try {
-          const res = await fetch(
-            `https://api.github.com/repos/${owner}/${repo}/actions/runs`
-            + `?head_sha=${commitSha}&event=push&per_page=1`,
-            { headers: apiHeaders(token) }
-          );
-          const json = await res.json();
-          const run = json.workflow_runs?.[0];
-
-          if (!run) {
-            emit('actionsQueued');
-          } else if (run.status === 'queued') {
-            emit('actionsQueued');
-          } else if (run.status === 'in_progress') {
-            emit('actionsRunning');
-          } else if (run.status === 'completed') {
-            if (run.conclusion === 'success') {
-              emit('actionsComplete');
-              return true;
-            } else {
-              emit('actionsFailed', { reason: run.conclusion ?? 'unknown' });
-              return false;
-            }
-          }
-        } catch (err) {
-          console.warn('Actions poll error', err.message);
-        }
-        await sleep(actionsIntervalMs);
+  app.ports.commitStaged.subscribe(async ({ token, owner, repo, branch, message, files }) => {
+    try {
+      const result = await createMultiFileCommit({ token, owner, repo, branch, message, files });
+      app.ports.commitDone.send({ sha: result.sha });
+    } catch (err) {
+      if (err.conflicts) {
+        app.ports.commitDone.send({ conflicts: err.conflicts });
+      } else {
+        app.ports.commitDone.send({ error: err.message });
       }
-      emit('timedOut');
-      return false;
-    };
-
-    const pollPage = async () => {
-      const configUrl = `https://${owner}.github.io/${repo}/site-config.json`;
-      while (Date.now() < deadline) {
-        try {
-          const res = await fetch(configUrl, { cache: 'no-store' });
-          const json = await res.json();
-          if (json.buildSha === commitSha) {
-            emit('pageMatched', { pageUrl });
-            return;
-          }
-        } catch (err) {
-          console.warn('Page poll error', err.message);
-        }
-        await sleep(pageIntervalMs);
-      }
-      emit('timedOut');
-    };
-
-    const actionsOk = await pollActions();
-    if (actionsOk) await pollPage();
+    }
   });
 }
 
-function apiHeaders(token, extra = {}) {
-  return {
-    Authorization: `Bearer ${token}`,
-    Accept: 'application/vnd.github+json',
-    ...extra,
-  };
+function normalizePrefix(path) {
+  const trimmed = (path || '').replace(/^\/+|\/+$/g, '');
+  return trimmed ? `${trimmed}/` : '';
 }
 
-function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
+function encodePath(path) {
+  return path.split('/').map(encodeURIComponent).join('/');
+}
+
+function decodeBase64(raw) {
+  const clean = raw.replace(/\n/g, '');
+  const bytes = Uint8Array.from(atob(clean), c => c.charCodeAt(0));
+  return new TextDecoder('utf-8').decode(bytes);
 }

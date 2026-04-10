@@ -49,3 +49,4 @@ content/
 TODO.md
 TODO*
 node_modules
+admin-app/elm.js

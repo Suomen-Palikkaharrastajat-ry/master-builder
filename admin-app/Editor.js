@@ -53,6 +53,17 @@ export function setContent(text) {
   suppressNext = false;
 }
 
+/** Insert text at the current selection and notify Elm through the normal change listener. */
+export function insertSnippet(text) {
+  if (!editorView) return;
+  const selection = editorView.state.selection.main;
+  editorView.dispatch({
+    changes: { from: selection.from, to: selection.to, insert: text },
+    selection: { anchor: selection.from + text.length },
+  });
+  editorView.focus();
+}
+
 /** Unmount editor (call when navigating away). */
 export function destroyEditor() {
   if (editorView) {

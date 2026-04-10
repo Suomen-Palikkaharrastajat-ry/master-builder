@@ -1,5 +1,6 @@
 module Config exposing
-    ( BrandingConfig
+    ( AdminConfig
+    , BrandingConfig
     , Config
     , FooterConfig
     , FooterLink
@@ -29,6 +30,7 @@ type alias Config =
     , pwa : PwaConfig
     , branding : BrandingConfig
     , navbar : NavbarConfig
+    , admin : AdminConfig
     , footer : FooterConfig
     }
 
@@ -113,6 +115,16 @@ type alias NavbarConfig =
     }
 
 
+type alias AdminConfig =
+    { enabled : Bool
+    , path : String
+    , contentOwner : String
+    , contentRepo : String
+    , contentBranch : String
+    , contentPath : String
+    }
+
+
 type alias FooterConfig =
     { links : List FooterLink
     , copyright : String
@@ -138,13 +150,14 @@ task =
 
 decoder : Decoder Config
 decoder =
-    Decode.map7 Config
+    Decode.map8 Config
         (Decode.field "site" siteDecoder)
         (Decode.oneOf [ Decode.field "metadata" metadataDecoder, Decode.succeed defaultMetadataConfig ])
         (Decode.oneOf [ Decode.field "icons" iconDecoder, Decode.succeed defaultIconConfig ])
         (Decode.oneOf [ Decode.field "pwa" pwaDecoder, Decode.succeed defaultPwaConfig ])
         (Decode.field "branding" brandingDecoder)
         (Decode.field "navbar" navbarDecoder)
+        (Decode.oneOf [ Decode.field "admin" adminDecoder, Decode.succeed defaultAdminConfig ])
         (Decode.field "footer" footerDecoder)
 
 
@@ -233,6 +246,17 @@ navbarDecoder =
     Decode.succeed NavbarConfig
         |> andMap (Decode.field "sticky" Decode.bool)
         |> andMap (optionalField "variant" Decode.string "standard")
+
+
+adminDecoder : Decoder AdminConfig
+adminDecoder =
+    Decode.succeed AdminConfig
+        |> andMap (optionalField "enabled" Decode.bool False)
+        |> andMap (optionalField "path" Decode.string "/admin/")
+        |> andMap (optionalField "content_owner" Decode.string "")
+        |> andMap (optionalField "content_repo" Decode.string "")
+        |> andMap (optionalField "content_branch" Decode.string "main")
+        |> andMap (optionalField "content_path" Decode.string "")
 
 
 footerDecoder : Decoder FooterConfig
@@ -328,4 +352,15 @@ defaultPwaIconConfig =
     { icon192 = "/icon-192.png"
     , icon512 = "/icon-512.png"
     , maskableIcon = "/icon-maskable.png"
+    }
+
+
+defaultAdminConfig : AdminConfig
+defaultAdminConfig =
+    { enabled = False
+    , path = "/admin/"
+    , contentOwner = ""
+    , contentRepo = ""
+    , contentBranch = "main"
+    , contentPath = ""
     }

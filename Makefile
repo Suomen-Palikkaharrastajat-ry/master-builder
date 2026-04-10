@@ -1,5 +1,6 @@
 ELM_PAGES ?= elm-pages
 ELM_TAILWIND ?= elm-tailwind-classes
+VITE ?= ../node_modules/.bin/vite
 CONTENT_DIR ?= template
 
 .PHONY: help
@@ -90,6 +91,23 @@ watch: node_modules ## Start dev server pointed at ./content (CONTENT_DIR=conten
 	$(ELM_TAILWIND) gen
 	CONTENT_DIR=content $(ELM_PAGES) dev
 
+.PHONY: watch-admin
+watch-admin: node_modules ## Start content dev server and standalone admin app dev server
+	$(MAKE) CONTENT_DIR=content sync-assets
+	bash deploy/inject-build-meta.sh
+	$(ELM_TAILWIND) gen
+	cd admin-app && elm make src/Main.elm --output=elm.js
+	@site_pid=; admin_pid=; \
+	cleanup() { \
+		[ -z "$$site_pid" ] || kill "$$site_pid" 2>/dev/null || true; \
+		[ -z "$$admin_pid" ] || kill "$$admin_pid" 2>/dev/null || true; \
+		wait 2>/dev/null || true; \
+	}; \
+	trap cleanup INT TERM EXIT; \
+	CONTENT_DIR=content $(ELM_PAGES) dev & site_pid=$$!; \
+	(cd admin-app && $(VITE) dev --host 0.0.0.0) & admin_pid=$$!; \
+	wait "$$site_pid" "$$admin_pid"
+
 .PHONY: build
 build: node_modules ## Build elm-pages site into dist/ (fetch content first when CONTENT_OWNER/CONTENT_REPO are set)
 	bash deploy/fetch-content.sh
@@ -98,6 +116,20 @@ build: node_modules ## Build elm-pages site into dist/ (fetch content first when
 	bash deploy/inject-build-meta.sh
 	$(ELM_TAILWIND) gen
 	$(ELM_PAGES) build
+	$(MAKE) admin-build
+
+.PHONY: admin-build
+admin-build: node_modules ## Build standalone admin app into dist/admin/
+	$(ELM_TAILWIND) gen
+	mkdir -p dist/admin
+	cd admin-app && elm make src/Main.elm --optimize --output=../dist/admin/elm.js
+	cd admin-app && $(VITE) build --base ./ --outDir ../dist/admin --emptyOutDir false
+
+.PHONY: admin-dev
+admin-dev: node_modules ## Start standalone admin app dev server (served from admin-app/)
+	$(ELM_TAILWIND) gen
+	cd admin-app && elm make src/Main.elm --output=elm.js
+	cd admin-app && $(VITE) dev --host 0.0.0.0
 
 .PHONY: all
 all: clean build ## Clean and rebuild everything
@@ -110,7 +142,9 @@ deploy: ## Commit and push to trigger CI deploy (requires clean working tree)
 
 .PHONY: check
 check: ## Check Elm formatting and elm-review rules (no changes)
-	elm-format --validate app/ src/
+	elm-format --validate app/ src/ admin-app/src/
+	cd admin-app && elm make src/Main.elm --output=/tmp/master-builder-admin-check.js
+	node --test admin-app/GitHubCommit.test.mjs
 	elm-review --config review
 
 .PHONY: format
