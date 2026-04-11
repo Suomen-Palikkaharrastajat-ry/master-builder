@@ -6,6 +6,7 @@ module TailwindExtra exposing
     , bg_brand_5
     , bg_brand_red_10
     , bg_brand_red_15
+    , bg_brand_yellow_10
     , bg_brand_yellow_20
     , bg_current
     , bg_transparent
@@ -16,6 +17,7 @@ module TailwindExtra exposing
     , border_t_gray_900
     , border_transparent
     , border_white_10
+    , bottom_4
     , divide_color
     , grid_cols_auto_1fr
     , group
@@ -49,6 +51,7 @@ module TailwindExtra exposing
     , p_text_inherit
     , peer
     , right_2
+    , right_4
     , ring_brand
     , ring_brand_yellow
     , scroll_mt
@@ -301,6 +304,13 @@ bg_brand_yellow_20 =
     Tailwind "bg-brand-yellow/20"
 
 
+{-| Brand yellow background at 10 % opacity.
+-}
+bg_brand_yellow_10 : Tailwind
+bg_brand_yellow_10 =
+    Tailwind "bg-brand-yellow/10"
+
+
 {-| Black border at 10 % opacity — subtle outline for colour swatches.
 -}
 border_black_10 : Tailwind
@@ -516,6 +526,20 @@ top_2 =
 right_2 : Tailwind
 right_2 =
     Tailwind "right-2"
+
+
+{-| Positions element at `right: 1rem (16px)`.
+-}
+right_4 : Tailwind
+right_4 =
+    Tailwind "right-4"
+
+
+{-| Positions element at `bottom: 1rem (16px)`.
+-}
+bottom_4 : Tailwind
+bottom_4 =
+    Tailwind "bottom-4"
 
 
 {-| `margin-inline-start: 2rem (32px)` — logical-property equivalent of ml-8.
