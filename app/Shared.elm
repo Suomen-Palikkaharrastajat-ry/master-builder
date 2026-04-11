@@ -514,7 +514,7 @@ viewNavbarSearchForm isCompact =
                 , Tw.text_simple TC.brand
                 , Tw.cursor_pointer
                 , Bp.hover [ Tw.text_simple TC.brand ]
-                , Bp.focus_visible [ Tw.outline_none, Tw.ring_2, TwEx.ring_brand_yellow ]
+                , Bp.focus_visible [ Tw.outline_none, Tw.ring_2, TwEx.ring_brand ]
                 ]
             ]
             [ FeatherIcons.search |> FeatherIcons.withSize 16 |> FeatherIcons.toHtml [] ]
