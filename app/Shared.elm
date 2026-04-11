@@ -371,7 +371,12 @@ view sharedData page model toMsg pageView =
                         , links = config.footer.links
                         , groups = []
                         , copyright = config.footer.copyright
-                        , disclaimer = Just config.footer.disclaimer
+                        , disclaimer =
+                            if List.isEmpty config.footer.disclaimer then
+                                Nothing
+
+                            else
+                                Just config.footer.disclaimer
                         }
                     , MobileDrawer.viewOverlay
                         { isOpen = model.menuOpen

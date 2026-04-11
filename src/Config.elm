@@ -128,7 +128,7 @@ type alias AdminConfig =
 type alias FooterConfig =
     { links : List FooterLink
     , copyright : String
-    , disclaimer : String
+    , disclaimer : List String
     , footerLogo : String
     , siteLabel : String
     }
@@ -264,7 +264,7 @@ footerDecoder =
     Decode.map5 FooterConfig
         (Decode.field "links" (Decode.list footerLinkDecoder))
         (Decode.field "copyright" Decode.string)
-        (Decode.field "disclaimer" Decode.string)
+        (optionalField "disclaimer" (Decode.list Decode.string) [])
         (Decode.field "logo" Decode.string)
         (Decode.field "site_label" Decode.string)
 
