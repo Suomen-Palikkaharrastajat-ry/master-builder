@@ -836,7 +836,12 @@ viewEditorAndPreview model =
                     , Html.p [ Attr.class "type-caption text-text-muted" ] [ Html.text "Rendered with the same MarkdownRenderer used by the public site." ]
                     ]
                 , Html.div [ Attr.class "rounded-lg border border-border-default bg-bg-page p-4" ]
-                    [ MarkdownRenderer.renderMarkdown (markdownBody model.editorContent) ]
+                    [ MarkdownRenderer.renderMarkdown
+                        { childPages = []
+                        , sectionSlug = Nothing
+                        }
+                        (markdownBody model.editorContent)
+                    ]
                 ]
             ]
         ]
