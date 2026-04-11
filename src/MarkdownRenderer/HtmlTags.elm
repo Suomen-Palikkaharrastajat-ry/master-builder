@@ -486,6 +486,11 @@ htmlRenderer context =
                 Tag.view { label = label, onRemove = Nothing }
             )
             |> Markdown.Html.withAttribute "label"
+        , -- <search /> — inline live search widget with /haku fallback.
+          Markdown.Html.tag "search"
+            (\_ ->
+                viewSearchWidget
+            )
         , -- <tab-group name="…"><preview>…</preview><example>…</example></tab-group>
           Markdown.Html.tag "tab-group"
             (\name children ->
@@ -588,6 +593,73 @@ htmlRenderer context =
                         Html.text ""
             )
             |> Markdown.Html.withOptionalAttribute "depth"
+        ]
+
+
+viewSearchWidget : Html msg
+viewSearchWidget =
+    Html.section
+        [ Attr.attribute "data-search-widget" "true"
+        , classes
+            [ TwEx.not_prose
+            , Tw.my s8
+            , Tw.rounded_lg
+            , Tw.border
+            , Tw.border_simple TC.borderDefault
+            , Tw.bg_simple TC.bgSubtle
+            , Tw.p s4
+            , TwEx.space_y s3
+            ]
+        ]
+        [ Html.form
+            [ Attr.action "/haku"
+            , Attr.method "GET"
+            , Attr.attribute "data-search-widget-form" "true"
+            , classes [ Tw.flex, Tw.flex_col, Bp.sm [ Tw.flex_row, Tw.items_center ], Tw.gap s2 ]
+            ]
+            [ Html.label [ classes [ Tw.sr_only ] ] [ Html.text "Hae sivustolta" ]
+            , Html.input
+                [ Attr.name "q"
+                , Attr.type_ "search"
+                , Attr.placeholder "Hae sivustolta"
+                , Attr.attribute "autocomplete" "off"
+                , Attr.attribute "data-search-widget-input" "true"
+                , classes
+                    [ Tw.w_full
+                    , Tw.rounded_md
+                    , Tw.border
+                    , Tw.border_simple TC.borderDefault
+                    , Tw.bg_simple TC.bgPage
+                    , Tw.px s3
+                    , Tw.py s2
+                    , Tw.type_body
+                    , Tw.text_simple TC.textPrimary
+                    , Bp.focus_visible [ Tw.outline_none, Tw.ring_2, TwEx.ring_brand ]
+                    ]
+                ]
+                []
+            , Html.button
+                [ Attr.type_ "submit"
+                , classes
+                    [ Tw.rounded_md
+                    , Tw.bg_simple TC.brand
+                    , Tw.px s4
+                    , Tw.py s2
+                    , Tw.type_body_small
+                    , Tw.text_simple TC.textOnDark
+                    , Tw.cursor_pointer
+                    , Bp.hover [ Tw.bg_simple TC.brandYellow, Tw.text_simple TC.brand ]
+                    , Bp.focus_visible [ Tw.outline_none, Tw.ring_2, TwEx.ring_brand ]
+                    ]
+                ]
+                [ Html.text "Hae" ]
+            ]
+        , Html.div
+            [ Attr.attribute "data-search-widget-results" "true"
+            , Attr.attribute "aria-live" "polite"
+            , classes [ Tw.type_body_small, Tw.text_simple TC.textMuted ]
+            ]
+            [ Html.text "Kirjoita hakusana ja tulokset päivittyvät automaattisesti." ]
         ]
 
 

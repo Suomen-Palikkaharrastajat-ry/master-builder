@@ -112,6 +112,7 @@ type alias BrandingConfig =
 type alias NavbarConfig =
     { sticky : Bool
     , variant : String
+    , showDesktopSearch : Bool
     }
 
 
@@ -246,6 +247,7 @@ navbarDecoder =
     Decode.succeed NavbarConfig
         |> andMap (Decode.field "sticky" Decode.bool)
         |> andMap (optionalField "variant" Decode.string "standard")
+        |> andMap (optionalField "show_desktop_search" Decode.bool True)
 
 
 adminDecoder : Decoder AdminConfig

@@ -328,6 +328,13 @@ view sharedData page model toMsg pageView =
                         , isActive = isActivePath item.path
                         }
                     )
+
+        searchAction =
+            if config.navbar.showDesktopSearch then
+                Just (viewNavbarSearchForm isCompact)
+
+            else
+                Nothing
     in
     case page.route of
         _ ->
@@ -346,7 +353,7 @@ view sharedData page model toMsg pageView =
                         { logo = logoHtml
                         , links = navLinks
                         , mobileMenuToggle = Just hamburgerHtml
-                        , action = Nothing
+                        , action = searchAction
                         , sticky = config.navbar.sticky
                         , variant =
                             if isCompact then
@@ -432,6 +439,9 @@ viewMobileDrawer currentPath model toMsg navItems breakpoint =
         , breakpoint = breakpoint
         , content =
             [ Html.nav [ classes [ Tw.p s4 ] ]
+                [ viewMobileSearchForm close
+                ]
+            , Html.nav [ classes [ Tw.p s4, Tw.pt s1 ] ]
                 [ Html.ul [ classes [ Tw.flex, Tw.flex_col, Tw.gap s1, Tw.list_none, Tw.m s0, Tw.p s0 ] ]
                     (List.map
                         (\item ->
@@ -447,3 +457,113 @@ viewMobileDrawer currentPath model toMsg navItems breakpoint =
                 ]
             ]
         }
+
+
+viewNavbarSearchForm : Bool -> Html msg
+viewNavbarSearchForm isCompact =
+    let
+        visibility =
+            if isCompact then
+                Bp.md [ Tw.flex ]
+
+            else
+                Bp.sm [ Tw.flex ]
+    in
+    Html.form
+        [ Attr.action "/haku"
+        , Attr.method "GET"
+        , classes
+            [ Tw.hidden
+            , visibility
+            , Tw.items_center
+            , Tw.gap s2
+            , Tw.ml s4
+            ]
+        ]
+        [ Html.label [ Attr.for "navbar-search-input", classes [ Tw.sr_only ] ] [ Html.text "Hae sivustolta" ]
+        , Html.input
+            [ Attr.id "navbar-search-input"
+            , Attr.name "q"
+            , Attr.type_ "search"
+            , Attr.placeholder "Hae sivustolta"
+            , classes
+                [ Tw.w_full
+                , Bp.md [ TwEx.max_w_2xl ]
+                , Tw.rounded_md
+                , Tw.border
+                , Tw.border_simple TC.borderBrand
+                , Tw.bg_simple TC.bgPage
+                , Tw.px s2
+                , Tw.py s1
+                , Tw.type_body_small
+                , Tw.text_simple TC.textPrimary
+                , Bp.focus_visible [ Tw.outline_none, Tw.ring_2, TwEx.ring_brand_yellow ]
+                ]
+            ]
+            []
+        , Html.button
+            [ Attr.type_ "submit"
+            , classes
+                [ Tw.rounded_md
+                , Tw.border
+                , Tw.border_simple TC.brandYellow
+                , Tw.bg_simple TC.brandYellow
+                , Tw.px s2
+                , Tw.py s1
+                , Tw.type_body_small
+                , Tw.text_simple TC.brand
+                , Tw.cursor_pointer
+                , Bp.hover [ Tw.text_simple TC.brand ]
+                , Bp.focus_visible [ Tw.outline_none, Tw.ring_2, TwEx.ring_brand_yellow ]
+                ]
+            ]
+            [ FeatherIcons.search |> FeatherIcons.withSize 16 |> FeatherIcons.toHtml [] ]
+        ]
+
+
+viewMobileSearchForm : msg -> Html msg
+viewMobileSearchForm closeMsg =
+    Html.form
+        [ Attr.action "/haku"
+        , Attr.method "GET"
+        , classes
+            [ Tw.flex
+            , Tw.items_center
+            , Tw.gap s2
+            ]
+        ]
+        [ Html.label [ Attr.for "mobile-search-input", classes [ Tw.sr_only ] ] [ Html.text "Hae sivustolta" ]
+        , Html.input
+            [ Attr.id "mobile-search-input"
+            , Attr.name "q"
+            , Attr.type_ "search"
+            , Attr.placeholder "Hae sivustolta"
+            , classes
+                [ Tw.w_full
+                , Tw.rounded_md
+                , Tw.border
+                , Tw.border_simple TC.borderDefault
+                , Tw.bg_simple TC.bgPage
+                , Tw.px s2
+                , Tw.py s2
+                , Tw.type_body
+                , Tw.text_simple TC.textPrimary
+                , Bp.focus_visible [ Tw.outline_none, Tw.ring_2, TwEx.ring_brand ]
+                ]
+            ]
+            []
+        , Html.button
+            [ Attr.type_ "submit"
+            , Html.Events.onClick closeMsg
+            , classes
+                [ Tw.rounded_md
+                , Tw.bg_simple TC.brand
+                , Tw.px s2
+                , Tw.py s2
+                , Tw.text_simple TC.textOnDark
+                , Tw.cursor_pointer
+                , Bp.focus_visible [ Tw.outline_none, Tw.ring_2, TwEx.ring_brand ]
+                ]
+            ]
+            [ FeatherIcons.search |> FeatherIcons.withSize 18 |> FeatherIcons.toHtml [] ]
+        ]

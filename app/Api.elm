@@ -9,6 +9,7 @@ import Color
 import Config
 import FatalError exposing (FatalError)
 import Html exposing (Html)
+import Json.Encode as Encode
 import LanguageTag
 import LanguageTag.Language
 import LanguageTag.Region
@@ -16,6 +17,7 @@ import MimeType
 import Pages.Manifest as Manifest
 import Pages.Url
 import Route exposing (Route)
+import SearchIndex
 import UrlPath
 
 
@@ -35,7 +37,23 @@ routes :
     -> List (ApiRoute ApiRoute.Response)
 routes getStaticRoutes htmlToString =
     [ Manifest.generator siteUrl manifestConfig
+    , searchIndexRoute
     ]
+
+
+searchIndexRoute : ApiRoute ApiRoute.Response
+searchIndexRoute =
+    ApiRoute.succeed
+        (SearchIndex.documentsTask
+            |> BackendTask.map
+                (\documents ->
+                    documents
+                        |> Encode.list SearchIndex.encodeDocument
+                        |> Encode.encode 0
+                )
+        )
+        |> ApiRoute.literal "search-index.json"
+        |> ApiRoute.single
 
 
 manifestConfig : BackendTask FatalError Manifest.Config

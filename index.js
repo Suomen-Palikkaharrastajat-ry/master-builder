@@ -1,5 +1,345 @@
 import './style.css';
 
+const SEARCH_INDEX_URL = '/search-index.json';
+const LUNR_SCRIPT_URL = '/vendor/lunr.min.js';
+const LUNR_SCRIPT_ID = 'lunr-js-runtime';
+const INLINE_SEARCH_ROOT_SELECTOR = '[data-search-widget]';
+const INLINE_SEARCH_FORM_SELECTOR = '[data-search-widget-form]';
+const INLINE_SEARCH_INPUT_SELECTOR = '[data-search-widget-input]';
+const INLINE_SEARCH_RESULTS_SELECTOR = '[data-search-widget-results]';
+const INLINE_SEARCH_DEBOUNCE_MS = 200;
+const INLINE_SEARCH_MAX_RESULTS = 8;
+let searchRuntimePromise = null;
+let searchRuntime = null;
+const inlineSearchTimers = new WeakMap();
+
+function loadLunrRuntime() {
+    if (window.lunr) {
+        return Promise.resolve(window.lunr);
+    }
+
+    if (window.__lunrRuntimePromise) {
+        return window.__lunrRuntimePromise;
+    }
+
+    window.__lunrRuntimePromise = new Promise(function (resolve, reject) {
+        const existing = document.getElementById(LUNR_SCRIPT_ID);
+        if (existing) {
+            existing.addEventListener('load', function () { resolve(window.lunr); }, { once: true });
+            existing.addEventListener('error', reject, { once: true });
+            return;
+        }
+
+        const script = document.createElement('script');
+        script.id = LUNR_SCRIPT_ID;
+        script.src = LUNR_SCRIPT_URL;
+        script.async = true;
+        script.onload = function () {
+            if (window.lunr) {
+                resolve(window.lunr);
+            } else {
+                reject(new Error('lunr runtime loaded but window.lunr is missing'));
+            }
+        };
+        script.onerror = reject;
+        document.head.appendChild(script);
+    });
+
+    return window.__lunrRuntimePromise;
+}
+
+function ensureSearchRuntime() {
+    if (!searchRuntimePromise) {
+        searchRuntimePromise = loadLunrRuntime()
+            .then(function (lunr) {
+                return fetch(SEARCH_INDEX_URL)
+                    .then(function (response) {
+                        if (!response.ok) {
+                            throw new Error('Search index request failed with status ' + response.status);
+                        }
+                        return response.json();
+                    })
+                    .then(function (documents) {
+                        const documentsById = new Map(
+                            documents.map(function (doc) {
+                                return [doc.id, doc];
+                            })
+                        );
+
+                        const index = lunr(function () {
+                            this.ref('id');
+                            this.field('title', { boost: 20 });
+                            this.field('description', { boost: 10 });
+                            this.field('body');
+                            documents.forEach(function (doc) { this.add(doc); }, this);
+                        });
+
+                        const runtime = { documents: documents, documentsById: documentsById, index: index };
+                        searchRuntime = runtime;
+                        return runtime;
+                    });
+            })
+            .catch(function (error) {
+                searchRuntimePromise = null;
+                throw error;
+            });
+    }
+
+    return searchRuntimePromise;
+}
+
+function escapeLunrTerm(term) {
+    return term.replace(/[+\-!(){}\[\]^"~*?:\\/]/g, '\\$&');
+}
+
+function buildLunrQuery(rawQuery) {
+    const terms = rawQuery
+        .trim()
+        .split(/\s+/)
+        .map(function (term) { return term.trim(); })
+        .filter(Boolean)
+        .map(escapeLunrTerm);
+
+    if (terms.length === 0) {
+        return '';
+    }
+
+    return terms.map(function (term) { return term + '*'; }).join(' ');
+}
+
+function fallbackSearch(rawQuery, runtime) {
+    const query = rawQuery.trim().toLowerCase();
+    if (!query) {
+        return [];
+    }
+
+    return runtime.documents
+        .filter(function (doc) {
+            const haystack = (doc.title + ' ' + doc.description + ' ' + doc.body).toLowerCase();
+            return haystack.includes(query);
+        })
+        .map(function (doc) { return doc.id; });
+}
+
+function runSearch(rawQuery, runtime) {
+    const query = buildLunrQuery(rawQuery);
+    if (!query) {
+        return [];
+    }
+
+    try {
+        return runtime.index.search(query).map(function (result) { return result.ref; });
+    } catch (_error) {
+        return fallbackSearch(rawQuery, runtime);
+    }
+}
+
+function mapSearchResults(ids, runtime) {
+    return ids
+        .map(function (id) { return runtime.documentsById.get(id); })
+        .filter(Boolean)
+        .map(function (doc) {
+            return {
+                path: doc.path,
+                title: doc.title,
+                description: doc.description,
+            };
+        });
+}
+
+function getInlineSearchElements(root) {
+    if (!root) {
+        return null;
+    }
+
+    const form = root.querySelector(INLINE_SEARCH_FORM_SELECTOR);
+    const input = root.querySelector(INLINE_SEARCH_INPUT_SELECTOR);
+    const results = root.querySelector(INLINE_SEARCH_RESULTS_SELECTOR);
+
+    if (!form || !input || !results) {
+        return null;
+    }
+
+    return { form: form, input: input, results: results };
+}
+
+function clearInlineSearchTimer(root) {
+    const existing = inlineSearchTimers.get(root);
+    if (existing) {
+        clearTimeout(existing);
+        inlineSearchTimers.delete(root);
+    }
+}
+
+function inlineSearchResultsLink(query) {
+    return '/haku?q=' + encodeURIComponent(query);
+}
+
+function createInlineResultsSummary(results) {
+    const summary = document.createElement('p');
+    summary.textContent = results.length + ' hakutulosta';
+    return summary;
+}
+
+function createInlineResultItem(result) {
+    const item = document.createElement('li');
+    const title = document.createElement('h3');
+    const link = document.createElement('a');
+    const description = document.createElement('p');
+
+    link.href = result.path;
+    link.textContent = result.title;
+    description.textContent = result.description;
+
+    title.appendChild(link);
+    item.appendChild(title);
+    item.appendChild(description);
+    return item;
+}
+
+function createInlineShowAllLink(query) {
+    const wrapper = document.createElement('p');
+    const link = document.createElement('a');
+
+    link.href = inlineSearchResultsLink(query);
+    link.textContent = 'Näytä kaikki tulokset';
+    wrapper.appendChild(link);
+    return wrapper;
+}
+
+function renderInlineSearchHint(root) {
+    const elements = getInlineSearchElements(root);
+    if (!elements) {
+        return;
+    }
+
+    elements.results.textContent = 'Kirjoita hakusana ja tulokset päivittyvät automaattisesti.';
+}
+
+function renderInlineSearchRuntimeFallback(root, query) {
+    const elements = getInlineSearchElements(root);
+    if (!elements) {
+        return;
+    }
+
+    elements.results.replaceChildren();
+
+    const message = document.createElement('p');
+    message.textContent = 'Live-haku ei ole juuri nyt saatavilla.';
+    elements.results.appendChild(message);
+    elements.results.appendChild(createInlineShowAllLink(query));
+}
+
+function renderInlineSearchResults(root, query, results) {
+    const elements = getInlineSearchElements(root);
+    if (!elements) {
+        return;
+    }
+
+    elements.results.replaceChildren();
+
+    const limitedResults = results.slice(0, INLINE_SEARCH_MAX_RESULTS);
+
+    if (limitedResults.length > 0) {
+        const list = document.createElement('ul');
+        elements.results.appendChild(createInlineResultsSummary(limitedResults));
+        limitedResults.forEach(function (result) {
+            list.appendChild(createInlineResultItem(result));
+        });
+        elements.results.appendChild(list);
+    } else {
+        const empty = document.createElement('p');
+        empty.textContent = 'Ei hakutuloksia.';
+        elements.results.appendChild(empty);
+    }
+
+    elements.results.appendChild(createInlineShowAllLink(query));
+}
+
+function runInlineSearch(root, rawQuery) {
+    const query = rawQuery.trim();
+    if (!query) {
+        renderInlineSearchHint(root);
+        return;
+    }
+
+    ensureSearchRuntime()
+        .then(function (runtime) {
+            const ids = runSearch(query, runtime);
+            const results = mapSearchResults(ids, runtime);
+            renderInlineSearchResults(root, query, results);
+        })
+        .catch(function () {
+            renderInlineSearchRuntimeFallback(root, query);
+        });
+}
+
+function setupInlineSearchWidgets() {
+    if (window.__inlineSearchWidgetsSetup) {
+        return;
+    }
+    window.__inlineSearchWidgetsSetup = true;
+
+    document.addEventListener('input', function (event) {
+        const target = event.target;
+        if (!(target instanceof HTMLInputElement)) {
+            return;
+        }
+        if (!target.matches(INLINE_SEARCH_INPUT_SELECTOR)) {
+            return;
+        }
+
+        const root = target.closest(INLINE_SEARCH_ROOT_SELECTOR);
+        if (!root) {
+            return;
+        }
+
+        clearInlineSearchTimer(root);
+        if (!target.value.trim()) {
+            renderInlineSearchHint(root);
+            return;
+        }
+
+        const timeoutId = setTimeout(function () {
+            runInlineSearch(root, target.value);
+        }, INLINE_SEARCH_DEBOUNCE_MS);
+        inlineSearchTimers.set(root, timeoutId);
+    });
+
+    document.addEventListener('submit', function (event) {
+        const target = event.target;
+        if (!(target instanceof HTMLFormElement)) {
+            return;
+        }
+        if (!target.matches(INLINE_SEARCH_FORM_SELECTOR)) {
+            return;
+        }
+
+        const root = target.closest(INLINE_SEARCH_ROOT_SELECTOR);
+        const elements = getInlineSearchElements(root);
+        if (!elements) {
+            return;
+        }
+
+        const query = elements.input.value.trim();
+        if (!query) {
+            return;
+        }
+
+        if (searchRuntime) {
+            event.preventDefault();
+            clearInlineSearchTimer(root);
+            const ids = runSearch(query, searchRuntime);
+            const results = mapSearchResults(ids, searchRuntime);
+            renderInlineSearchResults(root, query, results);
+        } else {
+            ensureSearchRuntime().catch(function () {
+                return null;
+            });
+        }
+    });
+}
+
 function setupPullToRefresh() {
     if (window.__pullToRefreshSetup) return;
     window.__pullToRefreshSetup = true;
@@ -150,12 +490,29 @@ function setupPullToRefresh() {
 const config = {
     load: async function (elmLoaded) {
         const app = await elmLoaded;
+
         app.ports.focusMobileNav.subscribe(function () {
             requestAnimationFrame(function () {
                 const el = document.querySelector('#mobile-nav-active') || document.querySelector('#mobile-nav a');
                 if (el) el.focus();
             });
         });
+
+        if (app.ports.performSearch && app.ports.searchResults) {
+            app.ports.performSearch.subscribe(function (query) {
+                ensureSearchRuntime()
+                    .then(function (runtime) {
+                        const ids = runSearch(query, runtime);
+                        app.ports.searchResults.send(mapSearchResults(ids, runtime));
+                    })
+                    .catch(function (error) {
+                        console.error('Failed to execute search:', error);
+                        app.ports.searchResults.send([]);
+                    });
+            });
+        }
+
+        setupInlineSearchWidgets();
         setupPullToRefresh();
     },
     flags: function () {
