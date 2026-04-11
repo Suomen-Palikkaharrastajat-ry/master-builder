@@ -72,7 +72,7 @@ viewFeature feature =
                     , Tw.rounded_lg
                     , Tw.p Th.s3
                     , Bp.withVariant "motion-safe" [ Tw.transition_colors ]
-                    , Bp.hover [ TwEx.bg_brand_5 ]
+                    , Bp.hover [ TwEx.bg_brand_5, Tw.ring_2, Tw.ring_offset_2, TwEx.ring_brand ]
                     , Bp.focus [ Tw.outline_none ]
                     , Bp.focus_visible [ Tw.ring_2, Tw.ring_offset_2, TwEx.ring_brand ]
                     ]
