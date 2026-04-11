@@ -184,3 +184,76 @@
   margin-bottom: 0;
   border-radius: 0;
 }
+
+/* ── Inline search widget ───────────────────────────────────────────────── */
+
+.search-widget-results {
+  margin-top: 0.75rem;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.search-widget-hint,
+.search-widget-state,
+.search-widget-summary {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  font-weight: 500;
+}
+
+.search-widget-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.search-widget-item {
+  margin: 0;
+  padding: 0.75rem;
+  border: 1px solid var(--color-border-default);
+  border-radius: 0.5rem;
+  background: var(--color-bg-page);
+}
+
+.search-widget-title {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.5;
+  font-weight: 600;
+}
+
+.search-widget-description {
+  margin: 0.25rem 0 0;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--color-text-muted);
+}
+
+.search-widget-link {
+  color: var(--color-brand);
+  text-decoration: none;
+}
+
+.search-widget-link:hover {
+  color: var(--color-brand);
+  text-decoration: underline;
+}
+
+.search-widget-link:focus-visible {
+  outline: none;
+  border-radius: 0.25rem;
+  box-shadow: 0 0 0 2px var(--color-brand);
+}
+
+.search-widget-show-all {
+  margin: 0;
+}
+
+.search-widget-link-all {
+  font-size: 0.875rem;
+  font-weight: 500;
+}

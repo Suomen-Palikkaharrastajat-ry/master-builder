@@ -177,15 +177,20 @@ function inlineSearchResultsLink(query) {
 
 function createInlineResultsSummary(results) {
     const summary = document.createElement('p');
+    summary.className = 'search-widget-summary';
     summary.textContent = results.length + ' hakutulosta';
     return summary;
 }
 
 function createInlineResultItem(result) {
     const item = document.createElement('li');
+    item.className = 'search-widget-item';
     const title = document.createElement('h3');
+    title.className = 'search-widget-title';
     const link = document.createElement('a');
+    link.className = 'search-widget-link';
     const description = document.createElement('p');
+    description.className = 'search-widget-description';
 
     link.href = result.path;
     link.textContent = result.title;
@@ -199,7 +204,9 @@ function createInlineResultItem(result) {
 
 function createInlineShowAllLink(query) {
     const wrapper = document.createElement('p');
+    wrapper.className = 'search-widget-show-all';
     const link = document.createElement('a');
+    link.className = 'search-widget-link search-widget-link-all';
 
     link.href = inlineSearchResultsLink(query);
     link.textContent = 'Näytä kaikki tulokset';
@@ -213,7 +220,12 @@ function renderInlineSearchHint(root) {
         return;
     }
 
-    elements.results.textContent = 'Kirjoita hakusana ja tulokset päivittyvät automaattisesti.';
+    elements.results.replaceChildren();
+
+    const hint = document.createElement('p');
+    hint.className = 'search-widget-hint';
+    hint.textContent = 'Kirjoita hakusana ja tulokset päivittyvät automaattisesti.';
+    elements.results.appendChild(hint);
 }
 
 function renderInlineSearchRuntimeFallback(root, query) {
@@ -225,6 +237,7 @@ function renderInlineSearchRuntimeFallback(root, query) {
     elements.results.replaceChildren();
 
     const message = document.createElement('p');
+    message.className = 'search-widget-state';
     message.textContent = 'Live-haku ei ole juuri nyt saatavilla.';
     elements.results.appendChild(message);
     elements.results.appendChild(createInlineShowAllLink(query));
@@ -242,6 +255,7 @@ function renderInlineSearchResults(root, query, results) {
 
     if (limitedResults.length > 0) {
         const list = document.createElement('ul');
+        list.className = 'search-widget-list';
         elements.results.appendChild(createInlineResultsSummary(limitedResults));
         limitedResults.forEach(function (result) {
             list.appendChild(createInlineResultItem(result));
@@ -249,6 +263,7 @@ function renderInlineSearchResults(root, query, results) {
         elements.results.appendChild(list);
     } else {
         const empty = document.createElement('p');
+        empty.className = 'search-widget-state';
         empty.textContent = 'Ei hakutuloksia.';
         elements.results.appendChild(empty);
     }

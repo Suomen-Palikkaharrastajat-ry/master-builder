@@ -7,6 +7,7 @@ import BackendTask exposing (BackendTask)
 import Dict
 import Effect exposing (Effect)
 import FatalError exposing (FatalError)
+import FeatherIcons
 import Head
 import Head.Seo as Seo
 import Html exposing (Html)
@@ -198,14 +199,9 @@ viewSearchForm query =
         , Attr.method "GET"
         , classes
             [ Tw.flex
-            , Tw.flex_col
-            , Bp.sm [ Tw.flex_row, Tw.items_center ]
+            , Tw.items_center
             , Tw.gap s2
-            , Tw.rounded_lg
-            , Tw.border
-            , Tw.border_simple TC.borderDefault
-            , Tw.bg_simple TC.bgSubtle
-            , Tw.p s2
+            , TwEx.max_w_2xl
             ]
         ]
         [ Html.label [ Attr.for "search-page-input", classes [ Tw.sr_only ] ] [ Html.text "Hae sivustolta" ]
@@ -213,19 +209,19 @@ viewSearchForm query =
             [ Attr.id "search-page-input"
             , Attr.name "q"
             , Attr.type_ "search"
-            , Attr.placeholder "Hae esimerkiksi jasenyys, saannot tai tapahtuma"
+            , Attr.placeholder "Hae sivustolta"
             , Attr.value query
             , classes
                 [ Tw.w_full
                 , Tw.rounded_md
                 , Tw.border
-                , Tw.border_simple TC.borderDefault
+                , Tw.border_simple TC.borderBrand
                 , Tw.bg_simple TC.bgPage
-                , Tw.px s3
-                , Tw.py s2
-                , Tw.type_body
+                , Tw.px s2
+                , Tw.py s1
+                , Tw.type_body_small
                 , Tw.text_simple TC.textPrimary
-                , Bp.focus_visible [ Tw.outline_none, Tw.ring_2, TwEx.ring_brand ]
+                , Bp.focus_visible [ Tw.outline_none, Tw.ring_2, TwEx.ring_brand_yellow ]
                 ]
             ]
             []
@@ -233,17 +229,19 @@ viewSearchForm query =
             [ Attr.type_ "submit"
             , classes
                 [ Tw.rounded_md
-                , Tw.bg_simple TC.brand
-                , Tw.px s4
-                , Tw.py s2
+                , Tw.border
+                , Tw.border_simple TC.brandYellow
+                , Tw.bg_simple TC.brandYellow
+                , Tw.px s2
+                , Tw.py s1
                 , Tw.type_body_small
-                , Tw.text_simple TC.textOnDark
+                , Tw.text_simple TC.brand
                 , Tw.cursor_pointer
-                , Bp.hover [ Tw.bg_simple TC.brandYellow, Tw.text_simple TC.brand ]
-                , Bp.focus_visible [ Tw.outline_none, Tw.ring_2, TwEx.ring_brand ]
+                , Bp.hover [ Tw.text_simple TC.brand ]
+                , Bp.focus_visible [ Tw.outline_none, Tw.ring_2, TwEx.ring_brand_yellow ]
                 ]
             ]
-            [ Html.text "Hae" ]
+            [ FeatherIcons.search |> FeatherIcons.withSize 16 |> FeatherIcons.toHtml [] ]
         ]
 
 
