@@ -1,6 +1,14 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
+/* Brand/semantic token utilities — must be listed explicitly because the
+   elm-tailwind-classes extractor cannot resolve TailwindTokens cross-module
+   references (e.g. Tw.text_simple TC.brandYellow → "text-brand-yellow").
+   The dev build works via @source inline() added by the plugin; production
+   does not, so we provide the directives here where they apply to both modes. */
+@source inline("{text,bg,border,ring,placeholder}-{brand,brand-yellow,brand-red,brand-nougat,brand-nougat-light,brand-nougat-dark,text-primary,text-on-dark,text-muted,text-subtle,bg-page,bg-dark,bg-subtle,bg-accent,border-default,border-brand}");
+@source inline("text-white/80 text-white/70 text-white/60 text-white/50 text-white/90 text-brand/80 text-brand/70 text-brand/50 bg-brand-yellow/20 bg-brand/5 bg-brand/10 bg-brand/15 bg-brand/20 bg-brand-red/10 bg-brand-red/15 border-brand/30 border-brand/40 border-white/10 border-black/10 [&_li]:before:text-brand-yellow");
+
 @font-face {
   font-family: "Outfit";
   src: url("/fonts/Outfit-VariableFont_wght.ttf") format("truetype");
