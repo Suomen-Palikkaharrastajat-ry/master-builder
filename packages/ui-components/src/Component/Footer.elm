@@ -33,7 +33,7 @@ view :
     , links : List { label : String, href : String }
     , groups : List LinkGroup
     , copyright : String
-    , disclaimer : Maybe String
+    , disclaimer : Maybe (List String)
     }
     -> Html msg
 view config =
@@ -65,7 +65,7 @@ viewBrandLayout :
         , siteLabel : Maybe String
         , links : List { label : String, href : String }
         , copyright : String
-        , disclaimer : Maybe String
+        , disclaimer : Maybe (List String)
     }
     -> Html msg
 viewBrandLayout config =
@@ -103,9 +103,12 @@ viewBrandLayout config =
         , Html.div [ classes [ TwEx.space_y Th.s1, Tw.pl Th.s4, Bp.sm [ Tw.text_right ] ] ]
             [ Html.div [ classes [ TwEx.space_y Th.s1, Tw.text_xs, TwEx.text_white_50 ] ]
                 (List.filterMap identity
-                    [ Just (Html.p [] [ Html.text config.copyright ])
-                    , Maybe.map (\d -> Html.p [] [ Html.text d ]) config.disclaimer
-                    ]
+                    (Just (Html.p [] [ Html.text config.copyright ])
+                        :: (config.disclaimer
+                                |> Maybe.withDefault []
+                                |> List.map (\d -> Just (Html.p [] [ Html.text d ]))
+                           )
+                    )
                 )
             ]
         ]
