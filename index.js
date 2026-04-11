@@ -7,10 +7,14 @@ const INLINE_SEARCH_ROOT_SELECTOR = '[data-search-widget]';
 const INLINE_SEARCH_FORM_SELECTOR = '[data-search-widget-form]';
 const INLINE_SEARCH_INPUT_SELECTOR = '[data-search-widget-input]';
 const INLINE_SEARCH_RESULTS_SELECTOR = '[data-search-widget-results]';
+const INLINE_SEARCH_AUTOFOCUS_SELECTOR = '[data-search-widget-autofocus]';
 const INLINE_SEARCH_DEBOUNCE_MS = 200;
 const INLINE_SEARCH_MAX_RESULTS = 8;
+const INLINE_SEARCH_AUTOFOCUS_RETRY_MS = 50;
+const INLINE_SEARCH_AUTOFOCUS_MAX_ATTEMPTS = 20;
 let searchRuntimePromise = null;
 let searchRuntime = null;
+let lastInlineSearchAutofocusUrl = null;
 const inlineSearchTimers = new WeakMap();
 
 function loadLunrRuntime() {
@@ -355,6 +359,65 @@ function setupInlineSearchWidgets() {
     });
 }
 
+function urlKey() {
+    return window.location.pathname + window.location.search + window.location.hash;
+}
+
+function attemptInlineSearchAutofocus(key, attemptsLeft) {
+    if (lastInlineSearchAutofocusUrl === key) {
+        return;
+    }
+
+    const target = document.querySelector(INLINE_SEARCH_AUTOFOCUS_SELECTOR);
+    if (target instanceof HTMLInputElement) {
+        target.focus();
+        lastInlineSearchAutofocusUrl = key;
+        return;
+    }
+
+    if (attemptsLeft > 0) {
+        setTimeout(function () {
+            attemptInlineSearchAutofocus(key, attemptsLeft - 1);
+        }, INLINE_SEARCH_AUTOFOCUS_RETRY_MS);
+    }
+}
+
+function scheduleInlineSearchAutofocus() {
+    const key = urlKey();
+    if (lastInlineSearchAutofocusUrl === key) {
+        return;
+    }
+
+    requestAnimationFrame(function () {
+        attemptInlineSearchAutofocus(key, INLINE_SEARCH_AUTOFOCUS_MAX_ATTEMPTS);
+    });
+}
+
+function setupInlineSearchAutofocus() {
+    if (window.__inlineSearchAutofocusSetup) {
+        return;
+    }
+    window.__inlineSearchAutofocusSetup = true;
+
+    const originalPushState = window.history.pushState;
+    window.history.pushState = function () {
+        const result = originalPushState.apply(window.history, arguments);
+        scheduleInlineSearchAutofocus();
+        return result;
+    };
+
+    const originalReplaceState = window.history.replaceState;
+    window.history.replaceState = function () {
+        const result = originalReplaceState.apply(window.history, arguments);
+        scheduleInlineSearchAutofocus();
+        return result;
+    };
+
+    window.addEventListener('popstate', scheduleInlineSearchAutofocus);
+
+    scheduleInlineSearchAutofocus();
+}
+
 function setupPullToRefresh() {
     if (window.__pullToRefreshSetup) return;
     window.__pullToRefreshSetup = true;
@@ -528,6 +591,7 @@ const config = {
         }
 
         setupInlineSearchWidgets();
+        setupInlineSearchAutofocus();
         setupPullToRefresh();
     },
     flags: function () {

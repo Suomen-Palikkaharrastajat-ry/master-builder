@@ -630,6 +630,7 @@ viewSearchWidget liveSearch =
                  , Attr.type_ "search"
                  , Attr.placeholder "Hae sivustolta"
                  , Attr.attribute "autocomplete" "off"
+                 , Attr.attribute "data-search-widget-autofocus" "true"
                  ]
                     ++ (if liveSearch then
                             [ Attr.attribute "data-search-widget-input" "true" ]
