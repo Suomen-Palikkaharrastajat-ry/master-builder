@@ -127,7 +127,7 @@ htmlRenderer context =
                                 , Tw.rounded_lg
                                 , Tw.p s3
                                 , Bp.withVariant "motion-safe" [ Tw.transition_colors ]
-                                , Bp.hover [ TwEx.bg_brand_5 ]
+                                , Bp.hover [ TwEx.bg_brand_5, Tw.ring_2, Tw.ring_offset_2, TwEx.ring_brand ]
                                 , Bp.focus [ Tw.outline_none ]
                                 , Bp.focus_visible [ Tw.ring_2, Tw.ring_offset_2, TwEx.ring_brand ]
                                 ]
@@ -205,7 +205,7 @@ htmlRenderer context =
                                 , Tw.shadow_sm
                                 , Tw.overflow_hidden
                                 , Bp.withVariant "motion-safe" [ Tw.transition_colors ]
-                                , Bp.hover [ TwEx.bg_brand_5, Tw.border_simple TC.brand ]
+                                , Bp.hover [ TwEx.bg_brand_5, Tw.border_simple TC.brand, Tw.ring_2, Tw.ring_offset_2, TwEx.ring_brand ]
                                 , Bp.focus [ Tw.outline_none ]
                                 , Bp.focus_visible [ Tw.ring_2, Tw.ring_offset_2, TwEx.ring_brand ]
                                 ]

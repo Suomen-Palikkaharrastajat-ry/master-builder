@@ -373,8 +373,26 @@ view sharedData page model toMsg pageView =
                         , copyright = config.footer.copyright
                         , disclaimer = Just config.footer.disclaimer
                         }
-                    , MobileDrawer.viewOverlay { isOpen = model.menuOpen, onClose = toMsg (SharedMsg CloseMenu), breakpoint = if isCompact then MobileDrawer.Md else MobileDrawer.Sm }
-                    , viewMobileDrawer page.path model (toMsg << SharedMsg) sharedData.navItems (if isCompact then MobileDrawer.Md else MobileDrawer.Sm)
+                    , MobileDrawer.viewOverlay
+                        { isOpen = model.menuOpen
+                        , onClose = toMsg (SharedMsg CloseMenu)
+                        , breakpoint =
+                            if isCompact then
+                                MobileDrawer.Md
+
+                            else
+                                MobileDrawer.Sm
+                        }
+                    , viewMobileDrawer page.path
+                        model
+                        (toMsg << SharedMsg)
+                        sharedData.navItems
+                        (if isCompact then
+                            MobileDrawer.Md
+
+                         else
+                            MobileDrawer.Sm
+                        )
                     ]
                 ]
             , title = pageView.title
