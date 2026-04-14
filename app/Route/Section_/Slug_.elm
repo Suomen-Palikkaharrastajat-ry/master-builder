@@ -72,6 +72,17 @@ pages =
                         (List.filter
                             (\p -> p.slug /= "index" && not (ContentMarkdown.isPartialSlug p.slug))
                         )
+                    |> BackendTask.andThen
+                        (\params ->
+                            params
+                                |> List.map
+                                    (\p ->
+                                        ContentMarkdown.loadFrontmatter (dir ++ "/" ++ p.section ++ "/" ++ p.slug ++ ".md")
+                                            |> BackendTask.map (\fm -> ( p, fm.published ))
+                                    )
+                                |> BackendTask.combine
+                                |> BackendTask.map (List.filterMap (\( p, pub ) -> if pub then Just p else Nothing))
+                        )
             )
 
 
@@ -178,6 +189,7 @@ view app _ =
               }
             , { label = app.data.frontmatter.title, href = Nothing }
             ]
+
     in
     { title = app.data.frontmatter.title ++ " — " ++ app.sharedData.config.site.title
     , body =

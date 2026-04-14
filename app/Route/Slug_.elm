@@ -68,6 +68,17 @@ pages =
                             |> Glob.match (Glob.literal ".md")
                             |> Glob.toBackendTask
                             |> BackendTask.map (List.filter (\p -> p.slug /= "index" && not (ContentMarkdown.isPartialSlug p.slug)))
+                            |> BackendTask.andThen
+                                (\params ->
+                                    params
+                                        |> List.map
+                                            (\p ->
+                                                ContentMarkdown.loadFrontmatter (dir ++ "/" ++ p.slug ++ ".md")
+                                                    |> BackendTask.map (\fm -> ( p, fm.published ))
+                                            )
+                                        |> BackendTask.combine
+                                        |> BackendTask.map (List.filterMap (\( p, pub ) -> if pub then Just p else Nothing))
+                                )
 
                     sectionIndexes =
                         Glob.succeed (\section -> { slug = section })
@@ -75,6 +86,17 @@ pages =
                             |> Glob.capture Glob.wildcard
                             |> Glob.match (Glob.literal "/index.md")
                             |> Glob.toBackendTask
+                            |> BackendTask.andThen
+                                (\params ->
+                                    params
+                                        |> List.map
+                                            (\p ->
+                                                ContentMarkdown.loadFrontmatter (dir ++ "/" ++ p.slug ++ "/index.md")
+                                                    |> BackendTask.map (\fm -> ( p, fm.published ))
+                                            )
+                                        |> BackendTask.combine
+                                        |> BackendTask.map (List.filterMap (\( p, pub ) -> if pub then Just p else Nothing))
+                                )
                 in
                 BackendTask.map2 (++) flatPages sectionIndexes
             )

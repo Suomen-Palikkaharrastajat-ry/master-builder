@@ -64,6 +64,17 @@ pages =
                     |> Glob.match (Glob.literal ".md")
                     |> Glob.toBackendTask
                     |> BackendTask.map (List.filter (\p -> not (ContentMarkdown.isPartialSlug p.slug)))
+                    |> BackendTask.andThen
+                        (\params ->
+                            params
+                                |> List.map
+                                    (\p ->
+                                        ContentMarkdown.loadFrontmatter (dir ++ "/blog/" ++ p.slug ++ ".md")
+                                            |> BackendTask.map (\fm -> ( p, fm.published ))
+                                    )
+                                |> BackendTask.combine
+                                |> BackendTask.map (List.filterMap (\( p, pub ) -> if pub then Just p else Nothing))
+                        )
             )
 
 

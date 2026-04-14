@@ -188,7 +188,7 @@ navItemsTask =
                 BackendTask.map2 (++) flatFrontmatters sectionFrontmatters
             )
         |> BackendTask.map
-            (List.filter (\item -> item.frontmatter.nav /= NavHidden)
+            (List.filter (\item -> item.frontmatter.nav /= NavHidden && item.frontmatter.published)
                 >> List.map
                     (\item ->
                         let
