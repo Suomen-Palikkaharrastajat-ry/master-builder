@@ -1,24 +1,23 @@
 module DesignTokens.Accessibility exposing
-    ( ringAccentColor
-    , ringAccentOffsetPx
-    , ringAccentTailwindClass
-    , ringAccentWidthPx
-    , ringBrandColor
+    ( ringBrandWidthPx
     , ringBrandOffsetPx
+    , ringBrandColor
     , ringBrandTailwindClass
-    , ringBrandWidthPx
-    , ringErrorColor
-    , ringErrorOffsetPx
-    , ringErrorTailwindClass
+    , ringAccentWidthPx
+    , ringAccentOffsetPx
+    , ringAccentColor
+    , ringAccentTailwindClass
     , ringErrorWidthPx
+    , ringErrorOffsetPx
+    , ringErrorColor
+    , ringErrorTailwindClass
     )
 
-{-| Focus ring tokens for accessible interactive elements.
--}
+
+{-| Focus ring tokens for accessible interactive elements. -}
 
 
-{-| Default focus ring — brand-colored. Use for most interactive elements.
--}
+{-| Default focus ring — brand-colored. Use for most interactive elements. -}
 ringBrandWidthPx : Int
 ringBrandWidthPx =
     2
@@ -38,9 +37,7 @@ ringBrandTailwindClass : String
 ringBrandTailwindClass =
     "focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-brand"
 
-
-{-| Accent focus ring — yellow. Use for CTAs on dark backgrounds.
--}
+{-| Accent focus ring — yellow. Use for CTAs on dark backgrounds. -}
 ringAccentWidthPx : Int
 ringAccentWidthPx =
     2
@@ -60,9 +57,7 @@ ringAccentTailwindClass : String
 ringAccentTailwindClass =
     "focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-brand-yellow"
 
-
-{-| Error focus ring — red. Use for invalid form fields.
--}
+{-| Error focus ring — red. Use for invalid form fields. -}
 ringErrorWidthPx : Int
 ringErrorWidthPx =
     2
