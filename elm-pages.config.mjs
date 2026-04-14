@@ -11,6 +11,7 @@ export default {
   headTagsTemplate(context) {
     return `
 <meta name="generator" content="elm-pages v${context.cliVersion}" />
+<script>window.addEventListener('load',function(){var s=document.createElement('script');s.src='https://kehys.palikkaharrastajat.fi/bricks-viewer.iife.js';document.head.appendChild(s);});</script>
 `;
   },
   preloadTagForFile(file) {

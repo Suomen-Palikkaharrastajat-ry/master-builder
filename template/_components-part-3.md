@@ -146,50 +146,48 @@ A panel without a title or icon.
 
 ## Image + Text
 
-Use `<with-image src="…">` to place an image beside a block of content in a two-column layout. The `side` attribute controls which side the image appears on — `right` (default) or `left`. Use `alt` for an accessible description. The optional `caption` attribute renders a centred caption below the image. The optional `maxwidth` attribute constrains the component width — accepts `lg`, `2xl`, `3xl`, or `4xl`.
+Add a `{float-right}` or `{float-left}` directive to a standard Markdown image alt text to float the image alongside the following prose. On small screens the image becomes a full-width block above the text. Combine with `{max-lg}`, `{max-2xl}`, `{max-3xl}`, or `{max-4xl}` to cap the image width. Add a caption via the Markdown image title field: `![...](src "caption text")`. Use `<clear>` to reset the float before the next section.
 
-<tab-group name="with-image">
+<tab-group name="float-image">
 
 <preview>
 
-<with-image src="/logo/square/svg/square-smile.svg" alt="Square smile logo" side="right">
+![{float-right} Square smile logo](/logo/square/svg/square-smile.svg)
 
 ### Image on the right
 
-Pair an image with descriptive copy to create rich editorial layouts without writing a single line of CSS. The grid collapses to a single column on small screens.
+Pair an image with descriptive copy to create rich editorial layouts without writing a single line of CSS. On small screens the image stacks above the text. Use `{float-left}` to swap sides.
 
-</with-image>
+<clear>
 
-<with-image src="/logo/square/svg/square-smile.svg" alt="Square smile logo" side="left" caption="Square smile logo variant." maxwidth="3xl">
+![{float-left max-3xl} Square smile logo](/logo/square/svg/square-smile.svg "Square smile logo variant.")
 
 ### Image on the left, with caption and max-width
 
-Use `caption` to add a label below the image. Use `maxwidth` to stop the layout from stretching to full container width — useful for portrait images or tighter editorial compositions.
+Use a Markdown title to add a caption below the image. Use `{max-3xl}` (or `max-lg`, `max-2xl`, `max-4xl`) to cap the image width — useful for portrait images or tighter compositions.
 
-</with-image>
+<clear>
 
 </preview>
 
 <example>
 
-```html
-&lt;with-image src="/images/screenshot.png" alt="Screenshot" side="right"&gt;
+```markdown
+![{float-right} Alt text](/images/screenshot.png)
 
 ### Your heading
 
 Your description text goes here.
 
-&lt;/with-image&gt;
+<clear>
 
-&lt;with-image src="/images/photo.jpg" alt="Photo" side="left"
-  caption="Optional caption below the image."
-  maxwidth="3xl"&gt;
+![{float-left max-3xl} Alt text](/images/photo.jpg "Optional caption")
 
 ### Constrained width
 
 Content here.
 
-&lt;/with-image&gt;
+<clear>
 ```
 
 </example>
