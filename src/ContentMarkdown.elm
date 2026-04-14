@@ -127,7 +127,7 @@ loadRootChildren dir =
                     )
     in
     BackendTask.map2 (++) flatPages sectionIndexes
-        |> BackendTask.map (List.sortBy .order)
+        |> BackendTask.map (List.filter .published >> List.sortBy .order)
 
 
 {-| Load frontmatters of all non-index, non-partial pages inside a section directory,
@@ -147,7 +147,7 @@ loadSectionChildren dir section =
                     |> List.map (\s -> loadFrontmatter (dir ++ "/" ++ section ++ "/" ++ s ++ ".md"))
                     |> BackendTask.combine
             )
-        |> BackendTask.map (List.sortBy .order)
+        |> BackendTask.map (List.filter .published >> List.sortBy .order)
 
 
 {-| Load a TocNode list for a given section (or "" for root).

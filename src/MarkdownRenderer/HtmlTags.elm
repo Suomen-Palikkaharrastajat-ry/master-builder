@@ -22,6 +22,7 @@ import ContentMarkdown exposing (TocNode)
 import FeatherIcons
 import Html exposing (Html)
 import Html.Attributes as Attr
+import Html.Lazy
 import Markdown.Html
 import MarkdownRenderer.Helpers as Helpers
 import Tailwind as Tw exposing (classes)
@@ -364,65 +365,9 @@ htmlRenderer context =
             |> Markdown.Html.withOptionalAttribute "color"
             |> Markdown.Html.withOptionalAttribute "title"
             |> Markdown.Html.withOptionalAttribute "icon"
-        , -- <with-image src="…" alt="…" side="left|right" caption="…" maxwidth="lg|2xl|3xl|4xl">…</with-image>
-          Markdown.Html.tag "with-image"
-            (\src alt side caption maxwidth children ->
-                let
-                    imgEl =
-                        Html.img
-                            [ Attr.src (Helpers.normalizeSrc src)
-                            , Attr.alt (Maybe.withDefault "" alt)
-                            , classes [ Tw.w_full, Tw.rounded_lg ]
-                            ]
-                            []
-
-                    imgBlock =
-                        case caption of
-                            Just cap ->
-                                Html.figure [ classes [ Tw.m Th.s0 ] ]
-                                    [ imgEl
-                                    , Html.figcaption
-                                        [ classes [ Tw.mt s2, Tw.type_caption, Tw.text_center, Tw.text_simple TC.textMuted ] ]
-                                        [ Html.text cap ]
-                                    ]
-
-                            Nothing ->
-                                imgEl
-
-                    isRight =
-                        Maybe.withDefault "right" side == "right"
-
-                    maxWidthTw =
-                        case maxwidth of
-                            Just "lg" ->
-                                [ TwEx.max_w_lg, Tw.mx_auto ]
-
-                            Just "2xl" ->
-                                [ TwEx.max_w_2xl, Tw.mx_auto ]
-
-                            Just "3xl" ->
-                                [ TwEx.max_w_3xl, Tw.mx_auto ]
-
-                            Just "4xl" ->
-                                [ TwEx.max_w_4xl, Tw.mx_auto ]
-
-                            _ ->
-                                []
-                in
-                Html.div
-                    [ classes ([ TwEx.not_prose, Tw.grid, Tw.grid_cols_1, Bp.md [ Tw.grid_cols_2 ], Tw.gap s8, Tw.items_center, Tw.my s8 ] ++ maxWidthTw) ]
-                    (if isRight then
-                        [ Html.div [] children, Html.div [] [ imgBlock ] ]
-
-                     else
-                        [ Html.div [] [ imgBlock ], Html.div [] children ]
-                    )
-            )
-            |> Markdown.Html.withAttribute "src"
-            |> Markdown.Html.withOptionalAttribute "alt"
-            |> Markdown.Html.withOptionalAttribute "side"
-            |> Markdown.Html.withOptionalAttribute "caption"
-            |> Markdown.Html.withOptionalAttribute "maxwidth"
+        , -- <clear> — inserts a float-clearing div
+          Markdown.Html.tag "clear"
+            (\_ -> Html.div [ classes [ Tw.clear_both ] ] [])
         , -- <spinner size="small|medium|large" label="…"/>
           Markdown.Html.tag "spinner"
             (\size label _ ->
@@ -594,6 +539,86 @@ htmlRenderer context =
                         Html.text ""
             )
             |> Markdown.Html.withOptionalAttribute "depth"
+        , -- <bricks-viewer src="…" controls float="left|right" max-width="400px" camera-azimuth="…" …></bricks-viewer>
+          -- float="left|right"  — floats the viewer so prose text wraps around it.
+          -- Not set             — ml-auto (right-aligned block, no text wrapping).
+          -- max-width           — any CSS value, e.g. "400px" or "40%".
+          -- Html.Lazy.lazy prevents Elm's vdom from re-diffing this subtree on every
+          -- Shared re-render (menu toggle etc.), which would otherwise remove children
+          -- appended to the light DOM by the bricks-viewer script.
+          Markdown.Html.tag "bricks-viewer"
+            (\src controls azimuth elevation distance tx ty tz motorIndex rpm float maxWidth _ ->
+                let
+                    viewerAttrs =
+                        { src = src
+                        , controls = controls
+                        , azimuth = azimuth
+                        , elevation = elevation
+                        , distance = distance
+                        , tx = tx
+                        , ty = ty
+                        , tz = tz
+                        , motorIndex = motorIndex
+                        , rpm = rpm
+                        }
+
+                    viewer =
+                        Html.Lazy.lazy
+                            (\a ->
+                                Html.node "bricks-viewer"
+                                    (List.filterMap identity
+                                        [ Maybe.map (Attr.attribute "src") a.src
+                                        , Maybe.map (\_ -> Attr.attribute "controls" "") a.controls
+                                        , Maybe.map (Attr.attribute "camera-azimuth") a.azimuth
+                                        , Maybe.map (Attr.attribute "camera-elevation") a.elevation
+                                        , Maybe.map (Attr.attribute "camera-distance") a.distance
+                                        , Maybe.map (Attr.attribute "camera-target-x") a.tx
+                                        , Maybe.map (Attr.attribute "camera-target-y") a.ty
+                                        , Maybe.map (Attr.attribute "camera-target-z") a.tz
+                                        , Maybe.map (Attr.attribute "motor-index") a.motorIndex
+                                        , Maybe.map (Attr.attribute "rpm") a.rpm
+                                        ]
+                                    )
+                                    []
+                            )
+                            viewerAttrs
+
+                    floatClasses =
+                        case float of
+                            Just "left" ->
+                                [ TwEx.not_prose, Tw.float_left, Tw.mr s6, Tw.mb s4 ]
+
+                            Just "right" ->
+                                [ TwEx.not_prose, Tw.float_right, Tw.ml s6, Tw.mb s4 ]
+
+                            _ ->
+                                [ TwEx.not_prose, Tw.ml_auto, Tw.mb s4 ]
+
+                in
+                Html.div
+                    (classes floatClasses
+                        :: (case maxWidth of
+                                Just w ->
+                                    [ Attr.style "max-width" w ]
+
+                                Nothing ->
+                                    []
+                           )
+                    )
+                    [ viewer ]
+            )
+            |> Markdown.Html.withOptionalAttribute "src"
+            |> Markdown.Html.withOptionalAttribute "controls"
+            |> Markdown.Html.withOptionalAttribute "camera-azimuth"
+            |> Markdown.Html.withOptionalAttribute "camera-elevation"
+            |> Markdown.Html.withOptionalAttribute "camera-distance"
+            |> Markdown.Html.withOptionalAttribute "camera-target-x"
+            |> Markdown.Html.withOptionalAttribute "camera-target-y"
+            |> Markdown.Html.withOptionalAttribute "camera-target-z"
+            |> Markdown.Html.withOptionalAttribute "motor-index"
+            |> Markdown.Html.withOptionalAttribute "rpm"
+            |> Markdown.Html.withOptionalAttribute "float"
+            |> Markdown.Html.withOptionalAttribute "max-width"
         ]
 
 
