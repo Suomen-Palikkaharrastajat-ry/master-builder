@@ -558,38 +558,29 @@ htmlRenderer context =
                         , tz = tz
                         , motorIndex = motorIndex
                         , rpm = rpm
+                        , extraClass = extraClass
                         }
-
-                    viewer =
-                        Html.Lazy.lazy
-                            (\a ->
-                                Html.node "bricks-viewer"
-                                    (List.filterMap identity
-                                        [ Maybe.map (Attr.attribute "src") a.src
-                                        , Maybe.map (\_ -> Attr.attribute "controls" "") a.controls
-                                        , Maybe.map (Attr.attribute "camera-azimuth") a.azimuth
-                                        , Maybe.map (Attr.attribute "camera-elevation") a.elevation
-                                        , Maybe.map (Attr.attribute "camera-distance") a.distance
-                                        , Maybe.map (Attr.attribute "camera-target-x") a.tx
-                                        , Maybe.map (Attr.attribute "camera-target-y") a.ty
-                                        , Maybe.map (Attr.attribute "camera-target-z") a.tz
-                                        , Maybe.map (Attr.attribute "motor-index") a.motorIndex
-                                        , Maybe.map (Attr.attribute "rpm") a.rpm
-                                        ]
-                                    )
-                                    []
-                            )
-                            viewerAttrs
                 in
-                Html.div
-                    (case extraClass of
-                        Just c ->
-                            [ Attr.class c ]
-
-                        Nothing ->
+                Html.Lazy.lazy
+                    (\a ->
+                        Html.node "bricks-viewer"
+                            (List.filterMap identity
+                                [ Maybe.map (Attr.attribute "src") a.src
+                                , Maybe.map (\_ -> Attr.attribute "controls" "") a.controls
+                                , Maybe.map (Attr.attribute "camera-azimuth") a.azimuth
+                                , Maybe.map (Attr.attribute "camera-elevation") a.elevation
+                                , Maybe.map (Attr.attribute "camera-distance") a.distance
+                                , Maybe.map (Attr.attribute "camera-target-x") a.tx
+                                , Maybe.map (Attr.attribute "camera-target-y") a.ty
+                                , Maybe.map (Attr.attribute "camera-target-z") a.tz
+                                , Maybe.map (Attr.attribute "motor-index") a.motorIndex
+                                , Maybe.map (Attr.attribute "rpm") a.rpm
+                                , Maybe.map Attr.class a.extraClass
+                                ]
+                            )
                             []
                     )
-                    [ viewer ]
+                    viewerAttrs
             )
             |> Markdown.Html.withOptionalAttribute "src"
             |> Markdown.Html.withOptionalAttribute "controls"
