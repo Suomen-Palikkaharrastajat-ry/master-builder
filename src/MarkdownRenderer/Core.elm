@@ -101,68 +101,21 @@ viewLink link children =
 viewImage : { alt : String, src : String, title : Maybe String } -> Html msg
 viewImage img =
     let
-        ( directives, altText ) =
-            Helpers.splitImageDirectives img.alt
+        ( rawClasses, altText ) =
+            Helpers.splitClassPrefix img.alt
 
-        isFloatRight =
-            List.member "float-right" directives
+        figAttrs =
+            case rawClasses of
+                Just classStr ->
+                    [ Attr.class classStr ]
 
-        isFloatLeft =
-            List.member "float-left" directives
-
-        isFloat =
-            isFloatRight || isFloatLeft
-
-        maxWidthClass =
-            if List.member "max-lg" directives then
-                [ TwEx.max_w_lg ]
-
-            else if List.member "max-2xl" directives then
-                [ TwEx.max_w_2xl ]
-
-            else if List.member "max-3xl" directives then
-                [ TwEx.max_w_3xl ]
-
-            else if List.member "max-4xl" directives then
-                [ TwEx.max_w_4xl ]
-
-            else
-                []
-
-        centerClass =
-            if not isFloat && maxWidthClass /= [] then
-                [ Tw.mx_auto ]
-
-            else
-                []
-
-        figureClasses =
-            if isFloatRight then
-                [ TwEx.not_prose, Tw.mb s4, Bp.md [ Tw.float_right, Tw.ml s6 ] ]
-                    ++ maxWidthClass
-
-            else if isFloatLeft then
-                [ TwEx.not_prose, Tw.mb s4, Bp.md [ Tw.float_left, Tw.mr s6 ] ]
-                    ++ maxWidthClass
-
-            else
-                [ Tw.my s8 ] ++ maxWidthClass ++ centerClass
-
-        imgClasses =
-            if isFloat then
-                Tw.batch [ Tw.w_full, Tw.rounded_lg ]
-
-            else if List.member "self-center" directives then
-                Tw.batch [ Tw.mx_auto, Tw.w_4over6 ]
-
-            else
-                Tw.batch []
+                Nothing ->
+                    [ classes [ Tw.my s8 ] ]
     in
-    Html.figure [ classes figureClasses ]
+    Html.figure figAttrs
         [ Html.img
             [ Attr.src (Helpers.normalizeSrc img.src)
             , Attr.alt altText
-            , classes [ imgClasses ]
             ]
             []
         , case img.title of

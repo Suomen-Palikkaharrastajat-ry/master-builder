@@ -1,4 +1,4 @@
-module MarkdownRenderer.Helpers exposing (decodeHtmlEntities, externalLinkAttrs, normalizeSrc, splitClassPrefix, splitImageDirectives)
+module MarkdownRenderer.Helpers exposing (decodeHtmlEntities, externalLinkAttrs, normalizeSrc, splitClassPrefix)
 
 {-| Shared helpers for markdown rendering.
 -}
@@ -7,22 +7,6 @@ import Html exposing (Attribute)
 import Html.Attributes as Attr
 import Regex
 
-
-splitImageDirectives : String -> ( List String, String )
-splitImageDirectives str =
-    let
-        ( maybeClass, altText ) =
-            splitClassPrefix str
-    in
-    case maybeClass of
-        Nothing ->
-            ( [], altText )
-
-        Just "" ->
-            ( [], altText )
-
-        Just cls ->
-            ( String.words cls, altText )
 
 
 splitClassPrefix : String -> ( Maybe String, String )

@@ -27,7 +27,7 @@ import Markdown.Html
 import MarkdownRenderer.Helpers as Helpers
 import Tailwind as Tw exposing (classes)
 import Tailwind.Breakpoints as Bp
-import Tailwind.Theme as Th exposing (s0_dot_5, s1, s10, s1_dot_5, s2, s2_dot_5, s3, s4, s6, s8, white)
+import Tailwind.Theme as Th exposing (s0_dot_5, s1, s10, s1_dot_5, s2, s2_dot_5, s3, s4, s8, white)
 import TailwindExtra as TwEx
 import TailwindTokens as TC
 
@@ -539,15 +539,13 @@ htmlRenderer context =
                         Html.text ""
             )
             |> Markdown.Html.withOptionalAttribute "depth"
-        , -- <bricks-viewer src="…" controls float="left|right" max-width="400px" camera-azimuth="…" …></bricks-viewer>
-          -- float="left|right"  — floats the viewer so prose text wraps around it.
-          -- Not set             — ml-auto (right-aligned block, no text wrapping).
-          -- max-width           — any CSS value, e.g. "400px" or "40%".
+        , -- <bricks-viewer src="…" controls class="…" camera-azimuth="…" …></bricks-viewer>
+          -- class  — Tailwind classes on the wrapper div, e.g. "float-right ml-6 mb-4 max-w-sm not-prose".
           -- Html.Lazy.lazy prevents Elm's vdom from re-diffing this subtree on every
           -- Shared re-render (menu toggle etc.), which would otherwise remove children
           -- appended to the light DOM by the bricks-viewer script.
           Markdown.Html.tag "bricks-viewer"
-            (\src controls azimuth elevation distance tx ty tz motorIndex rpm float maxWidth _ ->
+            (\src controls azimuth elevation distance tx ty tz motorIndex rpm extraClass _ ->
                 let
                     viewerAttrs =
                         { src = src
@@ -582,28 +580,14 @@ htmlRenderer context =
                                     []
                             )
                             viewerAttrs
-
-                    floatClasses =
-                        case float of
-                            Just "left" ->
-                                [ TwEx.not_prose, Tw.float_left, Tw.mr s6, Tw.mb s4 ]
-
-                            Just "right" ->
-                                [ TwEx.not_prose, Tw.float_right, Tw.ml s6, Tw.mb s4 ]
-
-                            _ ->
-                                [ TwEx.not_prose, Tw.ml_auto, Tw.mb s4 ]
-
                 in
                 Html.div
-                    (classes floatClasses
-                        :: (case maxWidth of
-                                Just w ->
-                                    [ Attr.style "max-width" w ]
+                    (case extraClass of
+                        Just c ->
+                            [ Attr.class c ]
 
-                                Nothing ->
-                                    []
-                           )
+                        Nothing ->
+                            []
                     )
                     [ viewer ]
             )
@@ -617,8 +601,7 @@ htmlRenderer context =
             |> Markdown.Html.withOptionalAttribute "camera-target-z"
             |> Markdown.Html.withOptionalAttribute "motor-index"
             |> Markdown.Html.withOptionalAttribute "rpm"
-            |> Markdown.Html.withOptionalAttribute "float"
-            |> Markdown.Html.withOptionalAttribute "max-width"
+            |> Markdown.Html.withOptionalAttribute "class"
         ]
 
 
