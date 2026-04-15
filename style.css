@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@source "../content/**/*.md";
 @plugin "@tailwindcss/typography";
 
 /* Brand/semantic token utilities — must be listed explicitly because the

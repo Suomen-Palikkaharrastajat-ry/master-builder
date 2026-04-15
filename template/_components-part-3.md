@@ -146,25 +146,25 @@ A panel without a title or icon.
 
 ## Image + Text
 
-Add a `{float-right}` or `{float-left}` directive to a standard Markdown image alt text to float the image alongside the following prose. On small screens the image becomes a full-width block above the text. Combine with `{max-lg}`, `{max-2xl}`, `{max-3xl}`, or `{max-4xl}` to cap the image width. Add a caption via the Markdown image title field: `![...](src "caption text")`. Use `<clear>` to reset the float before the next section.
+Write Tailwind classes inside `{…}` in the image alt text to style the `<figure>` wrapper. Use `not-prose` to escape the prose container, `md:float-right` or `md:float-left` to float the image alongside following text on medium+ screens, and any other Tailwind utilities you need. Add a caption via the Markdown image title field: `![...](src "caption text")`. Use `<clear>` to reset the float before the next section.
 
 <tab-group name="float-image">
 
 <preview>
 
-![{float-right} Square smile logo](/logo/square/svg/square-smile.svg)
+![{not-prose mb-4 md:float-right md:ml-6} Square smile logo](/logo/square/svg/square-smile.svg)
 
 ### Image on the right
 
-Pair an image with descriptive copy to create rich editorial layouts without writing a single line of CSS. On small screens the image stacks above the text. Use `{float-left}` to swap sides.
+Pair an image with descriptive copy to create rich editorial layouts. On small screens the image stacks above the text. Use `md:float-left md:mr-6` to swap sides.
 
 <clear>
 
-![{float-left max-3xl} Square smile logo](/logo/square/svg/square-smile.svg "Square smile logo variant.")
+![{not-prose mb-4 md:float-left md:mr-6 max-w-xs} Square smile logo](/logo/square/svg/square-smile.svg "Square smile logo variant.")
 
 ### Image on the left, with caption and max-width
 
-Use a Markdown title to add a caption below the image. Use `{max-3xl}` (or `max-lg`, `max-2xl`, `max-4xl`) to cap the image width — useful for portrait images or tighter compositions.
+Use a Markdown title to add a caption below the image. Any Tailwind utility works — `max-w-xs`, `max-w-sm`, `w-48`, `rounded-xl`, etc.
 
 <clear>
 
@@ -173,7 +173,7 @@ Use a Markdown title to add a caption below the image. Use `{max-3xl}` (or `max-
 <example>
 
 ```markdown
-![{float-right} Alt text](/images/screenshot.png)
+![{not-prose mb-4 md:float-right md:ml-6} Alt text](/images/screenshot.png)
 
 ### Your heading
 
@@ -181,7 +181,7 @@ Your description text goes here.
 
 <clear>
 
-![{float-left max-3xl} Alt text](/images/photo.jpg "Optional caption")
+![{not-prose mb-4 md:float-left md:mr-6 max-w-xs} Alt text](/images/photo.jpg "Optional caption")
 
 ### Constrained width
 
