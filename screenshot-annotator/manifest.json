@@ -1,0 +1,46 @@
+{
+  "manifest_version": 2,
+  "name": "Palikkashot Annotator",
+  "version": "1.0",
+  "description": "Annotate web pages with shapes, arrows, and text, then capture a screenshot.",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "palikkashot-annotator@local",
+      "strict_min_version": "109.0"
+    }
+  },
+  "permissions": ["tabs", "downloads", "storage", "<all_urls>"],
+  "browser_action": {
+    "default_icon": {
+      "48": "icons/icon.svg",
+      "96": "icons/icon.svg"
+    },
+    "default_title": "Toggle Palikkashot Annotator"
+  },
+  "background": {
+    "scripts": ["background.js"],
+    "persistent": false
+  },
+  "commands": {
+    "capture-visible-shortcut": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+V"
+      },
+      "description": "Capture visible area screenshot"
+    },
+    "capture-fullpage-shortcut": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+F"
+      },
+      "description": "Capture full page screenshot"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "css": ["content.css"],
+      "run_at": "document_idle"
+    }
+  ]
+}

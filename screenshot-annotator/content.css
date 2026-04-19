@@ -1,0 +1,392 @@
+/* Screenshot Annotator — injected styles */
+
+#annotator-root {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483647;
+  pointer-events: none;
+}
+
+#annotator-root.ann-capture-ui-hidden #annotator-toolbar,
+#annotator-root.ann-capture-ui-hidden #annotator-snap-hint,
+#annotator-root.ann-capture-ui-hidden #ann-capture-hint,
+#annotator-root.ann-capture-ui-hidden #ann-capture-actions,
+#annotator-root.ann-capture-ui-hidden #ann-toast {
+  display: none !important;
+}
+
+/* ── Toolbar ──────────────────────────────────────────────── */
+
+#annotator-toolbar {
+  position: fixed;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 8px;
+  background: rgba(24, 24, 27, 0.92);
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 10px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.45);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  pointer-events: all;
+  user-select: none;
+  font-family: system-ui, sans-serif;
+  font-size: 13px;
+  color: #f4f4f5;
+}
+
+.ann-sep {
+  width: 1px;
+  height: 24px;
+  background: rgba(255,255,255,0.15);
+  margin: 0 4px;
+  flex-shrink: 0;
+}
+
+/* Drag handle */
+.ann-drag {
+  cursor: grab;
+  padding: 4px 6px;
+  color: rgba(255,255,255,0.35);
+  font-size: 16px;
+  line-height: 1;
+  border-radius: 4px;
+}
+.ann-drag:hover { color: rgba(255,255,255,0.65); }
+.ann-drag:active { cursor: grabbing; }
+
+/* Tool buttons */
+.ann-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: none;
+  background: transparent;
+  color: rgba(255,255,255,0.7);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  padding: 0;
+  transition: background 0.1s, color 0.1s;
+}
+.ann-btn:hover {
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+}
+.ann-btn.ann-active {
+  background: #3b82f6;
+  color: #fff;
+}
+.ann-btn svg {
+  width: 16px;
+  height: 16px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+.ann-btn.ann-danger:hover {
+  background: rgba(239,68,68,0.25);
+  color: #f87171;
+}
+.ann-btn.ann-capture:hover {
+  background: rgba(34,197,94,0.2);
+  color: #4ade80;
+}
+.ann-btn.ann-capture-alt:hover {
+  background: rgba(59,130,246,0.2);
+  color: #93c5fd;
+}
+.ann-btn[disabled] {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* Color swatches */
+.ann-colors {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.ann-swatch {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: transform 0.1s;
+}
+.ann-swatch:hover { transform: scale(1.2); }
+.ann-swatch.ann-active {
+  border-color: #fff;
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.5);
+}
+
+/* Stroke width buttons */
+.ann-widths {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+.ann-width {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-radius: 5px;
+  padding: 0;
+  transition: background 0.1s;
+}
+.ann-width:hover { background: rgba(255,255,255,0.1); }
+.ann-width.ann-active { background: rgba(59,130,246,0.4); }
+.ann-width span {
+  display: block;
+  background: rgba(255,255,255,0.75);
+  border-radius: 9px;
+  width: 14px;
+}
+
+/* ── SVG overlay ──────────────────────────────────────────── */
+
+#annotator-svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  overflow: visible;
+  z-index: 2147483646;
+}
+
+#annotator-svg.ann-drawing {
+  pointer-events: all;
+  cursor: crosshair;
+}
+
+#annotator-svg.ann-selecting {
+  pointer-events: all;
+  cursor: default;
+}
+
+#annotator-svg.ann-capture-selecting {
+  pointer-events: all;
+  cursor: crosshair;
+}
+
+#annotator-svg.ann-capture-adjusting {
+  pointer-events: all;
+  cursor: default;
+}
+
+#ann-capture-mask {
+  pointer-events: none;
+  fill: rgba(17, 24, 39, 0.38);
+  fill-rule: evenodd;
+  display: none;
+}
+
+#ann-capture-mask.ann-visible {
+  display: block;
+}
+
+#ann-capture-box {
+  pointer-events: none;
+  fill: rgba(59, 130, 246, 0.15);
+  stroke: #3b82f6;
+  stroke-width: 1.5;
+  stroke-dasharray: 6 4;
+  display: none;
+}
+
+#ann-capture-box.ann-visible {
+  display: block;
+}
+
+#ann-capture-handles {
+  pointer-events: none;
+}
+
+.ann-capture-handle {
+  pointer-events: all;
+  fill: #ffffff;
+  stroke: #3b82f6;
+  stroke-width: 1.5;
+}
+
+#ann-capture-hint {
+  position: fixed;
+  top: 58px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: rgba(24, 24, 27, 0.9);
+  color: #fff;
+  font-family: system-ui, sans-serif;
+  font-size: 12px;
+  line-height: 1.35;
+  opacity: 0;
+  transition: opacity 0.12s;
+  pointer-events: none;
+  z-index: 2147483647;
+}
+
+#ann-capture-hint.ann-visible {
+  opacity: 1;
+}
+
+#ann-capture-actions {
+  position: fixed;
+  display: none;
+  align-items: center;
+  gap: 6px;
+  padding: 6px;
+  border-radius: 8px;
+  background: rgba(17, 24, 39, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  z-index: 2147483647;
+  pointer-events: all;
+}
+
+#ann-capture-actions.ann-visible {
+  display: flex;
+}
+
+.ann-capture-action {
+  appearance: none;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-family: system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.1s, border-color 0.1s, color 0.1s;
+}
+
+.ann-capture-save {
+  background: #3b82f6;
+  border-color: #60a5fa;
+  color: #ffffff;
+}
+
+.ann-capture-save:hover {
+  background: #2563eb;
+}
+
+.ann-capture-cancel {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+}
+
+.ann-capture-cancel:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+#annotator-svg.ann-capture-ui-hidden #ann-capture-mask,
+#annotator-svg.ann-capture-ui-hidden #ann-capture-box,
+#annotator-svg.ann-capture-ui-hidden #ann-capture-handles,
+#annotator-svg.ann-capture-ui-hidden #ann-select-layer {
+  display: none !important;
+}
+
+#ann-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 18px;
+  transform: translateX(-50%);
+  min-width: 220px;
+  max-width: min(92vw, 520px);
+  padding: 9px 12px;
+  border-radius: 8px;
+  background: rgba(17, 24, 39, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #fff;
+  font-family: system-ui, sans-serif;
+  font-size: 12px;
+  line-height: 1.35;
+  text-align: center;
+  opacity: 0;
+  transition: opacity 0.14s;
+  pointer-events: none;
+  z-index: 2147483647;
+}
+
+#ann-toast.ann-visible {
+  opacity: 1;
+}
+
+#ann-toast.ann-toast-success {
+  background: rgba(20, 83, 45, 0.95);
+  border-color: rgba(74, 222, 128, 0.45);
+}
+
+#ann-toast.ann-toast-error {
+  background: rgba(127, 29, 29, 0.95);
+  border-color: rgba(248, 113, 113, 0.5);
+}
+
+/* Text annotation foreignObject */
+.ann-text-fo {
+  overflow: visible;
+}
+.ann-text-input {
+  background: rgba(24,24,27,0.85);
+  color: #fff;
+  border: none;
+  outline: none;
+  border-radius: 4px;
+  padding: 3px 6px;
+  font-family: system-ui, sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  min-width: 60px;
+  min-height: 28px;
+  white-space: nowrap;
+  display: inline-block;
+  cursor: text;
+}
+
+/* ── Snap hint ────────────────────────────────────────────── */
+
+#annotator-snap-hint {
+  position: fixed;
+  pointer-events: none;
+  border: 2px dashed #3b82f6;
+  border-radius: 3px;
+  box-shadow: 0 0 0 1px rgba(59,130,246,0.3);
+  opacity: 0;
+  transition: opacity 0.08s, background 0.08s;
+}
+#annotator-snap-hint.ann-visible {
+  opacity: 1;
+}
+/* Ctrl+Click mode: solid border + faint fill to show "will stamp here" */
+#annotator-snap-hint.ann-ctrl {
+  border-style: solid;
+  background: rgba(59, 130, 246, 0.08);
+}
+
+/* ── Selection handles ────────────────────────────────────── */
+
+.ann-handle {
+  cursor: nwse-resize;
+  fill: #fff;
+  stroke: #3b82f6;
+  stroke-width: 1.5;
+}
