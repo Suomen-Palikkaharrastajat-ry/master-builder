@@ -1068,7 +1068,7 @@ function ctrlClickAnnotate(x, y) {
       div.contentEditable = "true";
       div.style.color = c;
       div.style.fontSize = `${14 + sw * 2}px`;
-      div.textContent = "Text";
+      div.textContent = window.getSelection().toString().trim();
       el.appendChild(div);
       break;
     }
@@ -1089,7 +1089,7 @@ function ctrlClickAnnotate(x, y) {
   }
   if (state.tool === "text") {
     const fo = el.querySelector(".ann-text-input");
-    if (fo) { fo.focus(); fo.select && fo.select(); }
+    if (fo) fo.focus();
   }
 
   updateSnapHint(null);
@@ -1636,6 +1636,11 @@ async function handleCapturedImage(dataUrl) {
 
 function onDrawStart(e) {
   if (e.button !== 0) return;
+  // If a text annotation is focused, clicking elsewhere just blurs it
+  if (document.activeElement && document.activeElement.classList.contains("ann-text-input")) {
+    document.activeElement.blur();
+    return;
+  }
   if (isCaptureInteractionActive()) {
     e.preventDefault();
     e.stopPropagation();
@@ -1729,7 +1734,7 @@ function onDrawEnd(e) {
       }
       if (state.tool === "text") {
         const fo = state.currentEl.querySelector(".ann-text-input");
-        if (fo) { fo.focus(); fo.select && fo.select(); }
+        if (fo) fo.focus();
       }
       updateCaptureButtonTitle();
     }
@@ -1794,7 +1799,7 @@ function createAnnotationStart(x, y) {
       div.contentEditable = "true";
       div.style.color = c;
       div.style.fontSize = `${14 + sw * 2}px`;
-      div.textContent = "Text";
+      div.textContent = window.getSelection().toString().trim();
       fo.appendChild(div);
       return fo;
     }
