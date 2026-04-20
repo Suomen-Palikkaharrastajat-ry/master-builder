@@ -4,6 +4,7 @@ module MarkdownRenderer.HtmlTags exposing (htmlRenderer)
 -}
 
 import Component.Accordion as Accordion
+import List.Extra
 import Component.Alert as Alert
 import Component.Card as Card
 import Component.ColorSwatch as ColorSwatch
@@ -19,6 +20,7 @@ import Component.Timeline as Timeline
 import Component.Toast as Toast
 import Component.Toc as Toc
 import ContentMarkdown exposing (TocNode)
+import MarkdownRenderer exposing (HeadingItem)
 import FeatherIcons
 import Html exposing (Html)
 import Html.Attributes as Attr
@@ -27,12 +29,12 @@ import Markdown.Html
 import MarkdownRenderer.Helpers as Helpers
 import Tailwind as Tw exposing (classes)
 import Tailwind.Breakpoints as Bp
-import Tailwind.Theme as Th exposing (s0_dot_5, s1, s10, s1_dot_5, s2, s2_dot_5, s3, s4, s8, white)
+import Tailwind.Theme as Th exposing (s0_dot_5, s1, s10, s1_dot_5, s2, s2_dot_5, s3, s4, s6, s8, white)
 import TailwindExtra as TwEx
 import TailwindTokens as TC
 
 
-htmlRenderer : { childPages : List TocNode, sectionSlug : Maybe String, pageDir : String } -> Markdown.Html.Renderer (List (Html msg) -> Html msg)
+htmlRenderer : { childPages : List TocNode, sectionSlug : Maybe String, pageDir : String, isIndex : Bool, headings : List HeadingItem } -> Markdown.Html.Renderer (List (Html msg) -> Html msg)
 htmlRenderer context =
     Markdown.Html.oneOf
         [ -- <callout type="info|success|warning|error" icon="…">…</callout>
@@ -498,45 +500,49 @@ htmlRenderer context =
                             |> Maybe.andThen String.toInt
                             |> Maybe.withDefault 99
                 in
-                case context.sectionSlug of
-                    Just section ->
-                        let
-                            nodeHref slug =
-                                if String.isEmpty section then
-                                    "/" ++ slug
-
-                                else
-                                    "/" ++ section ++ "/" ++ slug
-
-                            toTocItem node =
-                                let
-                                    fm =
-                                        node.frontmatter
-
-                                    selfHref =
-                                        nodeHref node.slug
-                                in
-                                { title = fm.title
-                                , href = selfHref
-                                , description = fm.description
-                                , children =
-                                    if maxDepth <= 1 then
-                                        []
+                if context.isIndex then
+                    case context.sectionSlug of
+                        Just section ->
+                            let
+                                nodeHref slug =
+                                    if String.isEmpty section then
+                                        "/" ++ slug
 
                                     else
-                                        List.map
-                                            (\child ->
-                                                { title = child.frontmatter.title
-                                                , href = selfHref ++ "/" ++ child.slug
-                                                }
-                                            )
-                                            node.sectionChildren
-                                }
-                        in
-                        Toc.view (List.map toTocItem context.childPages)
+                                        "/" ++ section ++ "/" ++ slug
 
-                    Nothing ->
-                        Html.text ""
+                                toTocItem node =
+                                    let
+                                        fm =
+                                            node.frontmatter
+
+                                        selfHref =
+                                            nodeHref node.slug
+                                    in
+                                    { title = fm.title
+                                    , href = selfHref
+                                    , description = fm.description
+                                    , children =
+                                        if maxDepth <= 1 then
+                                            []
+
+                                        else
+                                            List.map
+                                                (\child ->
+                                                    { title = child.frontmatter.title
+                                                    , href = selfHref ++ "/" ++ child.slug
+                                                    }
+                                                )
+                                                node.sectionChildren
+                                    }
+                            in
+                            Toc.view (List.map toTocItem context.childPages)
+
+                        Nothing ->
+                            Html.text ""
+
+                else
+                    viewAnchorToc context.headings maxDepth
             )
             |> Markdown.Html.withOptionalAttribute "depth"
         , -- <bricks-viewer src="…" controls class="…" camera-azimuth="…" …></bricks-viewer>
@@ -1078,3 +1084,60 @@ parseToastVariant s =
 
         _ ->
             Toast.Default
+
+
+viewAnchorToc : List HeadingItem -> Int -> Html msg
+viewAnchorToc allHeadings maxDepth =
+    let
+        headings =
+            List.filter (\h -> h.level >= 2 && h.level <= 1 + maxDepth) allHeadings
+    in
+    if List.length headings < 2 then
+        Html.text ""
+
+    else
+        Html.nav
+            [ classes [ TwEx.not_prose, Tw.my s6, Tw.rounded_lg, Tw.border, Tw.border_simple TC.borderDefault, Tw.p s4 ] ]
+            [ Html.p
+                [ classes [ Tw.type_body_small, Tw.font_semibold, Tw.text_simple TC.textPrimary, Tw.mb s2 ] ]
+                [ Html.text "Sisällys" ]
+            , Html.ol
+                [ classes [ Tw.list_none, Tw.m Th.s0, Tw.p Th.s0, TwEx.space_y s1 ] ]
+                (viewAnchorGroups headings)
+            ]
+
+
+viewAnchorGroups : List HeadingItem -> List (Html msg)
+viewAnchorGroups headings =
+    case headings of
+        [] ->
+            []
+
+        first :: rest ->
+            let
+                ( children, remaining ) =
+                    List.Extra.span (\h -> h.level > first.level) rest
+            in
+            Html.li []
+                (Html.a
+                    [ Attr.href ("#" ++ first.id)
+                    , classes
+                        [ Tw.no_underline
+                        , Tw.type_caption
+                        , Tw.text_simple TC.textPrimary
+                        , Bp.hover [ Tw.text_simple TC.brand ]
+                        , Bp.withVariant "motion-safe" [ Tw.transition_colors ]
+                        ]
+                    ]
+                    [ Html.text first.text ]
+                    :: (if List.isEmpty children then
+                            []
+
+                        else
+                            [ Html.ol
+                                [ classes [ Tw.list_none, Tw.mt s1, Tw.ml s3, Tw.p Th.s0, TwEx.space_y s1 ] ]
+                                (viewAnchorGroups children)
+                            ]
+                       )
+                )
+                :: viewAnchorGroups remaining

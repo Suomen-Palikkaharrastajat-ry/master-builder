@@ -4,6 +4,7 @@ module MarkdownRenderer.Core exposing (renderer)
 -}
 
 import ContentMarkdown exposing (TocNode)
+import MarkdownRenderer exposing (HeadingItem)
 import Html exposing (Html)
 import Html.Attributes as Attr
 import Markdown.Block as Block
@@ -17,7 +18,7 @@ import TailwindExtra as TwEx
 import TailwindTokens as TC
 
 
-renderer : { childPages : List TocNode, sectionSlug : Maybe String, pageDir : String } -> Markdown.Renderer.Renderer (Html msg)
+renderer : { childPages : List TocNode, sectionSlug : Maybe String, pageDir : String, isIndex : Bool, headings : List HeadingItem } -> Markdown.Renderer.Renderer (Html msg)
 renderer context =
     { heading = viewHeading
     , paragraph = Html.p [ classes [ Tw.my s4, TwEx.leading_7, Tw.text_simple TC.textPrimary ] ]

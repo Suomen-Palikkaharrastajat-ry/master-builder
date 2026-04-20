@@ -22,6 +22,7 @@ type alias PageData =
     { frontmatter : Frontmatter
     , body : String
     , pageDir : String
+    , isIndex : Bool
     }
 
 
@@ -41,7 +42,7 @@ loadPage contentRoot filePath =
     File.bodyWithFrontmatter
         (\body ->
             Frontmatter.decoder
-                |> Decode.map (\fm -> { frontmatter = fm, body = body, pageDir = pageDirFromPath contentRoot filePath })
+                |> Decode.map (\fm -> { frontmatter = fm, body = body, pageDir = pageDirFromPath contentRoot filePath, isIndex = False })
         )
         filePath
         |> BackendTask.allowFatal
@@ -79,7 +80,7 @@ loadPageOrSectionIndex dir slug =
             File.bodyWithFrontmatter
                 (\body ->
                     Frontmatter.decoder
-                        |> Decode.map (\fm -> ( { frontmatter = fm, body = body, pageDir = pageDirFromPath dir filePath }, filePath ))
+                        |> Decode.map (\fm -> ( { frontmatter = fm, body = body, pageDir = pageDirFromPath dir filePath, isIndex = String.endsWith "/index.md" filePath }, filePath ))
                 )
                 filePath
     in
