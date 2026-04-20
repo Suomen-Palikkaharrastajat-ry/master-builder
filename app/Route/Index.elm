@@ -34,6 +34,7 @@ type alias Data =
     { frontmatter : Frontmatter
     , body : String
     , childPages : List TocNode
+    , pageDir : String
     }
 
 
@@ -60,6 +61,7 @@ data =
                         { frontmatter = pageData.frontmatter
                         , body = pageData.body
                         , childPages = children
+                        , pageDir = pageData.pageDir
                         }
                     )
                     (ContentMarkdown.loadPage dir (dir ++ "/index.md"))
@@ -140,5 +142,5 @@ view :
     -> View (PagesMsg Msg)
 view app _ =
     { title = app.data.frontmatter.title
-    , body = [ MarkdownRenderer.renderMarkdown { childPages = app.data.childPages, sectionSlug = Just "" } app.data.body ]
+    , body = [ MarkdownRenderer.renderMarkdown { childPages = app.data.childPages, sectionSlug = Just "", pageDir = app.data.pageDir } app.data.body ]
     }

@@ -36,6 +36,7 @@ type alias RouteParams =
 type alias Data =
     { frontmatter : Frontmatter
     , body : String
+    , pageDir : String
     }
 
 
@@ -163,6 +164,6 @@ view app _ =
             [ { label = "Etusivu", href = Just "/" }
             , { label = app.data.frontmatter.title, href = Nothing }
             ]
-        , MarkdownRenderer.renderMarkdown { childPages = [], sectionSlug = Nothing } app.data.body
+        , MarkdownRenderer.renderMarkdown { childPages = [], sectionSlug = Nothing, pageDir = app.data.pageDir } app.data.body
         ]
     }

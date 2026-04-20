@@ -38,6 +38,7 @@ type alias Data =
     { frontmatter : Frontmatter
     , body : String
     , childPages : List TocNode
+    , pageDir : String
     }
 
 
@@ -116,6 +117,7 @@ data routeParams =
                                         { frontmatter = pageData.frontmatter
                                         , body = pageData.body
                                         , childPages = tree
+                                        , pageDir = pageData.pageDir
                                         }
                                     )
                         )
@@ -199,7 +201,7 @@ view app _ =
             , { label = app.data.frontmatter.title, href = Nothing }
             ]
         , MarkdownRenderer.renderMarkdown
-            { childPages = app.data.childPages, sectionSlug = Just app.routeParams.slug }
+            { childPages = app.data.childPages, sectionSlug = Just app.routeParams.slug, pageDir = app.data.pageDir }
             app.data.body
         ]
     }

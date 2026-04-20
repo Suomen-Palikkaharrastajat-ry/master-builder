@@ -39,6 +39,7 @@ type alias Data =
     { frontmatter : Frontmatter
     , body : String
     , sectionFrontmatter : Frontmatter
+    , pageDir : String
     }
 
 
@@ -96,6 +97,7 @@ data routeParams =
                         { frontmatter = pageData.frontmatter
                         , body = pageData.body
                         , sectionFrontmatter = sectionFm
+                        , pageDir = pageData.pageDir
                         }
                     )
                     (ContentMarkdown.loadPage dir
@@ -195,7 +197,7 @@ view app _ =
     , body =
         [ Breadcrumb.view breadcrumbItems
         , MarkdownRenderer.renderMarkdown
-            { childPages = [], sectionSlug = Nothing }
+            { childPages = [], sectionSlug = Nothing, pageDir = app.data.pageDir }
             app.data.body
         ]
     }
