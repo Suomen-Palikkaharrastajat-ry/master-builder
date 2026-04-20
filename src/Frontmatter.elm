@@ -31,7 +31,6 @@ Field usage:
 
   - `title` renders the page title in views and is also used for Open Graph and Twitter titles
   - `description` is used for the page meta description and for Open Graph and Twitter descriptions
-  - `slug` is used by [`Shared.navItemsTask`] to build internal navigation links
   - `published` controls whether the page is built and appears in navigation and TOC; defaults to `True` when absent
   - `nav` controls whether the page appears in desktop/mobile navigation
   - `navTitle` overrides the navigation label while leaving the page title unchanged
@@ -45,7 +44,6 @@ Field usage:
 type alias Frontmatter =
     { title : String
     , description : String
-    , slug : String
     , published : Bool
     , nav : NavVisibility
     , navTitle : Maybe String
@@ -62,7 +60,6 @@ decoder =
     Decode.succeed Frontmatter
         |> andMap (Decode.field "title" Decode.string)
         |> andMap (Decode.field "description" Decode.string)
-        |> andMap (Decode.field "slug" Decode.string)
         |> andMap (Decode.oneOf [ Decode.field "published" Decode.bool, Decode.succeed True ])
         |> andMap navDecoder
         |> andMap (Decode.maybe (Decode.field "navTitle" Decode.string))

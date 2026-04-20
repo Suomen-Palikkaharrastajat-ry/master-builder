@@ -33,8 +33,8 @@ splitClassPrefix str =
                             ( Nothing, str )
 
 
-normalizeSrc : String -> String
-normalizeSrc src =
+normalizeSrc : String -> String -> String
+normalizeSrc pageDir src =
     if
         String.startsWith "http://" src
             || String.startsWith "https://" src
@@ -44,10 +44,10 @@ normalizeSrc src =
         src
 
     else if String.startsWith "./" src then
-        "/" ++ String.dropLeft 2 src
+        "/" ++ pageDir ++ String.dropLeft 2 src
 
     else
-        "/" ++ src
+        "/" ++ pageDir ++ src
 
 
 decodeHtmlEntities : String -> String

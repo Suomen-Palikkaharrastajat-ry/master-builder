@@ -17,6 +17,7 @@ import TailwindTokens as TC
 type alias RenderContext =
     { childPages : List TocNode
     , sectionSlug : Maybe String
+    , pageDir : String
     }
 
 

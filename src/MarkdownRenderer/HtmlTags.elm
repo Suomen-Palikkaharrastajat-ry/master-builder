@@ -32,7 +32,7 @@ import TailwindExtra as TwEx
 import TailwindTokens as TC
 
 
-htmlRenderer : { childPages : List TocNode, sectionSlug : Maybe String } -> Markdown.Html.Renderer (List (Html msg) -> Html msg)
+htmlRenderer : { childPages : List TocNode, sectionSlug : Maybe String, pageDir : String } -> Markdown.Html.Renderer (List (Html msg) -> Html msg)
 htmlRenderer context =
     Markdown.Html.oneOf
         [ -- <callout type="info|success|warning|error" icon="…">…</callout>
@@ -501,12 +501,12 @@ htmlRenderer context =
                 case context.sectionSlug of
                     Just section ->
                         let
-                            nodeHref fm =
+                            nodeHref slug =
                                 if String.isEmpty section then
-                                    "/" ++ fm.slug
+                                    "/" ++ slug
 
                                 else
-                                    "/" ++ section ++ "/" ++ fm.slug
+                                    "/" ++ section ++ "/" ++ slug
 
                             toTocItem node =
                                 let
@@ -514,7 +514,7 @@ htmlRenderer context =
                                         node.frontmatter
 
                                     selfHref =
-                                        nodeHref fm
+                                        nodeHref node.slug
                                 in
                                 { title = fm.title
                                 , href = selfHref
@@ -525,9 +525,9 @@ htmlRenderer context =
 
                                     else
                                         List.map
-                                            (\childFm ->
-                                                { title = childFm.title
-                                                , href = selfHref ++ "/" ++ childFm.slug
+                                            (\child ->
+                                                { title = child.frontmatter.title
+                                                , href = selfHref ++ "/" ++ child.slug
                                                 }
                                             )
                                             node.sectionChildren

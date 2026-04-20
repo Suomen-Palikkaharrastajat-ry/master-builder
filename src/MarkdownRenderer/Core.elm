@@ -17,7 +17,7 @@ import TailwindExtra as TwEx
 import TailwindTokens as TC
 
 
-renderer : { childPages : List TocNode, sectionSlug : Maybe String } -> Markdown.Renderer.Renderer (Html msg)
+renderer : { childPages : List TocNode, sectionSlug : Maybe String, pageDir : String } -> Markdown.Renderer.Renderer (Html msg)
 renderer context =
     { heading = viewHeading
     , paragraph = Html.p [ classes [ Tw.my s4, TwEx.leading_7, Tw.text_simple TC.textPrimary ] ]
@@ -36,7 +36,7 @@ renderer context =
                 [ classes [ Tw.px s1_dot_5, Tw.py s0_dot_5, Tw.rounded, Tw.bg_simple TC.bgSubtle, Tw.text_simple TC.textPrimary, Tw.type_mono ] ]
                 [ Html.text code ]
     , link = viewLink
-    , image = viewImage
+    , image = viewImage context.pageDir
     , text = Html.text
     , unorderedList = viewUnorderedList
     , orderedList = viewOrderedList
@@ -98,8 +98,8 @@ viewLink link children =
         children
 
 
-viewImage : { alt : String, src : String, title : Maybe String } -> Html msg
-viewImage img =
+viewImage : String -> { alt : String, src : String, title : Maybe String } -> Html msg
+viewImage pageDir img =
     let
         ( rawClasses, altText ) =
             Helpers.splitClassPrefix img.alt
@@ -114,7 +114,7 @@ viewImage img =
     in
     Html.figure figAttrs
         [ Html.img
-            [ Attr.src (Helpers.normalizeSrc img.src)
+            [ Attr.src (Helpers.normalizeSrc pageDir img.src)
             , Attr.alt altText
             ]
             []

@@ -13,10 +13,15 @@ import Regex
 
 
 {-| Data shape used by route modules after loading markdown content.
+
+`pageDir` is the directory of the source file relative to the content root,
+with a trailing slash (e.g. `"jasenpalvelut/"`) or `""` for root-level files.
+It is used to resolve relative image paths in the markdown body.
 -}
 type alias PageData =
     { frontmatter : Frontmatter
     , body : String
+    , pageDir : String
     }
 
 
@@ -25,8 +30,9 @@ type alias PageData =
 For leaf pages and pages with no sub-directory, it is [].
 -}
 type alias TocNode =
-    { frontmatter : Frontmatter
-    , sectionChildren : List Frontmatter
+    { slug : String
+    , frontmatter : Frontmatter
+    , sectionChildren : List { slug : String, frontmatter : Frontmatter }
     }
 
 
@@ -35,7 +41,7 @@ loadPage contentRoot filePath =
     File.bodyWithFrontmatter
         (\body ->
             Frontmatter.decoder
-                |> Decode.map (\fm -> { frontmatter = fm, body = body })
+                |> Decode.map (\fm -> { frontmatter = fm, body = body, pageDir = pageDirFromPath contentRoot filePath })
         )
         filePath
         |> BackendTask.allowFatal
@@ -73,7 +79,7 @@ loadPageOrSectionIndex dir slug =
             File.bodyWithFrontmatter
                 (\body ->
                     Frontmatter.decoder
-                        |> Decode.map (\fm -> ( { frontmatter = fm, body = body }, filePath ))
+                        |> Decode.map (\fm -> ( { frontmatter = fm, body = body, pageDir = pageDirFromPath dir filePath }, filePath ))
                 )
                 filePath
     in
@@ -96,7 +102,7 @@ loadPageOrSectionIndex dir slug =
 Includes both flat pages (content/slug.md) and section indexes (content/section/index.md),
 filtered by nav visibility, sorted by order.
 -}
-loadRootChildren : String -> BackendTask FatalError (List Frontmatter)
+loadRootChildren : String -> BackendTask FatalError (List { slug : String, frontmatter : Frontmatter })
 loadRootChildren dir =
     let
         flatPages =
@@ -109,7 +115,7 @@ loadRootChildren dir =
                     (\slugs ->
                         slugs
                             |> List.filter (\s -> s /= "index" && not (isPartialSlug s))
-                            |> List.map (\s -> loadFrontmatter (dir ++ "/" ++ s ++ ".md"))
+                            |> List.map (\s -> loadFrontmatter (dir ++ "/" ++ s ++ ".md") |> BackendTask.map (\fm -> { slug = s, frontmatter = fm }))
                             |> BackendTask.combine
                     )
 
@@ -122,18 +128,18 @@ loadRootChildren dir =
                 |> BackendTask.andThen
                     (\sections ->
                         sections
-                            |> List.map (\s -> loadFrontmatter (dir ++ "/" ++ s ++ "/index.md"))
+                            |> List.map (\s -> loadFrontmatter (dir ++ "/" ++ s ++ "/index.md") |> BackendTask.map (\fm -> { slug = s, frontmatter = fm }))
                             |> BackendTask.combine
                     )
     in
     BackendTask.map2 (++) flatPages sectionIndexes
-        |> BackendTask.map (List.filter .published >> List.sortBy .order)
+        |> BackendTask.map (List.filter (.frontmatter >> .published) >> List.sortBy (.frontmatter >> .order))
 
 
 {-| Load frontmatters of all non-index, non-partial pages inside a section directory,
 sorted by their `order` field. Returns [] when the directory doesn't exist.
 -}
-loadSectionChildren : String -> String -> BackendTask FatalError (List Frontmatter)
+loadSectionChildren : String -> String -> BackendTask FatalError (List { slug : String, frontmatter : Frontmatter })
 loadSectionChildren dir section =
     Glob.succeed identity
         |> Glob.match (Glob.literal (dir ++ "/" ++ section ++ "/"))
@@ -144,10 +150,10 @@ loadSectionChildren dir section =
             (\slugs ->
                 slugs
                     |> List.filter (\s -> s /= "index" && not (isPartialSlug s))
-                    |> List.map (\s -> loadFrontmatter (dir ++ "/" ++ section ++ "/" ++ s ++ ".md"))
+                    |> List.map (\s -> loadFrontmatter (dir ++ "/" ++ section ++ "/" ++ s ++ ".md") |> BackendTask.map (\fm -> { slug = s, frontmatter = fm }))
                     |> BackendTask.combine
             )
-        |> BackendTask.map (List.filter .published >> List.sortBy .order)
+        |> BackendTask.map (List.filter (.frontmatter >> .published) >> List.sortBy (.frontmatter >> .order))
 
 
 {-| Load a TocNode list for a given section (or "" for root).
@@ -166,14 +172,15 @@ loadTocTree dir section =
     in
     parentLoader
         |> BackendTask.andThen
-            (\frontmatters ->
-                frontmatters
+            (\pages ->
+                pages
                     |> List.map
-                        (\fm ->
-                            loadSectionChildren dir fm.slug
+                        (\page ->
+                            loadSectionChildren dir page.slug
                                 |> BackendTask.map
                                     (\children ->
-                                        { frontmatter = fm
+                                        { slug = page.slug
+                                        , frontmatter = page.frontmatter
                                         , sectionChildren = children
                                         }
                                     )
@@ -324,6 +331,32 @@ applyRelativePath baseSegments srcSegments =
         )
         (Ok baseSegments)
         srcSegments
+
+
+pageDirFromPath : String -> String -> String
+pageDirFromPath contentRoot filePath =
+    let
+        prefix =
+            contentRoot ++ "/"
+
+        relative =
+            if String.startsWith prefix filePath then
+                String.dropLeft (String.length prefix) filePath
+
+            else
+                filePath
+    in
+    case List.reverse (String.split "/" relative) of
+        _ :: dirs ->
+            case List.reverse dirs of
+                [] ->
+                    ""
+
+                segments ->
+                    String.join "/" segments ++ "/"
+
+        [] ->
+            ""
 
 
 pathSegments : String -> List String
