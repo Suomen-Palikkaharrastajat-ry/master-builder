@@ -1,5 +1,7 @@
 @import "tailwindcss";
-@source "../content/**/*.md";
+/* Explicit sources are required because content/ is gitignored and skipped by Tailwind auto-scan. */
+@source "./content/**/*.md";
+@source "./template/**/*.md";
 @plugin "@tailwindcss/typography";
 
 /* Brand/semantic token utilities — must be listed explicitly because the
