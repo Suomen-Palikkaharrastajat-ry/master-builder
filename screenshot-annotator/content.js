@@ -39,6 +39,10 @@ const state = {
   captureOrigRect: null,
   captureRect: null,
   pendingCaptureRect: null,
+  // freeze-visible mode (timed capture for later annotation)
+  freezeActive: false,
+  freezeCountdownInterval: null,
+  freezeCountdownTimeout: null,
 };
 
 // ── SVG helpers ────────────────────────────────────────────────────────────
@@ -56,14 +60,21 @@ function svgEl(tag, attrs) {
 const SNAP_THRESHOLD = 14;
 
 function getSnapTarget(x, y) {
+  const target = getUnderlyingPageTarget(x, y);
+  if (!target || target === document.documentElement || target === document.body) return null;
+  return target;
+}
+
+function getUnderlyingPageTarget(x, y) {
   const root = document.getElementById("annotator-root");
   const annSvg = document.getElementById("annotator-svg");
-  const els = document.elementsFromPoint(x, y).filter(
-    (el) => el !== root && !(root && root.contains(el)) &&
-            el !== annSvg && !(annSvg && annSvg.contains(el)) &&
-            el !== document.documentElement && el !== document.body
-  );
-  return els[0] || null;
+  const els = document.elementsFromPoint(x, y);
+  for (const el of els) {
+    if (el === root || (root && root.contains(el))) continue;
+    if (el === annSvg || (annSvg && annSvg.contains(el))) continue;
+    return el;
+  }
+  return null;
 }
 
 // snapPoint takes viewport coords (clientX/Y) and returns page coords
@@ -90,6 +101,7 @@ const CAPTURE_MIN_SIZE = 8;
 const CAPTURE_ACTION_GAP = 8;
 const CAPTURE_TILE_DELAY_MS = 80;
 const TOAST_DEFAULT_MS = 2200;
+const FREEZE_COUNTDOWN_SECONDS = 3;
 
 function updateSnapHint(rect, ctrlMode = false) {
   const hint = document.getElementById("annotator-snap-hint");
@@ -392,19 +404,21 @@ function makeSelectable(entry) {
 // ── Select-mode drag / resize ──────────────────────────────────────────────
 
 function beginAnnotationMove(e) {
+  const start = snapPoint(e.clientX, e.clientY);
   state.selectMode = "move";
-  state.selectDragX = e.pageX;
-  state.selectDragY = e.pageY;
+  state.selectDragX = start.x;
+  state.selectDragY = start.y;
   state.origGeom = getGeom(state.selected.type, state.selected.el);
   document.addEventListener("mousemove", onSelectMouseMove);
   document.addEventListener("mouseup", onSelectMouseUp);
 }
 
 function beginAnnotationResize(e, handle) {
+  const start = snapPoint(e.clientX, e.clientY);
   state.selectMode = "resize";
   state.selectHandle = handle;
-  state.selectDragX = e.pageX;
-  state.selectDragY = e.pageY;
+  state.selectDragX = start.x;
+  state.selectDragY = start.y;
   state.origGeom = getGeom(state.selected.type, state.selected.el);
   document.addEventListener("mousemove", onSelectMouseMove);
   document.addEventListener("mouseup", onSelectMouseUp);
@@ -412,12 +426,14 @@ function beginAnnotationResize(e, handle) {
 
 function onSelectMouseMove(e) {
   if (!state.selectMode || !state.selected) return;
-  const dx = e.pageX - state.selectDragX;
-  const dy = e.pageY - state.selectDragY;
+  const { x, y, snapped, rect } = snapPoint(e.clientX, e.clientY);
+  const dx = x - state.selectDragX;
+  const dy = y - state.selectDragY;
   const newGeom = state.selectMode === "move"
     ? translateGeom(state.selected.type, state.origGeom, dx, dy)
     : resizeGeom(state.selected.type, state.origGeom, state.selectHandle, dx, dy);
   setGeom(state.selected.type, state.selected.el, newGeom);
+  updateSnapHint(snapped ? rect : null);
   showSelectionHandles(state.selected);
 }
 
@@ -425,6 +441,7 @@ function onSelectMouseUp() {
   state.selectMode = null;
   state.selectHandle = null;
   state.origGeom = null;
+  updateSnapHint(null);
   document.removeEventListener("mousemove", onSelectMouseMove);
   document.removeEventListener("mouseup", onSelectMouseUp);
 }
@@ -537,6 +554,16 @@ function createCaptureActionIcon(kind) {
   return svg;
 }
 
+function createFreezeIcon() {
+  const svg = svgEl("svg", { viewBox: "0 0 16 16" });
+  svg.appendChild(svgEl("rect", { x: "1.5", y: "4", width: "9.5", height: "7.5", rx: "1.4" }));
+  svg.appendChild(svgEl("circle", { cx: "6.2", cy: "7.8", r: "2.1" }));
+  svg.appendChild(svgEl("circle", { cx: "12.3", cy: "3.8", r: "2.2" }));
+  svg.appendChild(svgEl("line", { x1: "12.3", y1: "3.8", x2: "12.3", y2: "2.6" }));
+  svg.appendChild(svgEl("line", { x1: "12.3", y1: "3.8", x2: "13.2", y2: "4.3" }));
+  return svg;
+}
+
 function getCalloutNumber(entry) {
   if (entry.type !== "callout") return null;
   const num = Number.parseInt(entry.el.querySelector("text")?.textContent || "", 10);
@@ -571,6 +598,54 @@ function updateCaptureButtonTitle() {
   const cap = document.getElementById("ann-capture");
   if (!cap) return;
   cap.title = getCaptureButtonTitle();
+}
+
+function freezeCountdownRunning() {
+  return state.freezeCountdownInterval !== null || state.freezeCountdownTimeout !== null;
+}
+
+function getFreezeButtonTitle() {
+  if (freezeCountdownRunning()) return "Cancel timed freeze capture";
+  if (state.freezeActive) return "Clear frozen screenshot background";
+  return `Timed freeze visible area (${FREEZE_COUNTDOWN_SECONDS}s), then annotate`;
+}
+
+function updateFreezeButton() {
+  const btn = document.getElementById("ann-freeze");
+  if (!btn) return;
+  btn.title = getFreezeButtonTitle();
+  btn.classList.toggle("ann-active", state.freezeActive || freezeCountdownRunning());
+}
+
+function clearFreezeCountdown() {
+  if (state.freezeCountdownInterval !== null) {
+    window.clearInterval(state.freezeCountdownInterval);
+    state.freezeCountdownInterval = null;
+  }
+  if (state.freezeCountdownTimeout !== null) {
+    window.clearTimeout(state.freezeCountdownTimeout);
+    state.freezeCountdownTimeout = null;
+  }
+  updateFreezeButton();
+}
+
+function setFreezeBackground(dataUrl) {
+  const layer = document.getElementById("ann-freeze-layer");
+  const img = document.getElementById("ann-freeze-image");
+  if (!layer || !img) return;
+  img.src = dataUrl;
+  layer.classList.add("ann-active");
+  state.freezeActive = true;
+  updateFreezeButton();
+}
+
+function clearFreezeBackground() {
+  const layer = document.getElementById("ann-freeze-layer");
+  const img = document.getElementById("ann-freeze-image");
+  if (layer) layer.classList.remove("ann-active");
+  if (img) img.removeAttribute("src");
+  state.freezeActive = false;
+  updateFreezeButton();
 }
 
 function showToast(message, kind = "info", timeoutMs = TOAST_DEFAULT_MS) {
@@ -689,6 +764,13 @@ function buildToolbar() {
   capFull.appendChild(createCaptureActionIcon("fullpage"));
   tb.appendChild(capFull);
 
+  const freeze = document.createElement("button");
+  freeze.className = "ann-btn ann-capture ann-capture-alt";
+  freeze.id = "ann-freeze";
+  freeze.title = getFreezeButtonTitle();
+  freeze.appendChild(createFreezeIcon());
+  tb.appendChild(freeze);
+
   const cap = document.createElement("button");
   cap.className = "ann-btn ann-capture";
   cap.id = "ann-capture";
@@ -761,6 +843,17 @@ function inject() {
 
   root.appendChild(buildToolbar());
   document.body.appendChild(root);
+  updateFreezeButton();
+
+  const freezeLayer = document.createElement("div");
+  freezeLayer.id = "ann-freeze-layer";
+  const freezeImage = document.createElement("img");
+  freezeImage.id = "ann-freeze-image";
+  freezeImage.alt = "";
+  freezeLayer.appendChild(freezeImage);
+  freezeLayer.addEventListener("wheel", (e) => e.preventDefault(), { passive: false });
+  freezeLayer.addEventListener("touchmove", (e) => e.preventDefault(), { passive: false });
+  document.body.appendChild(freezeLayer);
 
   // SVG is position:absolute so annotations scroll with the page
   const svg = document.createElementNS(SVG_NS, "svg");
@@ -796,6 +889,8 @@ function inject() {
 function teardown() {
   const root = document.getElementById("annotator-root");
   if (root) root.remove();
+  const freezeLayer = document.getElementById("ann-freeze-layer");
+  if (freezeLayer) freezeLayer.remove();
   const svg = document.getElementById("annotator-svg");
   if (svg) svg.remove();
   window.removeEventListener("resize", updateSvgSize);
@@ -822,6 +917,8 @@ function teardown() {
   state.captureOrigRect = null;
   state.captureRect = null;
   state.pendingCaptureRect = null;
+  clearFreezeCountdown();
+  state.freezeActive = false;
 }
 
 // ── Event binding ──────────────────────────────────────────────────────────
@@ -879,12 +976,14 @@ function onToolbarClick(e) {
   if (widthBtn) return setWidth(Number(widthBtn.dataset.width));
   if (e.target.closest("#ann-undo"))    return undo();
   if (e.target.closest("#ann-clear"))   return clearAll();
-  if (e.target.closest("#ann-capture-visible")) return void captureVisibleAreaScreenshot();
-  if (e.target.closest("#ann-capture-fullpage")) return void captureFullPageScreenshot();
+  if (e.target.closest("#ann-capture-visible")) { clearFreezeCountdown(); return void captureVisibleAreaScreenshot(); }
+  if (e.target.closest("#ann-capture-fullpage")) { clearFreezeCountdown(); return void captureFullPageScreenshot(); }
+  if (e.target.closest("#ann-freeze")) return onFreezeClick();
   if (e.target.closest("#ann-capture")) return onCaptureClick(e);
 }
 
 function onCaptureClick(e) {
+  clearFreezeCountdown();
   if (e.ctrlKey || e.metaKey) {
     if (state.annotations.length > 0) {
       void exportAnnotationsJson();
@@ -918,7 +1017,66 @@ function onCaptureActionsClick(e) {
   }
 }
 
+async function captureFreezeBackgroundNow() {
+  if (state.capturePhase === "capturing") return;
+  const prevPhase = state.capturePhase;
+  state.capturePhase = "capturing";
+  applySvgInteractionMode();
+  prepareUiForCapture();
+
+  try {
+    await waitForPaint();
+    const dataUrl = await captureVisibleDataUrl();
+    setFreezeBackground(dataUrl);
+    showToast("Frozen screenshot ready. Annotate with the same tools.", "success", 2600);
+  } catch (err) {
+    console.error("[Annotator] Could not freeze visible area:", err);
+    showToast("Could not freeze visible area.", "error", 2800);
+  } finally {
+    restoreToolbarAfterCapture();
+    state.capturePhase = prevPhase === "capturing" ? "idle" : prevPhase;
+    if (state.capturePhase !== "idle") state.capturePhase = "idle";
+    applySvgInteractionMode();
+    updateFreezeButton();
+  }
+}
+
+function startFreezeCountdown() {
+  if (freezeCountdownRunning()) return;
+  let remaining = FREEZE_COUNTDOWN_SECONDS;
+  updateFreezeButton();
+  showToast(`Freezing in ${remaining}...`, "info", 900);
+
+  state.freezeCountdownInterval = window.setInterval(() => {
+    remaining -= 1;
+    if (remaining > 0) {
+      showToast(`Freezing in ${remaining}...`, "info", 900);
+    }
+  }, 1000);
+
+  state.freezeCountdownTimeout = window.setTimeout(() => {
+    clearFreezeCountdown();
+    void captureFreezeBackgroundNow();
+  }, FREEZE_COUNTDOWN_SECONDS * 1000);
+}
+
+function onFreezeClick() {
+  if (freezeCountdownRunning()) {
+    clearFreezeCountdown();
+    showToast("Timed freeze canceled.", "info");
+    return;
+  }
+  if (state.freezeActive) {
+    clearFreezeBackground();
+    showToast("Frozen screenshot cleared.", "info");
+    return;
+  }
+  if (state.capturePhase !== "idle") cancelCaptureSelection();
+  startFreezeCountdown();
+}
+
 function setTool(id) {
+  clearFreezeCountdown();
   if (state.capturePhase !== "idle") cancelCaptureSelection();
   state.tool = id;
   document.querySelectorAll(".ann-btn[data-tool]").forEach(
@@ -976,7 +1134,7 @@ function onDragEnd() {
 function onIdleMouseMove(e) {
   state.mouseX = e.clientX;
   state.mouseY = e.clientY;
-  refreshSnapHint(e.clientX, e.clientY, e.ctrlKey);
+  refreshSnapHint(e.clientX, e.clientY, e.ctrlKey || e.metaKey);
 }
 
 function refreshSnapHint(x, y, ctrlKey) {
@@ -995,7 +1153,7 @@ function refreshSnapHint(x, y, ctrlKey) {
 }
 
 function onCtrlChange(e) {
-  if (e.key !== "Control") return;
+  if (e.key !== "Control" && e.key !== "Meta") return;
   refreshSnapHint(state.mouseX, state.mouseY, e.type === "keydown");
 }
 
@@ -1412,6 +1570,7 @@ async function captureFullPageDataUrl() {
 }
 
 async function captureVisibleAreaScreenshot() {
+  clearFreezeCountdown();
   if (state.capturePhase === "capturing") return;
   const prevPhase = state.capturePhase;
   state.capturePhase = "capturing";
@@ -1435,6 +1594,7 @@ async function captureVisibleAreaScreenshot() {
 }
 
 async function captureFullPageScreenshot() {
+  clearFreezeCountdown();
   if (state.capturePhase === "capturing") return;
   const prevPhase = state.capturePhase;
   state.capturePhase = "capturing";
@@ -1667,7 +1827,7 @@ function onDrawStart(e) {
   }
 
   // Ctrl+Click: stamp annotation around the hovered DOM element
-  if (e.ctrlKey) {
+  if (e.ctrlKey || e.metaKey) {
     const handled = ctrlClickAnnotate(e.clientX, e.clientY);
     if (handled) {
       e.preventDefault();
