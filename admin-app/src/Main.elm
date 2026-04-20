@@ -839,6 +839,7 @@ viewEditorAndPreview model =
                     [ MarkdownRenderer.renderMarkdown
                         { childPages = []
                         , sectionSlug = Nothing
+                        , pageDir = ""
                         }
                         (markdownBody model.editorContent)
                     ]
