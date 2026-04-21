@@ -27,7 +27,7 @@ import Route exposing (Route(..))
 import SharedTemplate exposing (SharedTemplate)
 import Tailwind as Tw exposing (classes)
 import Tailwind.Breakpoints as Bp
-import Tailwind.Theme exposing (s0, s1, s10, s14, s2, s4, s6, s8, white)
+import Tailwind.Theme exposing (s0, s1, s10, s14, s2, s3, s4, s6, s8, white)
 import TailwindExtra as TwEx
 import TailwindTokens as TC
 import UrlPath exposing (UrlPath)
@@ -63,6 +63,8 @@ type SharedMsg
     = NoOp
     | ToggleMenu
     | CloseMenu
+    | ScrollY Float
+    | ScrollToTop
 
 
 type Msg
@@ -71,6 +73,7 @@ type Msg
 
 type alias Model =
     { menuOpen : Bool
+    , scrollY : Float
     }
 
 
@@ -88,7 +91,7 @@ init :
             }
     -> ( Model, Effect Msg )
 init _ _ =
-    ( { menuOpen = False }
+    ( { menuOpen = False, scrollY = 0 }
     , Effect.none
     )
 
@@ -106,27 +109,36 @@ update msg model =
         SharedMsg CloseMenu ->
             ( { model | menuOpen = False }, Effect.none )
 
+        SharedMsg (ScrollY y) ->
+            ( { model | scrollY = y }, Effect.none )
+
+        SharedMsg ScrollToTop ->
+            ( model, Effect.fromCmd (Ports.scrollToTop ()) )
+
         SharedMsg _ ->
             ( model, Effect.none )
 
 
 subscriptions : UrlPath -> Model -> Sub Msg
 subscriptions _ model =
-    if model.menuOpen then
-        Browser.Events.onKeyDown
-            (Json.Decode.field "key" Json.Decode.string
-                |> Json.Decode.andThen
-                    (\key ->
-                        if key == "Escape" then
-                            Json.Decode.succeed (SharedMsg CloseMenu)
+    Sub.batch
+        [ if model.menuOpen then
+            Browser.Events.onKeyDown
+                (Json.Decode.field "key" Json.Decode.string
+                    |> Json.Decode.andThen
+                        (\key ->
+                            if key == "Escape" then
+                                Json.Decode.succeed (SharedMsg CloseMenu)
 
-                        else
-                            Json.Decode.fail "not escape"
-                    )
-            )
+                            else
+                                Json.Decode.fail "not escape"
+                        )
+                )
 
-    else
-        Sub.none
+          else
+            Sub.none
+        , Ports.onScroll (SharedMsg << ScrollY)
+        ]
 
 
 navItemsTask : BackendTask FatalError (List NavItem)
@@ -405,6 +417,28 @@ view sharedData page model toMsg pageView =
                          else
                             MobileDrawer.Sm
                         )
+                    , if model.scrollY > 200 then
+                        Html.button
+                            [ Html.Events.onClick (toMsg (SharedMsg ScrollToTop))
+                            , classes
+                                [ Tw.fixed
+                                , TwEx.bottom_4
+                                , TwEx.right_4
+                                , Tw.z_50
+                                , Tw.p s3
+                                , Tw.rounded_full
+                                , Tw.bg_simple TC.brand
+                                , Tw.text_simple TC.textOnDark
+                                , Tw.cursor_pointer
+                                , Bp.withVariant "motion-safe" [ Tw.transition_opacity ]
+                                , Bp.focus_visible [ Tw.outline_none, Tw.ring_2, TwEx.ring_brand_yellow ]
+                                ]
+                            , Attr.attribute "aria-label" "Takaisin ylös"
+                            ]
+                            [ FeatherIcons.arrowUp |> FeatherIcons.withSize 24 |> FeatherIcons.toHtml [] ]
+
+                      else
+                        Html.text ""
                     ]
                 ]
             , title = pageView.title

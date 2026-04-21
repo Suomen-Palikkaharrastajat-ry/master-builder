@@ -1,4 +1,4 @@
-port module Ports exposing (SearchResult, focusMobileNav, performSearch, searchResults)
+port module Ports exposing (SearchResult, focusMobileNav, onScroll, performSearch, scrollToTop, searchResults)
 
 {-| Focus the first nav item in the mobile menu.
 -}
@@ -15,6 +15,16 @@ port performSearch : String -> Cmd msg
 {-| Search results returned from JavaScript in ranked order.
 -}
 port searchResults : (List SearchResult -> msg) -> Sub msg
+
+
+{-| Smooth-scroll the page to the top.
+-}
+port scrollToTop : () -> Cmd msg
+
+
+{-| Receive the current vertical scroll position from JavaScript.
+-}
+port onScroll : (Float -> msg) -> Sub msg
 
 
 {-| Search result record passed between JS and Elm through ports.
