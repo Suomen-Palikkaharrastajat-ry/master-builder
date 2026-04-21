@@ -1,4 +1,4 @@
-module MarkdownRenderer exposing (HeadingItem, RenderContext, renderMarkdown)
+module MarkdownRenderer exposing (RenderContext, renderMarkdown)
 
 {-| Markdown renderer for elm-pages content.
 -}
@@ -9,6 +9,7 @@ import Markdown.Block as Block
 import Markdown.Parser
 import Markdown.Renderer
 import MarkdownRenderer.Core as Core
+import MarkdownRenderer.Helpers exposing (HeadingItem, headingSlug)
 import Tailwind as Tw exposing (classes)
 import Tailwind.Theme exposing (s4)
 import TailwindExtra as TwEx
@@ -21,23 +22,6 @@ type alias RenderContext =
     , pageDir : String
     , isIndex : Bool
     }
-
-
-type alias HeadingItem =
-    { level : Int
-    , text : String
-    , id : String
-    }
-
-
-headingSlug : String -> String
-headingSlug text =
-    text
-        |> String.toLower
-        |> String.map (\c -> if Char.isAlphaNum c then c else '-')
-        |> String.split "-"
-        |> List.filter (not << String.isEmpty)
-        |> String.join "-"
 
 
 extractHeadings : String -> List HeadingItem

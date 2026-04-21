@@ -4,7 +4,7 @@ module MarkdownRenderer.Core exposing (renderer)
 -}
 
 import ContentMarkdown exposing (TocNode)
-import MarkdownRenderer exposing (HeadingItem)
+import MarkdownRenderer.Helpers exposing (HeadingItem, headingSlug)
 import Html exposing (Html)
 import Html.Attributes as Attr
 import Markdown.Block as Block
@@ -60,25 +60,29 @@ renderer context =
 viewHeading :
     { level : Block.HeadingLevel, rawText : String, children : List (Html msg) }
     -> Html msg
-viewHeading { level, children } =
+viewHeading { level, rawText, children } =
+    let
+        id =
+            Attr.id (headingSlug rawText)
+    in
     case level of
         Block.H1 ->
-            Html.h1 [ classes [ Tw.type_h1, Tw.tracking_tight, Tw.text_simple TC.textPrimary, Tw.mt s8, Tw.mb s4 ] ] children
+            Html.h1 [ id, classes [ Tw.type_h1, Tw.tracking_tight, Tw.text_simple TC.textPrimary, Tw.mt s8, Tw.mb s4 ] ] children
 
         Block.H2 ->
-            Html.h2 [ classes [ Tw.type_h2, Tw.text_simple TC.textPrimary, Tw.mt s8, Tw.mb s3, Tw.border_b, Tw.border_simple TC.borderDefault, Tw.pb s2 ] ] children
+            Html.h2 [ id, classes [ Tw.type_h2, Tw.text_simple TC.textPrimary, Tw.mt s8, Tw.mb s3, Tw.border_b, Tw.border_simple TC.borderDefault, Tw.pb s2 ] ] children
 
         Block.H3 ->
-            Html.h3 [ classes [ Tw.type_h3, Tw.text_simple TC.textPrimary, Tw.mt s6, Tw.mb s2 ] ] children
+            Html.h3 [ id, classes [ Tw.type_h3, Tw.text_simple TC.textPrimary, Tw.mt s6, Tw.mb s2 ] ] children
 
         Block.H4 ->
-            Html.h4 [ classes [ Tw.type_h4, Tw.text_simple TC.textPrimary, Tw.mt s4, Tw.mb s1 ] ] children
+            Html.h4 [ id, classes [ Tw.type_h4, Tw.text_simple TC.textPrimary, Tw.mt s4, Tw.mb s1 ] ] children
 
         Block.H5 ->
-            Html.h5 [ classes [ Tw.type_overline, Tw.text_simple TC.textMuted, Tw.mt s3, Tw.mb s1 ] ] children
+            Html.h5 [ id, classes [ Tw.type_overline, Tw.text_simple TC.textMuted, Tw.mt s3, Tw.mb s1 ] ] children
 
         Block.H6 ->
-            Html.h6 [ classes [ Tw.type_caption, Tw.text_simple TC.textMuted, Tw.mt s2, Tw.mb s1 ] ] children
+            Html.h6 [ id, classes [ Tw.type_caption, Tw.text_simple TC.textMuted, Tw.mt s2, Tw.mb s1 ] ] children
 
 
 viewLink : { title : Maybe String, destination : String } -> List (Html msg) -> Html msg

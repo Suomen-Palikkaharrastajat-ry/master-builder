@@ -20,7 +20,7 @@ import Component.Timeline as Timeline
 import Component.Toast as Toast
 import Component.Toc as Toc
 import ContentMarkdown exposing (TocNode)
-import MarkdownRenderer exposing (HeadingItem)
+import MarkdownRenderer.Helpers exposing (HeadingItem)
 import FeatherIcons
 import Html exposing (Html)
 import Html.Attributes as Attr
@@ -491,9 +491,10 @@ htmlRenderer context =
             (\children ->
                 Html.div [ Attr.class "tab-panel-code" ] children
             )
-        , -- <toc depth="N" /> — auto-generated table of contents (default: all levels)
+        , -- <toc depth="N" class="…" /> — auto-generated table of contents (default: all levels)
+          -- class  — extra Tailwind classes merged (after a space) into the default wrapper class.
           Markdown.Html.tag "toc"
-            (\depthAttr _ ->
+            (\depthAttr classAttr _ ->
                 let
                     maxDepth =
                         depthAttr
@@ -536,15 +537,16 @@ htmlRenderer context =
                                                 node.sectionChildren
                                     }
                             in
-                            Toc.view (List.map toTocItem context.childPages)
+                            Toc.view classAttr (List.map toTocItem context.childPages)
 
                         Nothing ->
                             Html.text ""
 
                 else
-                    viewAnchorToc context.headings maxDepth
+                    viewAnchorToc context.headings maxDepth classAttr
             )
             |> Markdown.Html.withOptionalAttribute "depth"
+            |> Markdown.Html.withOptionalAttribute "class"
         , -- <bricks-viewer src="…" controls class="…" camera-azimuth="…" …></bricks-viewer>
           -- class  — Tailwind classes on the wrapper div, e.g. "float-right ml-6 mb-4 max-w-sm not-prose".
           -- Html.Lazy.lazy prevents Elm's vdom from re-diffing this subtree on every
@@ -1086,8 +1088,8 @@ parseToastVariant s =
             Toast.Default
 
 
-viewAnchorToc : List HeadingItem -> Int -> Html msg
-viewAnchorToc allHeadings maxDepth =
+viewAnchorToc : List HeadingItem -> Int -> Maybe String -> Html msg
+viewAnchorToc allHeadings maxDepth extraClass =
     let
         headings =
             List.filter (\h -> h.level >= 2 && h.level <= 1 + maxDepth) allHeadings
@@ -1097,7 +1099,14 @@ viewAnchorToc allHeadings maxDepth =
 
     else
         Html.nav
-            [ classes [ TwEx.not_prose, Tw.my s6, Tw.rounded_lg, Tw.border, Tw.border_simple TC.borderDefault, Tw.p s4 ] ]
+            [ classes
+                ([ TwEx.not_prose, Tw.my s6, Tw.rounded_lg, Tw.border, Tw.border_simple TC.borderDefault, Tw.p s4 ]
+                    ++ (extraClass
+                            |> Maybe.map (List.singleton << Tw.raw)
+                            |> Maybe.withDefault []
+                       )
+                )
+            ]
             [ Html.p
                 [ classes [ Tw.type_body_small, Tw.font_semibold, Tw.text_simple TC.textPrimary, Tw.mb s2 ] ]
                 [ Html.text "Sisällys" ]
