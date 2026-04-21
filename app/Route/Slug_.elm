@@ -201,7 +201,7 @@ view app _ =
             , { label = app.data.frontmatter.title, href = Nothing }
             ]
         , MarkdownRenderer.renderMarkdown
-            { childPages = app.data.childPages, sectionSlug = Just app.routeParams.slug, pageDir = app.data.pageDir }
+            { childPages = app.data.childPages, sectionSlug = Just app.routeParams.slug, pageDir = app.data.pageDir, isIndex = not (List.isEmpty app.data.childPages) }
             app.data.body
         ]
     }

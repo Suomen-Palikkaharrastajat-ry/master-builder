@@ -142,5 +142,5 @@ view :
     -> View (PagesMsg Msg)
 view app _ =
     { title = app.data.frontmatter.title
-    , body = [ MarkdownRenderer.renderMarkdown { childPages = app.data.childPages, sectionSlug = Just "", pageDir = app.data.pageDir } app.data.body ]
+    , body = [ MarkdownRenderer.renderMarkdown { childPages = app.data.childPages, sectionSlug = Just "", pageDir = app.data.pageDir, isIndex = True } app.data.body ]
     }

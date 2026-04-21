@@ -37,6 +37,7 @@ type alias Data =
     { frontmatter : Frontmatter
     , body : String
     , pageDir : String
+    , isIndex : Bool
     }
 
 
@@ -164,6 +165,6 @@ view app _ =
             [ { label = "Etusivu", href = Just "/" }
             , { label = app.data.frontmatter.title, href = Nothing }
             ]
-        , MarkdownRenderer.renderMarkdown { childPages = [], sectionSlug = Nothing, pageDir = app.data.pageDir } app.data.body
+        , MarkdownRenderer.renderMarkdown { childPages = [], sectionSlug = Nothing, pageDir = app.data.pageDir, isIndex = app.data.isIndex } app.data.body
         ]
     }

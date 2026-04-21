@@ -197,7 +197,7 @@ view app _ =
     , body =
         [ Breadcrumb.view breadcrumbItems
         , MarkdownRenderer.renderMarkdown
-            { childPages = [], sectionSlug = Nothing, pageDir = app.data.pageDir }
+            { childPages = [], sectionSlug = Nothing, pageDir = app.data.pageDir, isIndex = False }
             app.data.body
         ]
     }
