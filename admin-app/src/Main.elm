@@ -840,6 +840,7 @@ viewEditorAndPreview model =
                         { childPages = []
                         , sectionSlug = Nothing
                         , pageDir = ""
+                        , isIndex = False
                         }
                         (markdownBody model.editorContent)
                     ]
