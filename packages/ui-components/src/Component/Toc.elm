@@ -27,21 +27,26 @@ type alias TocItem =
     }
 
 
-view : List TocItem -> Html msg
-view items =
+view : Maybe String -> List TocItem -> Html msg
+view extraClass items =
     if List.isEmpty items then
         Html.text ""
 
     else
         Html.div
             [ classes
-                [ TwEx.not_prose
-                , Tw.grid
-                , Tw.grid_cols_1
-                , Bp.sm [ Tw.grid_cols_2 ]
-                , Tw.gap Th.s4
-                , Tw.my Th.s6
-                ]
+                ([ TwEx.not_prose
+                 , Tw.grid
+                 , Tw.grid_cols_1
+                 , Bp.sm [ Tw.grid_cols_2 ]
+                 , Tw.gap Th.s4
+                 , Tw.my Th.s6
+                 ]
+                    ++ (extraClass
+                            |> Maybe.map (List.singleton << Tw.raw)
+                            |> Maybe.withDefault []
+                       )
+                )
             ]
             (List.map viewItem items)
 
