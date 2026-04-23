@@ -70,8 +70,8 @@ viewBrandLayout :
     -> Html msg
 viewBrandLayout config =
     Html.div
-        [ classes [ Tw.grid, Tw.gap Th.s8, Bp.sm [ Tw.items_end, Tw.grid_cols_2 ] ] ]
-        [ Html.div [ classes [ Tw.flex, Tw.items_start, Tw.gap Th.s4 ] ]
+        [ classes [ Tw.grid, Tw.gap Th.s8, Bp.sm [ Tw.items_end, Tw.grid_cols_5 ] ] ]
+        [ Html.div [ classes [ Tw.flex, Tw.items_start, Tw.gap Th.s4, Bp.sm [ Tw.col_span_3 ] ] ]
             (List.filterMap identity
                 [ Maybe.map
                     (\logoHtml -> Html.div [ classes [ Tw.shrink_0 ] ] [ logoHtml ])
@@ -100,7 +100,7 @@ viewBrandLayout config =
                     )
                 ]
             )
-        , Html.div [ classes [ TwEx.space_y Th.s1, Tw.pl Th.s4, Bp.sm [ Tw.text_right ] ] ]
+        , Html.div [ classes [ TwEx.space_y Th.s1, Tw.pl Th.s4, Bp.sm [ Tw.text_right, Tw.col_span_2 ] ] ]
             [ Html.div [ classes [ TwEx.space_y Th.s1, Tw.text_xs, TwEx.text_white_50 ] ]
                 (List.filterMap identity
                     (Just (Html.p [] [ Html.text config.copyright ])

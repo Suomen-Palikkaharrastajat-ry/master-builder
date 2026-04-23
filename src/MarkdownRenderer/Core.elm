@@ -4,12 +4,11 @@ module MarkdownRenderer.Core exposing (renderer)
 -}
 
 import ContentMarkdown exposing (TocNode)
-import MarkdownRenderer.Helpers exposing (HeadingItem, headingSlug)
 import Html exposing (Html)
 import Html.Attributes as Attr
 import Markdown.Block as Block
 import Markdown.Renderer
-import MarkdownRenderer.Helpers as Helpers
+import MarkdownRenderer.Helpers as Helpers exposing (HeadingItem, headingSlug)
 import MarkdownRenderer.HtmlTags as HtmlTags
 import Tailwind as Tw exposing (classes)
 import Tailwind.Breakpoints as Bp

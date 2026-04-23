@@ -1,6 +1,5 @@
 module DesignTokens exposing (version)
 
-
 {-| Design tokens for Suomen Palikkaharrastajat ry.
 
 Import sub-modules directly:
@@ -18,7 +17,8 @@ Import sub-modules directly:
 -}
 
 
-{-| Token version. -}
+{-| Token version.
+-}
 version : String
 version =
     "2025.10"

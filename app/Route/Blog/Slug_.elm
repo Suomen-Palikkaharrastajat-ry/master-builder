@@ -75,7 +75,16 @@ pages =
                                             |> BackendTask.map (\fm -> ( p, fm.published ))
                                     )
                                 |> BackendTask.combine
-                                |> BackendTask.map (List.filterMap (\( p, pub ) -> if pub then Just p else Nothing))
+                                |> BackendTask.map
+                                    (List.filterMap
+                                        (\( p, pub ) ->
+                                            if pub then
+                                                Just p
+
+                                            else
+                                                Nothing
+                                        )
+                                    )
                         )
             )
 

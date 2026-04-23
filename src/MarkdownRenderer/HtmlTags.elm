@@ -4,7 +4,6 @@ module MarkdownRenderer.HtmlTags exposing (htmlRenderer)
 -}
 
 import Component.Accordion as Accordion
-import List.Extra
 import Component.Alert as Alert
 import Component.Card as Card
 import Component.ColorSwatch as ColorSwatch
@@ -20,13 +19,13 @@ import Component.Timeline as Timeline
 import Component.Toast as Toast
 import Component.Toc as Toc
 import ContentMarkdown exposing (TocNode)
-import MarkdownRenderer.Helpers exposing (HeadingItem)
 import FeatherIcons
 import Html exposing (Html)
 import Html.Attributes as Attr
 import Html.Lazy
+import List.Extra
 import Markdown.Html
-import MarkdownRenderer.Helpers as Helpers
+import MarkdownRenderer.Helpers as Helpers exposing (HeadingItem)
 import Tailwind as Tw exposing (classes)
 import Tailwind.Breakpoints as Bp
 import Tailwind.Theme as Th exposing (s0_dot_5, s1, s10, s1_dot_5, s2, s2_dot_5, s3, s4, s6, s8, white)

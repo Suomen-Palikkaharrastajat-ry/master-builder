@@ -19,6 +19,19 @@ module TailwindExtra exposing
     , border_white_10
     , bottom_4
     , divide_color
+    , grid_col_span_1
+    , grid_col_span_10
+    , grid_col_span_11
+    , grid_col_span_12
+    , grid_col_span_2
+    , grid_col_span_3
+    , grid_col_span_4
+    , grid_col_span_5
+    , grid_col_span_6
+    , grid_col_span_7
+    , grid_col_span_8
+    , grid_col_span_9
+    , grid_col_span_full
     , grid_cols_auto_1fr
     , group
     , h_35
@@ -624,6 +637,97 @@ ring_brand_yellow =
 grid_cols_auto_1fr : Tailwind
 grid_cols_auto_1fr =
     Tailwind "grid-cols-[auto_1fr]"
+
+
+{-| Span 1 grid column.
+-}
+grid_col_span_1 : Tailwind
+grid_col_span_1 =
+    Tailwind "col-span-1"
+
+
+{-| Span 2 grid columns.
+-}
+grid_col_span_2 : Tailwind
+grid_col_span_2 =
+    Tailwind "col-span-2"
+
+
+{-| Span 3 grid columns.
+-}
+grid_col_span_3 : Tailwind
+grid_col_span_3 =
+    Tailwind "col-span-3"
+
+
+{-| Span 4 grid columns.
+-}
+grid_col_span_4 : Tailwind
+grid_col_span_4 =
+    Tailwind "col-span-4"
+
+
+{-| Span 5 grid columns.
+-}
+grid_col_span_5 : Tailwind
+grid_col_span_5 =
+    Tailwind "col-span-5"
+
+
+{-| Span 6 grid columns.
+-}
+grid_col_span_6 : Tailwind
+grid_col_span_6 =
+    Tailwind "col-span-6"
+
+
+{-| Span 7 grid columns.
+-}
+grid_col_span_7 : Tailwind
+grid_col_span_7 =
+    Tailwind "col-span-7"
+
+
+{-| Span 8 grid columns.
+-}
+grid_col_span_8 : Tailwind
+grid_col_span_8 =
+    Tailwind "col-span-8"
+
+
+{-| Span 9 grid columns.
+-}
+grid_col_span_9 : Tailwind
+grid_col_span_9 =
+    Tailwind "col-span-9"
+
+
+{-| Span 10 grid columns.
+-}
+grid_col_span_10 : Tailwind
+grid_col_span_10 =
+    Tailwind "col-span-10"
+
+
+{-| Span 11 grid columns.
+-}
+grid_col_span_11 : Tailwind
+grid_col_span_11 =
+    Tailwind "col-span-11"
+
+
+{-| Span 12 grid columns.
+-}
+grid_col_span_12 : Tailwind
+grid_col_span_12 =
+    Tailwind "col-span-12"
+
+
+{-| Span the full width of the grid.
+-}
+grid_col_span_full : Tailwind
+grid_col_span_full =
+    Tailwind "col-span-full"
 
 
 {-| Custom height of 8.75rem (140px) — matches the brand h-35 design token.
