@@ -116,7 +116,7 @@ Use `<button-link href="…" variant="…" label="…"/>` to render a styled anc
 
 ## Feature Grid
 
-Use `<feature-grid columns="2|3">` to wrap `<feature>` items in a responsive grid. The optional `columns` attribute accepts `2`, `3`, or `4` (default is `3`). The `icon` attribute accepts a Feather icon name (`zap`, `check`, `globe`, `edit`, `layers`, `git-branch`, `rss`, `calendar`, `shield`, `lock`, `code`, `cpu`, `package`, `trending-up`, `info`, `alert-triangle`, `settings`, `user`, `server`, `terminal`, etc.). The optional `href` attribute wraps the feature in a link — linked features gain a hover background and keyboard focus ring automatically.
+Use `<feature-grid columns="2|3">` to wrap `<feature>` items in a responsive grid. The optional `columns` attribute accepts `2`, `3`, or `4` (default is `3`). Add `align="center"` to the grid to center feature bodies while keeping each title at the top. The `icon` attribute accepts a Feather icon name (`zap`, `check`, `globe`, `edit`, `layers`, `git-branch`, `rss`, `calendar`, `shield`, `lock`, `code`, `cpu`, `package`, `trending-up`, `info`, `alert-triangle`, `settings`, `user`, `server`, `terminal`, etc.). The optional `href` attribute wraps the feature in a link.
 
 <tab-group name="feature-grid">
 
@@ -167,7 +167,7 @@ Content lives alongside your code. Commit, review, and deploy with standard git 
 <example>
 
 ```html
-&lt;feature-grid columns="3"&gt;
+&lt;feature-grid columns="3" align="center"&gt;
 
 &lt;feature title="Fast builds" icon="zap" href="/docs/builds"&gt;
 Description of the feature goes here.
@@ -252,4 +252,3 @@ Use `<pricing-table>` to wrap `<pricing-tier>` cards in a grid. Each tier has re
 </tab-group>
 
 ---
-

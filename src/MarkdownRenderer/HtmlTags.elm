@@ -67,9 +67,9 @@ htmlRenderer context =
             )
             |> Markdown.Html.withAttribute "title"
             |> Markdown.Html.withOptionalAttribute "subtitle"
-        , -- <feature-grid columns="2|3">…</feature-grid>
+        , -- <feature-grid columns="2|3" align="center">…</feature-grid>
           Markdown.Html.tag "feature-grid"
-            (\columns children ->
+            (\columns align children ->
                 let
                     cols =
                         columns
@@ -93,11 +93,13 @@ htmlRenderer context =
                                     _ ->
                                         [ Bp.sm [ Tw.grid_cols_2 ], Bp.lg [ Tw.grid_cols_4 ] ]
                                )
+                            ++ featureGridAlignmentTw align
                         )
                     ]
                     children
             )
             |> Markdown.Html.withOptionalAttribute "columns"
+            |> Markdown.Html.withOptionalAttribute "align"
         , -- <feature title="…" icon="…" href="…">…</feature>
           Markdown.Html.tag "feature"
             (\title icon href children ->
@@ -112,19 +114,24 @@ htmlRenderer context =
                                 )
 
                     content =
-                        [ Maybe.withDefault (Html.text "") renderedIcon
-                        , Html.h3 [ classes [ Tw.type_h4, TwEx.leading_7, Tw.text_simple TC.textPrimary ] ]
+                        [ Html.h3 [ Attr.class "feature-grid-title", classes [ Tw.type_h4, TwEx.leading_7, Tw.text_simple TC.textPrimary ] ]
                             [ Html.text title ]
-                        , Html.div [ classes [ Tw.mt s2, Tw.type_caption, TwEx.leading_7, Tw.text_simple TC.textMuted, TwEx.p_my_0, TwEx.p_text_inherit ] ] children
+                        , Html.div
+                            [ Attr.class "feature-grid-body" ]
+                            [ Maybe.withDefault (Html.text "") renderedIcon
+                            , Html.div [ classes [ Tw.mt s2, Tw.type_caption, TwEx.leading_7, Tw.text_simple TC.textMuted, TwEx.p_my_0, TwEx.p_text_inherit ] ] children
+                            ]
                         ]
                 in
                 case href of
                     Just url ->
                         Html.a
                             ([ Attr.href url
+                             , Attr.class "feature-grid-item"
                              , classes
                                 [ Tw.flex
                                 , Tw.flex_col
+                                , Tw.h_full
                                 , Tw.no_underline
                                 , Tw.rounded_lg
                                 , Tw.p s3
@@ -139,7 +146,7 @@ htmlRenderer context =
                             content
 
                     Nothing ->
-                        Html.div [ classes [ Tw.flex, Tw.flex_col ] ] content
+                        Html.div [ Attr.class "feature-grid-item", classes [ Tw.flex, Tw.flex_col, Tw.h_full ] ] content
             )
             |> Markdown.Html.withAttribute "title"
             |> Markdown.Html.withOptionalAttribute "icon"
@@ -1050,6 +1057,25 @@ parseSpinnerSize s =
 
         _ ->
             Spinner.Medium
+
+
+featureGridAlignmentTw : Maybe String -> List Tw.Tailwind
+featureGridAlignmentTw align =
+    case align of
+        Just "center" ->
+            [ TwEx.feature_grid_body_flex
+            , TwEx.feature_grid_body_flex_1
+            , TwEx.feature_grid_body_flex_col
+            , TwEx.feature_grid_body_items_center
+            , TwEx.feature_grid_body_justify_center
+            , TwEx.feature_grid_body_text_center
+            , TwEx.feature_grid_item_items_center
+            , TwEx.feature_grid_title_self_stretch
+            , TwEx.feature_grid_title_text_center
+            ]
+
+        _ ->
+            []
 
 
 parseProgressColor : Maybe String -> Progress.Color

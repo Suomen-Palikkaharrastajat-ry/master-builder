@@ -1,4 +1,4 @@
-module Component.FeatureGrid exposing (Feature, view)
+module Component.FeatureGrid exposing (Alignment(..), Feature, view)
 
 {-| Feature-highlight grid component.
 -}
@@ -20,67 +20,114 @@ type alias Feature msg =
     }
 
 
-view : { columns : Int, features : List (Feature msg) } -> Html msg
+type Alignment
+    = Start
+    | Center
+
+
+view : { columns : Int, features : List (Feature msg), alignment : Alignment } -> Html msg
 view config =
     Html.div
         [ classes [ Tw.py Th.s12 ] ]
         [ Html.div
             [ classes (gridTw config.columns) ]
-            (List.map viewFeature config.features)
+            (List.map (viewFeature config.alignment) config.features)
         ]
 
 
-viewFeature : Feature msg -> Html msg
-viewFeature feature =
+viewFeature : Alignment -> Feature msg -> Html msg
+viewFeature alignment feature =
     let
-        content =
-            [ case feature.icon of
-                Just ico ->
-                    Html.div
-                        [ classes
-                            [ Tw.mb Th.s4
-                            , Tw.flex
-                            , Tw.h Th.s10
-                            , Tw.w Th.s10
-                            , Tw.items_center
-                            , Tw.justify_center
-                            , Tw.rounded_lg
-                            , Tw.bg_simple TC.brandYellow
-                            , Tw.text_simple TC.brand
-                            ]
-                        ]
-                        [ ico ]
+        itemTw =
+            featureItemTw alignment
 
-                Nothing ->
-                    Html.text ""
-            , Html.h3
-                [ classes [ Tw.type_h4, TwEx.leading_7, Tw.text_simple TC.textPrimary ] ]
-                [ Html.text feature.title ]
-            , Html.div
-                [ classes [ Tw.mt Th.s2, Tw.type_caption, TwEx.leading_7, Tw.text_simple TC.textMuted, TwEx.p_my_0, TwEx.p_text_inherit ] ]
-                feature.description
-            ]
+        content =
+            case alignment of
+                Start ->
+                    [ viewIcon feature.icon
+                    , viewTitle [] feature.title
+                    , viewDescription [] feature.description
+                    ]
+
+                Center ->
+                    [ viewTitle [ Tw.text_center, Tw.self_stretch ] feature.title
+                    , Html.div
+                        [ classes [ Tw.flex, Tw.flex_1, Tw.flex_col, Tw.items_center, Tw.justify_center, Tw.text_center ] ]
+                        [ viewIcon feature.icon
+                        , viewDescription [] feature.description
+                        ]
+                    ]
     in
     case feature.href of
         Just url ->
             Html.a
                 [ Attr.href url
                 , classes
-                    [ Tw.flex
-                    , Tw.flex_col
-                    , Tw.no_underline
-                    , Tw.rounded_lg
-                    , Tw.p Th.s3
-                    , Bp.withVariant "motion-safe" [ Tw.transition_colors ]
-                    , Bp.hover [ TwEx.bg_brand_5, Tw.ring_2, Tw.ring_offset_2, TwEx.ring_brand ]
-                    , Bp.focus [ Tw.outline_none ]
-                    , Bp.focus_visible [ Tw.ring_2, Tw.ring_offset_2, TwEx.ring_brand ]
-                    ]
+                    ([ Tw.flex
+                     , Tw.flex_col
+                     , Tw.h_full
+                     , Tw.no_underline
+                     , Tw.rounded_lg
+                     , Tw.p Th.s3
+                     , Bp.withVariant "motion-safe" [ Tw.transition_colors ]
+                     , Bp.hover [ TwEx.bg_brand_5, Tw.ring_2, Tw.ring_offset_2, TwEx.ring_brand ]
+                     , Bp.focus [ Tw.outline_none ]
+                     , Bp.focus_visible [ Tw.ring_2, Tw.ring_offset_2, TwEx.ring_brand ]
+                     ]
+                        ++ itemTw
+                    )
                 ]
                 content
 
         Nothing ->
-            Html.div [ classes [ Tw.flex, Tw.flex_col ] ] content
+            Html.div [ classes ([ Tw.flex, Tw.flex_col, Tw.h_full ] ++ itemTw) ] content
+
+
+featureItemTw : Alignment -> List Tw.Tailwind
+featureItemTw alignment =
+    case alignment of
+        Start ->
+            []
+
+        Center ->
+            [ Tw.items_center ]
+
+
+viewIcon : Maybe (Html msg) -> Html msg
+viewIcon icon =
+    case icon of
+        Just ico ->
+            Html.div
+                [ classes
+                    [ Tw.mb Th.s4
+                    , Tw.flex
+                    , Tw.h Th.s10
+                    , Tw.w Th.s10
+                    , Tw.items_center
+                    , Tw.justify_center
+                    , Tw.rounded_lg
+                    , Tw.bg_simple TC.brandYellow
+                    , Tw.text_simple TC.brand
+                    ]
+                ]
+                [ ico ]
+
+        Nothing ->
+            Html.text ""
+
+
+viewTitle : List Tw.Tailwind -> String -> Html msg
+viewTitle extraClasses title =
+    Html.h3
+        [ classes ([ Tw.type_h4, TwEx.leading_7, Tw.text_simple TC.textPrimary ] ++ extraClasses) ]
+        [ Html.text title ]
+
+
+viewDescription : List Tw.Tailwind -> List (Html msg) -> Html msg
+viewDescription extraClasses description =
+    Html.div
+        [ classes ([ Tw.mt Th.s2, Tw.type_caption, TwEx.leading_7, Tw.text_simple TC.textMuted, TwEx.p_my_0, TwEx.p_text_inherit ] ++ extraClasses) ]
+        description
 
 
 gridTw : Int -> List Tw.Tailwind

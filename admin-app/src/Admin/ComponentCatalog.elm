@@ -26,7 +26,7 @@ all : List ComponentSpec
 all =
     [ body "callout" "Callout" "Alert box for info, success, warning, or error notes." [ attr "type" "Type" "info", attr "icon" "Icon" "" ] "Important note goes here."
     , body "hero" "Hero" "Large heading block with optional call-to-action children." [ attr "title" "Title" "Page title", attr "subtitle" "Subtitle" "Short supporting text" ] "[Read more](https://example.com)"
-    , body "feature-grid" "Feature grid" "Responsive feature card grid." [ attr "columns" "Columns" "2" ] "<feature title=\"Feature\" icon=\"star\">\nFeature body.\n</feature>"
+    , body "feature-grid" "Feature grid" "Responsive feature card grid." [ attr "columns" "Columns" "2", attr "align" "Align" "" ] "<feature title=\"Feature\" icon=\"star\">\nFeature body.\n</feature>"
     , body "feature" "Feature" "Single feature item, usually inside a feature grid." [ attr "title" "Title" "Feature", attr "icon" "Icon" "star", attr "href" "Link" "" ] "Feature body."
     , body "pricing-table" "Pricing table" "Pricing tier wrapper." [ attr "highlighted" "Highlighted tier" "" ] "<pricing-tier name=\"Jäsenmaksu\" price=\"10 €\" period=\"vuosi\">\nTier details.\n</pricing-tier>"
     , body "pricing-tier" "Pricing tier" "Single pricing tier." [ attr "name" "Name" "Jäsenmaksu", attr "price" "Price" "10 €", attr "period" "Period" "vuosi", attr "href" "Link" "" ] "Tier details."

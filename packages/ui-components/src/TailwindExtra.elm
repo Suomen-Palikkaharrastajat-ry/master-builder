@@ -19,6 +19,15 @@ module TailwindExtra exposing
     , border_white_10
     , bottom_4
     , divide_color
+    , feature_grid_body_flex
+    , feature_grid_body_flex_1
+    , feature_grid_body_flex_col
+    , feature_grid_body_items_center
+    , feature_grid_body_justify_center
+    , feature_grid_body_text_center
+    , feature_grid_item_items_center
+    , feature_grid_title_self_stretch
+    , feature_grid_title_text_center
     , grid_col_span_1
     , grid_col_span_10
     , grid_col_span_11
@@ -143,6 +152,51 @@ scroll_mt spacing =
 divide_color : Color -> Tailwind
 divide_color color =
     Tailwind ("divide-" ++ colorToString color)
+
+
+feature_grid_body_flex : Tailwind
+feature_grid_body_flex =
+    Tailwind "[&_.feature-grid-body]:flex"
+
+
+feature_grid_body_flex_1 : Tailwind
+feature_grid_body_flex_1 =
+    Tailwind "[&_.feature-grid-body]:flex-1"
+
+
+feature_grid_body_flex_col : Tailwind
+feature_grid_body_flex_col =
+    Tailwind "[&_.feature-grid-body]:flex-col"
+
+
+feature_grid_body_items_center : Tailwind
+feature_grid_body_items_center =
+    Tailwind "[&_.feature-grid-body]:items-center"
+
+
+feature_grid_body_justify_center : Tailwind
+feature_grid_body_justify_center =
+    Tailwind "[&_.feature-grid-body]:justify-center"
+
+
+feature_grid_body_text_center : Tailwind
+feature_grid_body_text_center =
+    Tailwind "[&_.feature-grid-body]:text-center"
+
+
+feature_grid_item_items_center : Tailwind
+feature_grid_item_items_center =
+    Tailwind "[&_.feature-grid-item]:items-center"
+
+
+feature_grid_title_self_stretch : Tailwind
+feature_grid_title_self_stretch =
+    Tailwind "[&_.feature-grid-title]:self-stretch"
+
+
+feature_grid_title_text_center : Tailwind
+feature_grid_title_text_center =
+    Tailwind "[&_.feature-grid-title]:text-center"
 
 
 {-| Caps width at Tailwind's `2xl` container size (42 rem / 672 px).
