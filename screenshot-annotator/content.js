@@ -96,7 +96,7 @@ function snapPoint(x, y) {
   return { x: sx + window.scrollX, y: sy + window.scrollY, snapped, rect: snapped ? r : null };
 }
 
-const CTRL_PAD = 6; // px padding added by Ctrl+Click
+const CTRL_PAD = 6; // px padding added by Ctrl/Cmd element targeting
 const CAPTURE_MIN_SIZE = 8;
 const CAPTURE_ACTION_GAP = 8;
 const CAPTURE_TILE_DELAY_MS = 80;
@@ -591,7 +591,7 @@ function getCaptureButtonTitle() {
   const action = state.annotations.length
     ? "Ctrl/Cmd+Click: save annotations JSON"
     : "Ctrl/Cmd+Click: load annotations JSON";
-  return `Capture area screenshot (PNG). Shift+Click: full page. Alt+Click: visible area. ${action}`;
+  return `Capture area screenshot (PNG). Click: drag area selection. In selection mode, Ctrl/Cmd+Click selects the hovered element area. ${action}`;
 }
 
 function updateCaptureButtonTitle() {
@@ -825,7 +825,7 @@ function inject() {
 
   const captureHint = document.createElement("div");
   captureHint.id = "ann-capture-hint";
-  captureHint.textContent = "Drag to select screenshot area. Esc to cancel.";
+  captureHint.textContent = "Drag to select screenshot area, or Ctrl/Cmd+Click a hovered element to prefill the selection. Esc to cancel.";
   root.appendChild(captureHint);
 
   const captureActions = document.createElement("div");
@@ -992,14 +992,6 @@ function onCaptureClick(e) {
     }
     return;
   }
-  if (e.shiftKey) {
-    void captureFullPageScreenshot();
-    return;
-  }
-  if (e.altKey) {
-    void captureVisibleAreaScreenshot();
-    return;
-  }
   beginCaptureSelection();
 }
 
@@ -1138,6 +1130,15 @@ function onIdleMouseMove(e) {
 }
 
 function refreshSnapHint(x, y, ctrlKey) {
+  if (isCaptureInteractionActive()) {
+    if (ctrlKey && !state.captureDragging) {
+      const target = getSnapTarget(x, y);
+      updateSnapHint(target ? target.getBoundingClientRect() : null, true);
+      return;
+    }
+    updateSnapHint(null);
+    return;
+  }
   if (state.capturePhase !== "idle" || state.drawing || state.tool === "select" ||
       state.tool === "text" || state.tool === "blur") {
     updateSnapHint(null);
@@ -1155,6 +1156,31 @@ function refreshSnapHint(x, y, ctrlKey) {
 function onCtrlChange(e) {
   if (e.key !== "Control" && e.key !== "Meta") return;
   refreshSnapHint(state.mouseX, state.mouseY, e.type === "keydown");
+}
+
+function getCaptureRectFromHoveredElement(x, y, pad = CTRL_PAD) {
+  const target = getSnapTarget(x, y);
+  if (!target) return null;
+
+  const r = target.getBoundingClientRect();
+  const left = clamp(r.left - pad, 0, window.innerWidth);
+  const top = clamp(r.top - pad, 0, window.innerHeight);
+  const right = clamp(r.right + pad, 0, window.innerWidth);
+  const bottom = clamp(r.bottom + pad, 0, window.innerHeight);
+  const rect = {
+    x: left,
+    y: top,
+    w: Math.max(0, right - left),
+    h: Math.max(0, bottom - top),
+  };
+  return isCaptureRectValid(rect) ? rect : null;
+}
+
+function ctrlClickCaptureElement(x, y) {
+  const rect = getCaptureRectFromHoveredElement(x, y);
+  if (!rect) return false;
+  enterCaptureAdjusting(rect);
+  return true;
 }
 
 // ── Ctrl+Click: stamp annotation around hovered element ───────────────────
@@ -1436,7 +1462,7 @@ function beginCaptureSelection() {
   applySvgInteractionMode();
   setCaptureHintVisible(true);
   renderCaptureSelection();
-  showToast("Drag to select an area, then click Save.", "info", 2400);
+  showToast("Drag to select an area, or Ctrl/Cmd+Click an element to prefill and adjust.", "info", 2600);
 }
 
 function enterCaptureAdjusting(rect) {
@@ -1804,6 +1830,9 @@ function onDrawStart(e) {
   if (isCaptureInteractionActive()) {
     e.preventDefault();
     e.stopPropagation();
+    if ((e.ctrlKey || e.metaKey) && ctrlClickCaptureElement(e.clientX, e.clientY)) {
+      return;
+    }
     const handle = state.capturePhase === "adjusting" ? getCaptureHandleFromTarget(e.target) : null;
     if (state.capturePhase === "adjusting" && handle && state.captureRect) {
       beginCaptureDrag("resize", e.clientX, e.clientY, handle);
