@@ -148,7 +148,7 @@ htmlRenderer context =
                             content
 
                     Nothing ->
-                        Html.div [ Attr.class "feature-grid-item", classes [ Tw.flex, Tw.flex_col, Tw.h_full ] ] content
+                        Html.div [ Attr.class "feature-grid-item", classes [ Tw.flex, Tw.flex_col, Tw.h_full, Tw.rounded_lg, Tw.p s3 ] ] content
             )
             |> Markdown.Html.withAttribute "title"
             |> Markdown.Html.withOptionalAttribute "icon"

@@ -81,7 +81,18 @@ viewFeature alignment feature =
                 content
 
         Nothing ->
-            Html.div [ classes ([ Tw.flex, Tw.flex_col, Tw.h_full ] ++ itemTw) ] content
+            Html.div
+                [ classes
+                    ([ Tw.flex
+                     , Tw.flex_col
+                     , Tw.h_full
+                     , Tw.rounded_lg
+                     , Tw.p Th.s3
+                     ]
+                        ++ itemTw
+                    )
+                ]
+                content
 
 
 featureItemTw : Alignment -> List Tw.Tailwind

@@ -17,6 +17,7 @@ let
         pkgs.elmPackages.elm-review
         pkgs.elmPackages.elm-test
         pkgs.elmPackages.elm-json
+        pkgs.imagemagick
         lamdera
         pkgs.nodejs_22
         npmTools # provides elm-pages and elm-tailwind-classes bins
