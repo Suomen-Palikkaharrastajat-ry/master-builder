@@ -46,7 +46,6 @@ The content repo must contain Markdown files at the root with YAML frontmatter:
 ---
 title: "Page Title"
 description: "SEO description"
-slug: page-slug
 published: true
 nav: true           # Include in site navigation (default: false)
 navTitle: "Short"   # Optional shorter label for nav (default: title)
@@ -59,6 +58,7 @@ Page body in Markdown…
 - `index.md` → renders at `/`
 - Any other `<slug>.md` → renders at `/<slug>`
 - `blog/<slug>.md` → renders at `/blog/<slug>`
+- Slugs are always inferred from the filename/path; `slug` in frontmatter is ignored.
 
 ### Static assets
 

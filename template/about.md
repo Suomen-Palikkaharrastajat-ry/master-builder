@@ -1,7 +1,6 @@
 ---
 title: "About"
 description: "About this site."
-slug: about
 published: true
 ---
 

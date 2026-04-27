@@ -1,7 +1,6 @@
 ---
 title: "Hello from elm-pages"
 description: "Our first blog post, demonstrating rich content components inside Markdown."
-slug: hello
 published: true
 ---
 

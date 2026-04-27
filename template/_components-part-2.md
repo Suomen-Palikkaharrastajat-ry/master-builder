@@ -38,6 +38,7 @@ A card without a title.
 
 ---
 
+
 ## Badge
 
 Use `<badge color="…" label="…"/>` inline to label content. The `color` attribute accepts `gray`, `blue`, `green`, `yellow`, `red`, `purple`, or `indigo`.
@@ -90,7 +91,7 @@ Not to read it! But if you want to add new component types or modify the layout,
 
 <accordion-item summary="How do I add a new page?">
 
-Create a new Markdown file in the `content/` directory with a frontmatter block (`title`, `description`, `slug`, `published`). elm-pages picks it up automatically on the next build.
+Create a new Markdown file in the `content/` directory with a frontmatter block (`title`, `description`, `published`). elm-pages picks it up automatically on the next build, using the filename as the slug.
 
 </accordion-item>
 
@@ -280,4 +281,3 @@ Use `<toast title="…">` to render an inline notification banner. The `variant`
 </tab-group>
 
 ---
-

@@ -1,7 +1,6 @@
 ---
 title: "Component Showcase"
 description: "All available component tags for use in Markdown content."
-slug: components
 published: true
 ---
 

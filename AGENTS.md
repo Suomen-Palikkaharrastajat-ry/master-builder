@@ -131,7 +131,6 @@ Content pages are Markdown files with YAML frontmatter:
 ---
 title: "Page Title"
 description: "SEO description"
-slug: page-slug
 published: true
 nav: true           # Show in navigation (default: false)
 navTitle: "Nav"     # Optional shorter nav label
@@ -142,6 +141,7 @@ order: 1            # Nav sort order (default: 999)
 - `app/Route/Index.elm` renders `index.md`
 - `app/Route/Slug_.elm` renders all other `.md` files as `/:slug`
 - `app/Shared.elm` builds navigation from pages with `nav: true`, sorted by `order`
+- Slugs are always inferred from the filename/path; `slug` in frontmatter is ignored.
 
 ## elm-review
 

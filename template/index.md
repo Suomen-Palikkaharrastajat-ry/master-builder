@@ -1,7 +1,6 @@
 ---
 title: "Welcome"
 description: "The home page of this site."
-slug: index
 published: true
 ---
 
