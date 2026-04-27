@@ -12,10 +12,12 @@ const INLINE_SEARCH_DEBOUNCE_MS = 200;
 const INLINE_SEARCH_MAX_RESULTS = 8;
 const INLINE_SEARCH_AUTOFOCUS_RETRY_MS = 50;
 const INLINE_SEARCH_AUTOFOCUS_MAX_ATTEMPTS = 20;
+const RANDOM_FEATURE_GRID_SELECTOR = '[data-feature-grid-order="random"]';
 let searchRuntimePromise = null;
 let searchRuntime = null;
 let lastInlineSearchAutofocusUrl = null;
 const inlineSearchTimers = new WeakMap();
+const randomizedFeatureGrids = new WeakSet();
 
 function loadLunrRuntime() {
     if (window.lunr) {
@@ -418,6 +420,66 @@ function setupInlineSearchAutofocus() {
     scheduleInlineSearchAutofocus();
 }
 
+function shuffleFeatureGrid(grid) {
+    if (randomizedFeatureGrids.has(grid)) {
+        return;
+    }
+
+    const items = Array.from(grid.children).filter(function (child) {
+        return child.classList.contains('feature-grid-item');
+    });
+
+    if (items.length < 2) {
+        randomizedFeatureGrids.add(grid);
+        return;
+    }
+
+    for (let index = items.length - 1; index > 0; index -= 1) {
+        const swapIndex = Math.floor(Math.random() * (index + 1));
+        const current = items[index];
+        items[index] = items[swapIndex];
+        items[swapIndex] = current;
+    }
+
+    items.forEach(function (item) {
+        grid.appendChild(item);
+    });
+    randomizedFeatureGrids.add(grid);
+}
+
+function shuffleRandomFeatureGrids() {
+    document.querySelectorAll(RANDOM_FEATURE_GRID_SELECTOR).forEach(shuffleFeatureGrid);
+}
+
+function setupRandomFeatureGrids() {
+    if (window.__randomFeatureGridsSetup) {
+        shuffleRandomFeatureGrids();
+        return;
+    }
+    window.__randomFeatureGridsSetup = true;
+
+    const scheduleShuffle = function () {
+        requestAnimationFrame(shuffleRandomFeatureGrids);
+    };
+
+    const originalPushState = window.history.pushState;
+    window.history.pushState = function () {
+        const result = originalPushState.apply(window.history, arguments);
+        scheduleShuffle();
+        return result;
+    };
+
+    const originalReplaceState = window.history.replaceState;
+    window.history.replaceState = function () {
+        const result = originalReplaceState.apply(window.history, arguments);
+        scheduleShuffle();
+        return result;
+    };
+
+    window.addEventListener('popstate', scheduleShuffle);
+    scheduleShuffle();
+}
+
 function setupPullToRefresh() {
     if (window.__pullToRefreshSetup) return;
     window.__pullToRefreshSetup = true;
@@ -592,6 +654,7 @@ const config = {
 
         setupInlineSearchWidgets();
         setupInlineSearchAutofocus();
+        setupRandomFeatureGrids();
         setupPullToRefresh();
     },
     flags: function () {
