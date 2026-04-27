@@ -67,9 +67,9 @@ htmlRenderer context =
             )
             |> Markdown.Html.withAttribute "title"
             |> Markdown.Html.withOptionalAttribute "subtitle"
-        , -- <feature-grid columns="2|3" align="center">…</feature-grid>
+        , -- <feature-grid columns="2|3" align="center" order="random">…</feature-grid>
           Markdown.Html.tag "feature-grid"
-            (\columns align children ->
+            (\columns align order children ->
                 let
                     cols =
                         columns
@@ -77,29 +77,23 @@ htmlRenderer context =
                             |> Maybe.withDefault 3
                 in
                 Html.div
-                    [ classes
+                    ([ classes
                         ([ TwEx.not_prose
                          , Tw.grid
                          , Tw.gap_x s8
                          , Tw.gap_y s10
                          ]
-                            ++ (case cols of
-                                    2 ->
-                                        [ Bp.sm [ Tw.grid_cols_2 ] ]
-
-                                    3 ->
-                                        [ Bp.sm [ Tw.grid_cols_2 ], Bp.lg [ Tw.grid_cols_3 ] ]
-
-                                    _ ->
-                                        [ Bp.sm [ Tw.grid_cols_2 ], Bp.lg [ Tw.grid_cols_4 ] ]
-                               )
+                            ++ featureGridColumnsTw cols
                             ++ featureGridAlignmentTw align
                         )
-                    ]
-                    children
+                     ]
+                        ++ featureGridOrderAttrs order
+                    )
+                    (orderFeatureGridChildren context.pageDir order children)
             )
             |> Markdown.Html.withOptionalAttribute "columns"
             |> Markdown.Html.withOptionalAttribute "align"
+            |> Markdown.Html.withOptionalAttribute "order"
         , -- <feature title="…" icon="…" href="…">…</feature>
           Markdown.Html.tag "feature"
             (\title icon href children ->
@@ -109,18 +103,26 @@ htmlRenderer context =
                             |> Maybe.map
                                 (\name ->
                                     Html.div
-                                        [ classes [ Tw.mb s4, Tw.flex, Tw.h s10, Tw.w s10, Tw.items_center, Tw.justify_center, Tw.rounded_lg, Tw.bg_simple TC.brandYellow, Tw.text_simple TC.brand ] ]
+                                        [ classes [ Tw.flex, Tw.h s10, Tw.w s10, Tw.shrink_0, Tw.items_center, Tw.justify_center, Tw.rounded_lg, Tw.bg_simple TC.brandYellow, Tw.text_simple TC.brand ] ]
                                         [ resolveIcon name |> FeatherIcons.withSize 22 |> FeatherIcons.toHtml [ Attr.attribute "aria-hidden" "true" ] ]
                                 )
 
+                    titleContent =
+                        case renderedIcon of
+                            Just iconEl ->
+                                [ iconEl
+                                , Html.text title
+                                ]
+
+                            Nothing ->
+                                [ Html.text title ]
+
                     content =
-                        [ Html.h3 [ Attr.class "feature-grid-title", classes [ Tw.type_h4, TwEx.leading_7, Tw.text_simple TC.textPrimary ] ]
-                            [ Html.text title ]
+                        [ Html.h3 [ Attr.class "feature-grid-title", classes [ Tw.flex, Tw.items_center, Tw.gap s4, Tw.type_h4, TwEx.leading_7, Tw.text_simple TC.textPrimary ] ]
+                            titleContent
                         , Html.div
                             [ Attr.class "feature-grid-body" ]
-                            [ Maybe.withDefault (Html.text "") renderedIcon
-                            , Html.div [ classes [ Tw.mt s2, Tw.type_caption, TwEx.leading_7, Tw.text_simple TC.textMuted, TwEx.p_my_0, TwEx.p_text_inherit ] ] children
-                            ]
+                            [ Html.div [ classes [ Tw.mt s2, Tw.type_caption, TwEx.leading_7, Tw.text_simple TC.textMuted, TwEx.p_my_0, TwEx.p_text_inherit ] ] children ]
                         ]
                 in
                 case href of
@@ -1070,12 +1072,61 @@ featureGridAlignmentTw align =
             , TwEx.feature_grid_body_justify_center
             , TwEx.feature_grid_body_text_center
             , TwEx.feature_grid_item_items_center
+            , TwEx.feature_grid_title_justify_center
             , TwEx.feature_grid_title_self_stretch
             , TwEx.feature_grid_title_text_center
             ]
 
         _ ->
             []
+
+
+featureGridColumnsTw : Int -> List Tw.Tailwind
+featureGridColumnsTw cols =
+    case cols of
+        2 ->
+            [ Bp.sm [ Tw.grid_cols_2 ] ]
+
+        3 ->
+            [ Bp.sm [ Tw.grid_cols_2 ], Bp.lg [ Tw.grid_cols_3 ] ]
+
+        _ ->
+            [ Bp.sm [ Tw.grid_cols_2 ], Bp.lg [ Tw.grid_cols_4 ] ]
+
+
+featureGridOrderAttrs : Maybe String -> List (Html.Attribute msg)
+featureGridOrderAttrs order =
+    case order of
+        Just "random" ->
+            [ Attr.attribute "data-feature-grid-order" "random" ]
+
+        _ ->
+            []
+
+
+orderFeatureGridChildren : String -> Maybe String -> List (Html msg) -> List (Html msg)
+orderFeatureGridChildren seed order children =
+    case order of
+        Just "random" ->
+            children
+                |> List.indexedMap Tuple.pair
+                |> List.sortBy (\( index, _ ) -> pseudoRandomOrderKey seed index)
+                |> List.map Tuple.second
+
+        _ ->
+            children
+
+
+pseudoRandomOrderKey : String -> Int -> Int
+pseudoRandomOrderKey seed index =
+    let
+        seedValue =
+            String.foldl
+                (\char acc -> modBy 997 (acc + Char.toCode char))
+                0
+                seed
+    in
+    modBy 997 ((seedValue + ((index + 1) * 541)) * 37)
 
 
 parseProgressColor : Maybe String -> Progress.Color
