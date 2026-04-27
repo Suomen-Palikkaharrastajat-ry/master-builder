@@ -116,13 +116,13 @@ Use `<button-link href="…" variant="…" label="…"/>` to render a styled anc
 
 ## Feature Grid
 
-Use `<feature-grid columns="2|3">` to wrap `<feature>` items in a responsive grid. The optional `columns` attribute accepts `2`, `3`, or `4` (default is `3`). Add `align="center"` to the grid to center feature bodies while keeping each title at the top. The `icon` attribute accepts a Feather icon name (`zap`, `check`, `globe`, `edit`, `layers`, `git-branch`, `rss`, `calendar`, `shield`, `lock`, `code`, `cpu`, `package`, `trending-up`, `info`, `alert-triangle`, `settings`, `user`, `server`, `terminal`, etc.). The optional `href` attribute wraps the feature in a link.
+Use `<feature-grid columns="2|3">` to wrap `<feature>` items in a responsive grid. The optional `columns` attribute accepts `2`, `3`, or `4` (default is `3`). Add `align="center"` to center feature titles and bodies. Add `order="random"` to shuffle features deterministically at build time and again on each page load. The `icon` attribute accepts a Feather icon name (`zap`, `check`, `globe`, `edit`, `layers`, `git-branch`, `rss`, `calendar`, `shield`, `lock`, `code`, `cpu`, `package`, `trending-up`, `info`, `alert-triangle`, `settings`, `user`, `server`, `terminal`, etc.). The optional `href` attribute wraps the feature in a link.
 
 <tab-group name="feature-grid">
 
 <preview>
 
-<feature-grid columns="3">
+<feature-grid columns="3" order="random">
 
 <feature title="Fast builds" icon="zap" href="/docs/builds">
 
@@ -167,7 +167,7 @@ Content lives alongside your code. Commit, review, and deploy with standard git 
 <example>
 
 ```html
-&lt;feature-grid columns="3" align="center"&gt;
+&lt;feature-grid columns="3" align="center" order="random"&gt;
 
 &lt;feature title="Fast builds" icon="zap" href="/docs/builds"&gt;
 Description of the feature goes here.
