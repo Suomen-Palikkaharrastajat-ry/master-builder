@@ -44,18 +44,19 @@ viewFeature alignment feature =
         content =
             case alignment of
                 Start ->
-                    [ viewIcon feature.icon
-                    , viewTitle [] feature.title
+                    [ Html.div
+                        [ classes [ Tw.flex, Tw.items_center, Tw.gap Th.s4 ] ]
+                        (viewFeatureHeading [] feature.icon feature.title)
                     , viewDescription [] feature.description
                     ]
 
                 Center ->
-                    [ viewTitle [ Tw.text_center, Tw.self_stretch ] feature.title
+                    [ Html.div
+                        [ classes [ Tw.flex, Tw.self_stretch, Tw.items_center, Tw.justify_center, Tw.gap Th.s4, Tw.text_center ] ]
+                        (viewFeatureHeading [ Tw.text_center ] feature.icon feature.title)
                     , Html.div
                         [ classes [ Tw.flex, Tw.flex_1, Tw.flex_col, Tw.items_center, Tw.justify_center, Tw.text_center ] ]
-                        [ viewIcon feature.icon
-                        , viewDescription [] feature.description
-                        ]
+                        [ viewDescription [] feature.description ]
                     ]
     in
     case feature.href of
@@ -93,22 +94,36 @@ featureItemTw alignment =
             [ Tw.items_center ]
 
 
-viewIcon : Maybe (Html msg) -> Html msg
-viewIcon icon =
+viewFeatureHeading : List Tw.Tailwind -> Maybe (Html msg) -> String -> List (Html msg)
+viewFeatureHeading titleClasses icon title =
+    case icon of
+        Just _ ->
+            [ viewIcon [] icon
+            , viewTitle titleClasses title
+            ]
+
+        Nothing ->
+            [ viewTitle titleClasses title ]
+
+
+viewIcon : List Tw.Tailwind -> Maybe (Html msg) -> Html msg
+viewIcon extraClasses icon =
     case icon of
         Just ico ->
             Html.div
                 [ classes
-                    [ Tw.mb Th.s4
-                    , Tw.flex
-                    , Tw.h Th.s10
-                    , Tw.w Th.s10
-                    , Tw.items_center
-                    , Tw.justify_center
-                    , Tw.rounded_lg
-                    , Tw.bg_simple TC.brandYellow
-                    , Tw.text_simple TC.brand
-                    ]
+                    ([ Tw.flex
+                     , Tw.h Th.s10
+                     , Tw.w Th.s10
+                     , Tw.shrink_0
+                     , Tw.items_center
+                     , Tw.justify_center
+                     , Tw.rounded_lg
+                     , Tw.bg_simple TC.brandYellow
+                     , Tw.text_simple TC.brand
+                     ]
+                        ++ extraClasses
+                    )
                 ]
                 [ ico ]
 

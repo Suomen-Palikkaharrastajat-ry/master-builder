@@ -26,6 +26,7 @@ module TailwindExtra exposing
     , feature_grid_body_justify_center
     , feature_grid_body_text_center
     , feature_grid_item_items_center
+    , feature_grid_title_justify_center
     , feature_grid_title_self_stretch
     , feature_grid_title_text_center
     , grid_col_span_1
@@ -187,6 +188,11 @@ feature_grid_body_text_center =
 feature_grid_item_items_center : Tailwind
 feature_grid_item_items_center =
     Tailwind "[&_.feature-grid-item]:items-center"
+
+
+feature_grid_title_justify_center : Tailwind
+feature_grid_title_justify_center =
+    Tailwind "[&_.feature-grid-title]:justify-center"
 
 
 feature_grid_title_self_stretch : Tailwind
