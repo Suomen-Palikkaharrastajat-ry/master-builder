@@ -60,6 +60,10 @@ viewItem item =
             , Tw.border_simple TC.borderDefault
             , Tw.p Th.s4
             , Tw.bg_simple Th.white
+            , Tw.cursor_pointer
+            , TwEx.group
+            , Bp.withVariant "motion-safe" [ Tw.transition_colors ]
+            , Bp.hover [ TwEx.bg_brand_5, Tw.border_simple TC.brand ]
             ]
         ]
         [ Html.a
@@ -67,7 +71,7 @@ viewItem item =
             , classes
                 [ Tw.block
                 , Tw.no_underline
-                , Bp.hover [ Tw.text_simple TC.brand ]
+                , Bp.withVariant "group-hover" [ Tw.text_simple TC.brand ]
                 , Bp.withVariant "motion-safe" [ Tw.transition_colors ]
                 , Bp.focus [ Tw.outline_none ]
                 , Bp.focus_visible [ Tw.ring_2, Tw.ring_offset_2, TwEx.ring_brand ]
@@ -81,7 +85,7 @@ viewItem item =
 
               else
                 Html.p
-                    [ classes [ Tw.type_caption, Tw.text_simple TC.textMuted, Tw.m Th.s0 ] ]
+                    [ classes [ Tw.type_caption, Tw.text_simple TC.textMuted, Tw.m Th.s0, Bp.withVariant "group-hover" [ Tw.text_simple TC.brand ] ] ]
                     [ Html.text item.description ]
             ]
         , if List.isEmpty item.children then
@@ -114,10 +118,15 @@ viewChildItem child =
                 , Tw.items_center
                 , Tw.gap Th.s1_dot_5
                 , Tw.no_underline
+                , Tw.rounded
+                , Tw.px Th.s2
+                , Tw.py Th.s1
                 , Tw.type_caption
                 , Tw.text_simple TC.textMuted
-                , Bp.hover [ Tw.text_simple TC.brand ]
+                , Bp.hover [ TwEx.bg_brand_5, Tw.text_simple TC.brand ]
                 , Bp.withVariant "motion-safe" [ Tw.transition_colors ]
+                , Bp.focus [ Tw.outline_none ]
+                , Bp.focus_visible [ Tw.ring_2, Tw.ring_offset_2, TwEx.ring_brand ]
                 ]
             ]
             [ Html.span [ classes [ Tw.text_simple TC.brand ] ] [ Html.text "→" ]

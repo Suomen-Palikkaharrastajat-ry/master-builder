@@ -11,6 +11,12 @@
    does not, so we provide the directives here where they apply to both modes. */
 @source inline("{text,bg,border,ring,placeholder}-{brand,brand-yellow,brand-red,brand-nougat,brand-nougat-light,brand-nougat-dark,text-primary,text-on-dark,text-muted,text-subtle,bg-page,bg-dark,bg-subtle,bg-accent,border-default,border-brand}");
 @source inline("text-white/80 text-white/70 text-white/60 text-white/50 text-white/90 text-brand/80 text-brand/70 text-brand/50 bg-brand-yellow/20 bg-brand/5 bg-brand/10 bg-brand/15 bg-brand/20 bg-brand-red/10 bg-brand-red/15 border-brand/30 border-brand/40 border-white/10 border-black/10 [&_li]:before:text-brand-yellow");
+/* Hover and group-hover variants of semantic token classes — assembled at runtime by
+   elm-tailwind Bp.hover / Bp.withVariant so Tailwind's scanner never sees them as
+   static strings; must be listed explicitly here for both dev and production builds. */
+@source inline("hover:text-brand hover:bg-brand hover:border-brand hover:text-brand-yellow hover:bg-brand-yellow hover:text-text-primary hover:text-text-muted hover:text-text-on-dark hover:bg-bg-subtle hover:bg-bg-accent hover:border-border-brand hover:bg-brand/5 hover:bg-brand/10 hover:bg-brand/20 hover:text-brand/80 hover:text-white/80");
+@source inline("group-hover:text-brand group-hover:bg-brand group-hover:border-brand group-hover:text-text-muted group-hover:text-text-primary group-hover:bg-bg-subtle group-hover:bg-brand/5 group-hover:bg-brand/20");
+@source inline("motion-safe:transition-colors motion-safe:transition-opacity motion-safe:transition-transform motion-safe:rotate-90");
 
 @font-face {
   font-family: "Outfit";

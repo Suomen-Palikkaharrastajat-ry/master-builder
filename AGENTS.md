@@ -231,3 +231,59 @@ Minimum clear space: 25% of logo width. Minimum size: 80px (square), 200px (hori
 - `vendor/design-tokens/` IS committed (generated but vendored)
 - `vendor/design-guide/` is a submodule — do not modify directly
 - `dist/`, `elm-stuff/`, `.elm-pages/`, `.elm-tailwind/`, `gen/` are gitignored
+
+## Known pitfalls & lessons learned
+
+### Hover/variant classes on semantic tokens are invisible to the Tailwind scanner
+
+`Bp.hover`, `Bp.group_hover`, and `Bp.withVariant` in `Tailwind.Breakpoints` build class
+strings at runtime via string concatenation (e.g. `"hover:" ++ c`). Neither Tailwind's
+file scanner nor the elm-tailwind-classes elm-review extractor can see these — they only
+capture the base classes. The `.elm-tailwind/safelist.txt` therefore never contains
+`hover:text-brand`, `hover:bg-brand/5`, `group-hover:text-brand`, `motion-safe:transition-colors`, etc.
+
+**Fix:** List all required `hover:`, `group-hover:`, and `motion-safe:` variants of semantic
+token classes explicitly as `@source inline()` directives in `style.css`. This file is read
+for **both** dev and production builds, unlike the plugin-generated wrapper CSS.
+
+Current coverage (see `style.css`):
+```css
+@source inline("hover:text-brand hover:bg-brand hover:border-brand … hover:bg-brand/5 …");
+@source inline("group-hover:text-brand group-hover:bg-brand/5 …");
+@source inline("motion-safe:transition-colors motion-safe:transition-opacity …");
+```
+
+Whenever you add a new `Bp.hover [Tw.something TC.someToken]` usage, check that the
+resulting class string (e.g. `hover:text-text-muted`) is already covered by one of these
+`@source inline()` lines. If not, add it.
+
+### `TC.textPrimary` and `TC.brand` are the same colour
+
+Both resolve to `#05131D`. Using `TC.textPrimary` as a default text colour and
+`TC.brand` as the hover colour creates **zero visible transition**. Use `TC.textMuted`
+(`#6B7280`) as the resting colour on links that should highlight to brand on hover.
+
+### Card-level hover: use `TwEx.group` + `Bp.withVariant "group-hover"`
+
+When a clickable card wraps an anchor, putting `Bp.hover` on the inner `<a>` only
+fires when the pointer is directly over the text, not over the card padding or child
+elements. Pattern:
+
+```elm
+-- card div
+Html.div
+    [ classes [ …, TwEx.group, Tw.cursor_pointer
+              , Bp.hover [ TwEx.bg_brand_5, Tw.border_simple TC.brand ] ] ]
+    [ Html.a
+        [ classes [ …, Bp.withVariant "group-hover" [ Tw.text_simple TC.brand ] ] ]
+        [ … ]
+    , Html.p
+        [ classes [ …, Bp.withVariant "group-hover" [ Tw.text_simple TC.brand ] ] ]
+        [ … ]
+    ]
+```
+
+### Content frontmatter: `slug` field is ignored
+
+Slugs are always derived from the filename/path. Remove any `slug:` keys from
+frontmatter — they have no effect and add noise.

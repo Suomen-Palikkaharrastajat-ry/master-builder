@@ -1209,8 +1209,12 @@ viewAnchorGroups headings =
                     , classes
                         [ Tw.no_underline
                         , Tw.type_caption
-                        , Tw.text_simple TC.textPrimary
-                        , Bp.hover [ Tw.text_simple TC.brand ]
+                        , Tw.text_simple TC.textMuted
+                        , Tw.block
+                        , Tw.rounded
+                        , Tw.px s1_dot_5
+                        , Tw.py s0_dot_5
+                        , Bp.hover [ TwEx.bg_brand_5, Tw.text_simple TC.brand ]
                         , Bp.withVariant "motion-safe" [ Tw.transition_colors ]
                         ]
                     ]

@@ -17,6 +17,7 @@ import Regex
 `pageDir` is the directory of the source file relative to the content root,
 with a trailing slash (e.g. `"jasenpalvelut/"`) or `""` for root-level files.
 It is used to resolve relative image paths in the markdown body.
+
 -}
 type alias PageData =
     { frontmatter : Frontmatter
