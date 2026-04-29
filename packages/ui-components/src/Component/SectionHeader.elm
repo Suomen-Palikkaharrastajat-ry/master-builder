@@ -31,10 +31,10 @@ view { title, description } =
 viewSub : { title : String, description : Maybe String } -> Html msg
 viewSub { title, description } =
     Html.div [ classes [ Tw.mb Th.s4, TwEx.not_prose ] ]
-        (Html.h3 [ classes [ Tw.type_h4, Tw.text_simple TC.brand ] ] [ Html.text title ]
+        (Html.h3 [ classes [ Tw.type_h3, Tw.text_simple TC.brand ] ] [ Html.text title ]
             :: (case description of
                     Just desc ->
-                        [ Html.p [ classes [ Tw.mt Th.s1, Tw.text_color (Th.gray Th.s600), Tw.text_sm ] ] [ Html.text desc ] ]
+                        [ Html.p [ classes [ Tw.mt Th.s1, Tw.text_color (Th.gray Th.s600), Tw.type_body_small ] ] [ Html.text desc ] ]
 
                     Nothing ->
                         []

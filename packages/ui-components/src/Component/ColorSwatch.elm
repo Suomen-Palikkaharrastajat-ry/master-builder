@@ -32,14 +32,14 @@ view config =
         , Html.div [ classes [ TwEx.space_y Th.s1 ] ]
             [ Html.div [ classes [ Tw.type_body_small, Tw.text_simple TC.brand ] ]
                 [ Html.text config.name ]
-            , Html.div [ classes [ Tw.font_mono, Tw.text_xs, Tw.text_color (Th.gray Th.s500) ] ]
+            , Html.div [ classes [ Tw.type_mono, Tw.text_color (Th.gray Th.s500) ] ]
                 [ Html.text config.hex ]
             , viewContrastInfo config.hex
             , if String.isEmpty config.description then
                 Html.text ""
 
               else
-                Html.div [ classes [ Tw.text_xs, Tw.text_color (Th.gray Th.s400) ] ]
+                Html.div [ classes [ Tw.type_caption, Tw.text_color (Th.gray Th.s500) ] ]
                     [ Html.text config.description ]
             , if List.isEmpty config.usageTags then
                 Html.text ""
@@ -113,11 +113,11 @@ viewContrastInfo hex =
                         |> FeatherIcons.toHtml [ Attr.attribute "aria-hidden" "true" ]
             in
             Html.div [ classes [ TwEx.space_y Th.s0_dot_5, Tw.mt Th.s1 ] ]
-                [ Html.div [ classes [ Tw.text_xs, Tw.font_mono, Tw.text_color (Th.gray Th.s400), Tw.flex, Tw.items_center, Tw.gap Th.s1 ] ]
+                [ Html.div [ classes [ Tw.type_mono, Tw.text_color (Th.gray Th.s500), Tw.flex, Tw.items_center, Tw.gap Th.s1 ] ]
                     [ Html.text ("vs #FFF: " ++ fmt ratioVsWhite ++ " " ++ gradeLabel ratioVsWhite)
                     , gradeIcon ratioVsWhite
                     ]
-                , Html.div [ classes [ Tw.text_xs, Tw.font_mono, Tw.text_color (Th.gray Th.s400), Tw.flex, Tw.items_center, Tw.gap Th.s1 ] ]
+                , Html.div [ classes [ Tw.type_mono, Tw.text_color (Th.gray Th.s500), Tw.flex, Tw.items_center, Tw.gap Th.s1 ] ]
                     [ Html.text ("vs #1A1A2E: " ++ fmt ratioVsDark ++ " " ++ gradeLabel ratioVsDark)
                     , gradeIcon ratioVsDark
                     ]

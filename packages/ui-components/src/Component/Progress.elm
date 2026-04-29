@@ -26,7 +26,7 @@ view config =
     Html.div [ classes [ TwEx.space_y Th.s1, Tw.mb Th.s4 ] ]
         (case config.label of
             Just lbl ->
-                [ Html.div [ classes [ Tw.flex, Tw.justify_between, Tw.text_sm, Tw.text_color (Th.gray Th.s600) ] ]
+                [ Html.div [ classes [ Tw.flex, Tw.justify_between, Tw.type_body_small, Tw.text_color (Th.gray Th.s600) ] ]
                     [ Html.span [] [ Html.text lbl ]
                     , Html.span [] [ Html.text (String.fromInt pct ++ "%") ]
                     ]

@@ -173,9 +173,10 @@ viewLink variant link =
                  , Tw.px Th.s2
                  , Bp.sm [ Tw.px Th.s3 ]
                  , Tw.py Th.s1
+                 , Tw.min_h Th.s11
                  , Tw.rounded
                  , Tw.transition_colors
-                 , Tw.text_sm
+                 , Tw.type_body_small
                  , Tw.cursor_pointer
                  ]
                     ++ linkVariantTw variant link.isActive

@@ -21,7 +21,7 @@ view items =
                 , Tw.flex_wrap
                 , Tw.items_center
                 , Tw.gap Th.s1_dot_5
-                , Tw.text_sm
+                , Tw.type_body_small
                 , Tw.text_color (Th.gray Th.s500)
                 ]
             ]

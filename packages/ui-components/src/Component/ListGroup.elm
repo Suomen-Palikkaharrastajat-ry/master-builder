@@ -31,7 +31,7 @@ view items =
 viewItem : { label : String, badge : Maybe String } -> Html msg
 viewItem config =
     Html.li
-        [ classes [ Tw.flex, Tw.items_center, Tw.justify_between, Tw.bg_simple Th.white, Tw.px Th.s4, Tw.py Th.s3, Tw.text_sm, Tw.text_color (Th.gray Th.s800) ] ]
+        [ classes [ Tw.flex, Tw.items_center, Tw.justify_between, Tw.bg_simple Th.white, Tw.px Th.s4, Tw.py Th.s3, Tw.type_body_small, Tw.text_color (Th.gray Th.s800) ] ]
         [ Html.span [] [ Html.text config.label ]
         , case config.badge of
             Just b ->
@@ -55,7 +55,7 @@ viewActionItem config =
                             [ Tw.type_body_small, Tw.bg_simple TC.brand, Tw.text_simple Th.white ]
 
                         else
-                            [ Tw.text_sm, Tw.text_color (Th.gray Th.s800), Tw.bg_simple Th.white, Bp.hover [ Tw.bg_color (Th.gray Th.s50), Tw.text_simple TC.brand ], Tw.transition_colors ]
+                            [ Tw.type_body_small, Tw.text_color (Th.gray Th.s800), Tw.bg_simple Th.white, Bp.hover [ Tw.bg_color (Th.gray Th.s50), Tw.text_simple TC.brand ], Tw.transition_colors ]
                        )
                 )
             , Events.onClick config.onClick

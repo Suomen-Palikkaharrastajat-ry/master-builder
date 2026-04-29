@@ -26,7 +26,7 @@ view config =
                 , Tw.rounded
                 , Tw.bg_color (Th.gray Th.s900)
                 , Tw.text_simple Th.white
-                , Tw.text_xs
+                , Tw.type_caption
                 , Tw.whitespace_nowrap
                 , Tw.opacity_0
                 , Tw.pointer_events_none

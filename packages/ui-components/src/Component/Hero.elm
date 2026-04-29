@@ -23,7 +23,7 @@ view config =
         [ Html.div
             [ classes [ Tw.mx_auto, TwEx.max_w_4xl, Tw.px Th.s6, Bp.lg [ Tw.px Th.s8 ], Tw.text_center ] ]
             [ Html.p
-                [ classes [ Tw.type_display, Tw.tracking_tight, Tw.text_simple TC.textPrimary ] ]
+                [ classes [ Tw.type_h1, Bp.md [ Tw.type_display ], Tw.tracking_tight, Tw.text_simple TC.textPrimary ] ]
                 [ Html.text config.title ]
             , case config.subtitle of
                 Just sub ->

@@ -57,5 +57,5 @@ view config =
                 ]
                 []
             ]
-        , Html.span [ classes [ Tw.text_sm, Tw.text_color (Th.gray Th.s700) ] ] [ Html.text config.label ]
+        , Html.span [ classes [ Tw.type_body_small, Tw.text_color (Th.gray Th.s700) ] ] [ Html.text config.label ]
         ]

@@ -48,7 +48,7 @@ view config =
             [ icon config.variant ]
         , Html.div [ classes [ Tw.flex_1, Tw.min_w Th.s0 ] ]
             [ Html.p [ classes [ Tw.type_body_small, Tw.text_color (Th.gray Th.s900) ] ] [ Html.text config.title ]
-            , Html.p [ classes [ Tw.mt Th.s0_dot_5, Tw.text_sm, Tw.text_color (Th.gray Th.s500) ] ] [ Html.text config.body ]
+            , Html.p [ classes [ Tw.mt Th.s0_dot_5, Tw.type_body_small, Tw.text_color (Th.gray Th.s500) ] ] [ Html.text config.body ]
             ]
         , case config.onClose of
             Just onClose ->

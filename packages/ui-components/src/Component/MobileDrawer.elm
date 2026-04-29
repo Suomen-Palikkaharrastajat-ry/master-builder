@@ -133,10 +133,11 @@ viewNavLink config =
                 , Tw.font_medium
                 , Tw.px Th.s3
                 , Tw.py Th.s2
+                , Tw.min_h Th.s11
                 , Tw.rounded
                 , Bp.hover [ Tw.bg_color (Th.gray Th.s100) ]
                 , Tw.transition_colors
-                , Tw.text_sm
+                , Tw.type_body_small
                 , Bp.focus_visible [ Tw.outline_none, Tw.ring_2, TwEx.ring_brand_yellow ]
                 ]
              , Html.Events.onClick config.onClose

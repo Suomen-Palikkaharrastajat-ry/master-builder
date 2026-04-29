@@ -53,13 +53,13 @@ viewItem config =
         , Html.div [ classes [ Tw.flex, Tw.items_start, Tw.gap Th.s4 ] ]
             [ Html.div [ classes [ Tw.flex_1, Tw.min_w Th.s0 ] ]
                 [ Html.time
-                    [ classes [ Tw.mb Th.s1, Tw.block, Tw.text_xs, Tw.font_normal, Tw.leading_none, Tw.text_color (Th.gray Th.s400) ] ]
+                    [ classes [ Tw.mb Th.s1, Tw.block, Tw.type_caption, Tw.text_color (Th.gray Th.s500) ] ]
                     [ Html.text config.date ]
                 , Html.h3
                     [ classes [ Tw.type_body_small, Tw.text_simple TC.brand ] ]
                     [ Html.text config.title ]
                 , Html.div
-                    [ classes [ Tw.mt Th.s1, Tw.text_sm, TwEx.leading_6, Tw.text_color (Th.gray Th.s600), TwEx.p_my_0, TwEx.p_text_inherit ] ]
+                    [ classes [ Tw.mt Th.s1, Tw.type_body_small, Tw.text_color (Th.gray Th.s600), TwEx.p_my_0, TwEx.p_text_inherit ] ]
                     config.children
                 ]
             , case config.image of

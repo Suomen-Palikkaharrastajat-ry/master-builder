@@ -43,7 +43,7 @@ view config =
                                 config.title
                             , Just
                                 (Html.div
-                                    [ classes ([ Tw.text_sm, TwEx.p_my_0, TwEx.p_text_inherit ] ++ bodyTw config.alertType) ]
+                                    [ classes ([ Tw.type_body_small, TwEx.p_my_0, TwEx.p_text_inherit ] ++ bodyTw config.alertType) ]
                                     config.body
                                 )
                             ]

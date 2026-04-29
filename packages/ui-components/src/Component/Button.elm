@@ -167,10 +167,10 @@ sizeTw : Size -> List Tw.Tailwind
 sizeTw size =
     case size of
         Small ->
-            [ Tw.px Th.s3, Tw.py Th.s1_dot_5, Tw.text_sm ]
+            [ Tw.px Th.s3, Tw.py Th.s1_dot_5, Tw.type_body_small ]
 
         Medium ->
-            [ Tw.px Th.s4, Tw.py Th.s2, Tw.text_sm ]
+            [ Tw.px Th.s4, Tw.py Th.s3, Tw.type_body_small ]
 
         Large ->
-            [ Tw.px Th.s6, Tw.py Th.s3, Tw.text_base ]
+            [ Tw.px Th.s6, Tw.py Th.s3, Tw.type_body ]

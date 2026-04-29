@@ -50,11 +50,11 @@ viewItem config =
             [ Html.text config.label ]
         , case config.change of
             Just change ->
-                Html.dd [ classes [ Tw.text_xs, Tw.font_medium, Tw.text_simple TC.brand ] ] [ Html.text change ]
+                Html.dd [ classes [ Tw.type_caption, Tw.text_simple TC.brand ] ] [ Html.text change ]
 
             Nothing ->
                 Html.text ""
         , Html.dd
-            [ classes [ Tw.w_full, Tw.flex_none, Tw.text_n3xl, Tw.font_medium, TwEx.leading_10, Tw.tracking_tight, Tw.text_simple TC.brand ] ]
+            [ classes [ Tw.w_full, Tw.flex_none, Tw.type_h1, Tw.text_simple TC.brand ] ]
             [ Html.text config.value ]
         ]

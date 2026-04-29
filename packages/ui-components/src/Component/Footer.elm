@@ -82,7 +82,7 @@ viewBrandLayout config =
                             [ Maybe.map
                                 (\label ->
                                     Html.p
-                                        [ classes [ Tw.text_xs, Tw.font_semibold, TwEx.text_white_50, Tw.uppercase, Tw.tracking_wider ] ]
+                                        [ classes [ Tw.type_overline, TwEx.text_white_50 ] ]
                                         [ Html.text label ]
                                 )
                                 config.siteLabel
@@ -101,7 +101,7 @@ viewBrandLayout config =
                 ]
             )
         , Html.div [ classes [ TwEx.space_y Th.s1, Tw.pl Th.s4, Bp.sm [ Tw.text_right, Tw.col_span_2 ] ] ]
-            [ Html.div [ classes [ TwEx.space_y Th.s1, Tw.text_xs, TwEx.text_white_50 ] ]
+            [ Html.div [ classes [ TwEx.space_y Th.s1, Tw.type_caption, TwEx.text_white_50 ] ]
                 (List.filterMap identity
                     (Just (Html.p [] [ Html.text config.copyright ])
                         :: (config.disclaimer
@@ -166,7 +166,7 @@ viewFlatLink link =
     Html.li []
         [ Html.a
             [ Attr.href link.href
-            , classes [ Tw.text_sm, TwEx.text_white_80, Bp.hover [ Tw.text_simple Th.white ], Tw.underline, Tw.transition_colors ]
+            , classes [ Tw.type_body_small, TwEx.text_white_80, Bp.hover [ Tw.text_simple Th.white ], Tw.underline, Tw.transition_colors ]
             ]
             [ Html.text link.label ]
         ]

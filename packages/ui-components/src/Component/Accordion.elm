@@ -60,7 +60,7 @@ viewItem config =
             [ classes
                 [ Tw.px Th.s6
                 , Tw.py Th.s4
-                , Tw.text_sm
+                , Tw.type_body_small
                 , Tw.text_color (Th.gray Th.s600)
                 , Tw.border_t
                 , Tw.border_color (Th.gray Th.s100)

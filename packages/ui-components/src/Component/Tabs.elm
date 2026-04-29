@@ -103,6 +103,7 @@ tabTw : Bool -> List Tw.Tailwind
 tabTw active =
     [ Tw.px Th.s4
     , Tw.py Th.s2
+    , Tw.min_h Th.s11
     , Tw.type_body_small
     , Tw.border_b_2
     , Tw.transition_colors

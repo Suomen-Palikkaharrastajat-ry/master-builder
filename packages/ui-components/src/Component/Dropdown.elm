@@ -50,6 +50,7 @@ view config =
                 , Tw.gap Th.s1
                 , Tw.px Th.s4
                 , Tw.py Th.s2
+                , Tw.min_h Th.s11
                 , Tw.type_body_small
                 , Tw.bg_simple Th.white
                 , Tw.border
@@ -104,10 +105,12 @@ viewItem config =
         [ Attr.href config.href
         , Attr.attribute "role" "menuitem"
         , classes
-            [ Tw.block
+            [ Tw.flex
+            , Tw.items_center
             , Tw.px Th.s4
             , Tw.py Th.s2
-            , Tw.text_sm
+            , Tw.min_h Th.s11
+            , Tw.type_body_small
             , Tw.text_color (Th.gray Th.s700)
             , Bp.hover [ Tw.bg_color (Th.gray Th.s100), Tw.text_simple TC.brand ]
             ]
