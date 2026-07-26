@@ -1,4 +1,4 @@
-module OpeningHours.Viewer exposing (view)
+module OpeningHours.Viewer exposing (view, formatToString)
 
 import Html exposing (Html, div, span, text)
 import Html.Attributes exposing (class)
@@ -74,3 +74,28 @@ formatTimeSpan i18n span =
 formatTime : Time -> String
 formatTime t =
     String.padLeft 2 '0' (String.fromInt t.hour) ++ ":" ++ String.padLeft 2 '0' (String.fromInt t.minute)
+
+formatToString : Translations -> OpeningHours -> String
+formatToString i18n hours =
+    case hours of
+        Open247 ->
+            i18n.alwaysOpen
+        Rules rules ->
+            rules
+                |> List.map (formatRuleToString i18n)
+                |> String.join "\n"
+
+formatRuleToString : Translations -> Rule -> String
+formatRuleToString i18n rule =
+    let
+        daysText =
+            case rule.days of
+                Just days -> formatDaySelectors i18n days
+                Nothing -> i18n.everyDay
+        
+        statusText =
+            case rule.status of
+                Off -> i18n.closed
+                Open times -> formatTimeSpans i18n times
+    in
+    daysText ++ ": " ++ statusText
