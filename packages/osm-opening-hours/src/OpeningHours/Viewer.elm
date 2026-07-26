@@ -73,7 +73,7 @@ formatTimeSpan i18n span =
 
 formatTime : Time -> String
 formatTime t =
-    String.padLeft 2 '0' (String.fromInt t.hour) ++ ":" ++ String.padLeft 2 '0' (String.fromInt t.minute)
+    String.padLeft 2 '0' (String.fromInt t.hour) ++ "." ++ String.padLeft 2 '0' (String.fromInt t.minute)
 
 formatToString : Translations -> OpeningHours -> String
 formatToString i18n hours =
