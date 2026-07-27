@@ -105,12 +105,20 @@ view config =
         [ content ]
 
 
-viewLink : { label : String, variant : Variant, size : Size, href : String } -> Html msg
+viewLink : { label : String, variant : Variant, size : Size, href : String, target : Maybe String } -> Html msg
 viewLink config =
     Html.a
-        [ Attr.href config.href
-        , classes (buttonTw config.variant config.size)
-        ]
+        ([ Attr.href config.href
+         , classes (buttonTw config.variant config.size)
+         ]
+            ++ (case config.target of
+                    Just t ->
+                        [ Attr.target t ]
+
+                    Nothing ->
+                        []
+               )
+        )
         [ Html.text config.label ]
 
 
