@@ -30,43 +30,72 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout master-builder (build engine)
+        id: mb
         uses: actions/checkout@v4
         with:
           repository: Suomen-Palikkaharrastajat-ry/master-builder
           ref: ${{ inputs.builder_ref }}
+
+      - name: Resolve builder SHA
+        id: builder
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
       - name: Checkout content
         uses: actions/checkout@v4
         with:
           path: content
 
-      - name: Setup Nix + devenv
-        uses: ./.github/actions/setup-nix
+      # Standard Debian toolchain (no Nix): the whole build toolchain — elm,
+      # elm-format, lamdera, elm-pages, elm-tailwind-classes, vite, tailwind — is
+      # declared in pkgs/package.json + pkgs/package-lock.json. A plain `npm ci`
+      # runs the postinstall (`elm-tooling install && node
+      # deploy/patch-tailwind-resolver.mjs`) which downloads the elm/elm-format/
+      # lamdera binaries and patches the upstream tailwind-resolver bug. Nix is
+      # still used for local dev / static analysis / tests.
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
-          cachix-auth-token: ${{ secrets.CACHIX_AUTH_TOKEN }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          node-version: 22
+          cache: npm
+          cache-dependency-path: pkgs/package-lock.json
 
-      - name: Restore Elm cache
-        id: elm-cache-restore
-        uses: actions/cache/restore@v4
+      # npm ci must run at the repo root so node_modules/ lands where the
+      # Makefile and deploy/patch-tailwind-resolver.mjs expect it, and so
+      # postinstall resolves elm-tooling.json and deploy/ relative to the root.
+      - name: Stage package manifests at repo root
+        run: cp pkgs/package.json pkgs/package-lock.json .
+
+      - name: Restore deps + tool binaries
+        id: deps
+        uses: actions/cache@v4
         with:
           path: |
+            node_modules
             ~/.elm
+          key: deps-${{ runner.os }}-${{ hashFiles('pkgs/package-lock.json', 'elm-tooling.json', 'elm.json', 'admin-app/elm.json') }}
+          restore-keys: deps-${{ runner.os }}-
+
+      - name: Install dependencies
+        if: steps.deps.outputs.cache-hit != 'true'
+        run: npm ci
+
+      - name: Put tool binaries on PATH
+        run: echo "$PWD/node_modules/.bin" >> "$GITHUB_PATH"
+
+      - name: Restore Elm compilation cache
+        uses: actions/cache@v4
+        with:
+          path: |
             elm-stuff
-          key: elm-${{ runner.os }}-${{ hashFiles('elm.json') }}
-          restore-keys: elm-${{ runner.os }}-
+            admin-app/elm-stuff
+            .elm-pages
+            .elm-tailwind
+            gen
+          key: elmbuild-${{ runner.os }}-${{ steps.builder.outputs.sha }}
+          restore-keys: elmbuild-${{ runner.os }}-
 
       - name: Build
-        run: devenv shell -- env CONTENT_DIR=content make build
-
-      - name: Save Elm cache
-        if: steps.elm-cache-restore.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v4
-        with:
-          path: |
-            ~/.elm
-            elm-stuff
-          key: ${{ steps.elm-cache-restore.outputs.cache-primary-key }}
+        run: env CONTENT_DIR=content make build
 
       - uses: actions/configure-pages@v5
 
