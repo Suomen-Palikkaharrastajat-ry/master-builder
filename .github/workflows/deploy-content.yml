@@ -50,8 +50,8 @@ jobs:
       # ContentMarkdown.loadRootChildren) treats every dir/*.md as a page and
       # requires frontmatter with title/description — a plain README has
       # neither and fails the build. Drop it before elm-pages ever sees it.
-      - name: Ignore content repo root README
-        run: find content -maxdepth 1 -iname 'README.md' -delete
+      - name: Ignore content repo root docs
+        run: find content -maxdepth 1 \( -iname 'README.md' -o -iname 'AGENTS.md' \) -delete
 
       # Standard Debian toolchain (no Nix): the whole build toolchain — elm,
       # elm-format, lamdera, elm-pages, elm-tailwind-classes, vite, tailwind — is
