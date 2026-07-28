@@ -38,6 +38,7 @@ by `deploy/fetch-content.sh`. Local development uses `template/` (bundled exampl
 | `vendor/design-guide/` | Git submodule — Haskell pipeline: TOML → W3C Design Tokens JSON + typed Elm package |
 | `packages/design-tokens/` | Generated Elm package (`DesignTokens.*` modules), committed to git |
 | `docs/` | Family-wide `conventions.md` and starter `templates/` for new repos |
+| `pkgs/mk-npm-tools.nix` | Shared npm-tools Nix builder that the app repos' `pkgs/npm-tools.nix` wrap |
 | `.github/actions/setup-nix/` | Composite action (nix + cachix + devenv) shared by every repo's CI |
 | `.github/workflows/deploy-content.yml` | Reusable `workflow_call` deploy used by the content repos |
 | `content/` | Content repo mount point (Markdown + static assets). Has its own git repo in production |
