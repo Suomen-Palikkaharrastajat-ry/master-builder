@@ -45,6 +45,14 @@ jobs:
         with:
           path: content
 
+      # The content repo's root README.md is GitHub-facing documentation, not
+      # site content, but the top-level page glob (app/Route/Slug_.elm,
+      # ContentMarkdown.loadRootChildren) treats every dir/*.md as a page and
+      # requires frontmatter with title/description — a plain README has
+      # neither and fails the build. Drop it before elm-pages ever sees it.
+      - name: Ignore content repo root README
+        run: find content -maxdepth 1 -iname 'README.md' -delete
+
       # Standard Debian toolchain (no Nix): the whole build toolchain — elm,
       # elm-format, lamdera, elm-pages, elm-tailwind-classes, vite, tailwind — is
       # declared in pkgs/package.json + pkgs/package-lock.json. A plain `npm ci`
