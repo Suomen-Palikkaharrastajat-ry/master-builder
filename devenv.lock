@@ -3,11 +3,11 @@
     "devenv": {
       "locked": {
         "dir": "src/modules",
-        "lastModified": 1775334024,
-        "narHash": "sha256-vg1CVojgtjLPZNFe7QVd/d97E12TLUgBQDlCqMqbEGU=",
+        "lastModified": 1785185389,
+        "narHash": "sha256-sOArp/OaxpyYJhGKULnKVQBRJEsNvYCGzO12ugUOAXs=",
         "owner": "cachix",
         "repo": "devenv",
-        "rev": "f30a244f8175ef14ed1a4e4dfc737d28ecc5d852",
+        "rev": "0bf6765ce7071d98ed137ecfe02d1e435007c971",
         "type": "github"
       },
       "original": {
@@ -17,58 +17,24 @@
         "type": "github"
       }
     },
-    "devenv-module-devcontainer": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1775203419,
-        "narHash": "sha256-lasDZlcdVDDi4SDjMw77E+8BEto3Os45HjRnuUkoJtA=",
-        "owner": "datakurre",
-        "repo": "devenv-module-devcontainer",
-        "rev": "be28f5111bc646960aec9062fd0417bbf1a14b9f",
-        "type": "github"
-      },
-      "original": {
-        "owner": "datakurre",
-        "repo": "devenv-module-devcontainer",
-        "type": "github"
-      }
-    },
-    "devenv-module-devcontainer-nixpkgs": {
-      "locked": {
-        "lastModified": 1775505183,
-        "narHash": "sha256-neUuWMMziEKJw0shzqWx/gxfcEmyRRVt+hf159WX1qI=",
-        "owner": "nixos",
-        "repo": "nixpkgs",
-        "rev": "172797b82894934c1ff179d8c76df2abd97e174d",
-        "type": "github"
-      },
-      "original": {
-        "owner": "nixos",
-        "repo": "nixpkgs",
-        "type": "github"
-      }
-    },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1775280064,
-        "narHash": "sha256-nwS8O8ruJaP5lZzzHuC9qGJygNDNXhWfMa94aGMEiLo=",
+        "lastModified": 1785210918,
+        "narHash": "sha256-uY/UYA3tWnXga7h0xSuwGWvpu0Fl1LrKVu2l7DY4JR4=",
         "owner": "nixos",
         "repo": "nixpkgs",
-        "rev": "719d25d6d269c87936932bc6db8d8da2b9278c85",
+        "rev": "29a3e341634615ff16f700e9a1fdbc9c42f0198c",
         "type": "github"
       },
       "original": {
         "owner": "nixos",
         "repo": "nixpkgs",
-        "rev": "719d25d6d269c87936932bc6db8d8da2b9278c85",
         "type": "github"
       }
     },
     "root": {
       "inputs": {
         "devenv": "devenv",
-        "devenv-module-devcontainer": "devenv-module-devcontainer",
-        "devenv-module-devcontainer-nixpkgs": "devenv-module-devcontainer-nixpkgs",
         "nixpkgs": "nixpkgs"
       }
     }

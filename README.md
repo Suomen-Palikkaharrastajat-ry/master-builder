@@ -3,6 +3,10 @@
 Static site generator for [Suomen Palikkaharrastajat ry](https://palikkaharrastajat.fi).
 Built with [elm-pages](https://elm-pages.com), Elm 0.19.1, and Tailwind CSS v4.
 
+This repo is also the **hub** for the sibling repositories: shared Elm/Haskell
+packages, CI tooling, and the family-wide conventions in
+[`docs/conventions.md`](docs/conventions.md) (with starter files in `docs/templates/`).
+
 ## Architecture
 
 **Dual-repo design.** This repository contains the **site code**: Elm routes, a 33-component UI library, design tokens, and the build system. The actual page **content** (Markdown files with YAML frontmatter) lives in a separate content repository.
@@ -114,25 +118,25 @@ The CI pipeline:
 
 Colors, typography, spacing, and motion tokens are defined in `style.css` as Tailwind v4 `@theme` custom properties. The canonical reference is at [logo.palikkaharrastajat.fi](https://logo.palikkaharrastajat.fi/).
 
-Design tokens are generated from TOML sources in `vendor/design-guide/` and vendored as typed Elm modules in `vendor/design-tokens/`.
+Design tokens are generated from TOML sources in `vendor/design-guide/` and committed as typed Elm modules in `packages/design-tokens/`.
 
-### Vendored packages / local packages
+### Local packages
 
-The project keeps two internal Elm packages with shared UI and tokens:
+The project keeps its internal Elm packages under `./packages/` (workspace layout), reachable via `elm.json` `source-directories`:
 
-- `vendor/design-tokens/` (generated, committed) — typed design tokens as an Elm package.
-- `vendor/ui-components/` (vendored component library) — the `Component.*` modules exposed as an Elm package.
+- `packages/design-tokens/` (generated, committed) — typed design tokens as an Elm package.
+- `packages/ui-components/` — the `Component.*` modules exposed as an Elm package.
 
-If you prefer a `./packages/` workspace layout (monorepo packages folder), you may place or symlink these packages under `./packages/design-tokens` and `./packages/ui-components` — the build only requires their `src/` directories to be reachable via `elm.json` `source-directories`. The repository currently exposes these packages from `vendor/` by default.
+`vendor/` is reserved for external checkouts (the `design-guide` git submodule).
 
 ## Project structure
 
 ```
 app/                Elm page routes (Index, Slug_, Blog/Slug_)
 src/                Shared modules (MarkdownRenderer, Frontmatter, TailwindTokens)
-vendor/ui-components/ or packages/ui-components/  34 UI components exposed as a vendored Elm package (Component.*)
+packages/ui-components/  34 UI components exposed as a local Elm package (Component.*)
+packages/design-tokens/  Generated Elm package (committed to git)
 vendor/design-guide/  Git submodule — Haskell token pipeline (TOML → Elm)
-vendor/design-tokens/ or packages/design-tokens/ Generated Elm package (committed to git)
 content/            Content repo mount point
 template/           Bundled example content
 public/             Static assets (logos, favicons, fonts)

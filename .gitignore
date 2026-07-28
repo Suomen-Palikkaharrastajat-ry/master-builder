@@ -23,7 +23,14 @@ dist/
 .elm-tailwind/
 .vite/
 elm-stuff/
-functions/
+# functions/ is mostly build output, but the two adapter entry stubs are tracked
+functions/*
+!functions/render
+functions/render/*
+!functions/render/index.mjs
+!functions/server-render
+functions/server-render/*
+!functions/server-render/index.mjs
 public/robots.txt
 public/site.webmanifest
 public/site-config.json

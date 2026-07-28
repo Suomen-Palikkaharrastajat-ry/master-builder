@@ -1,0 +1,43 @@
+# Starter .gitignore for a family repo. Trim sections that don't apply.
+
+# --- Environment / local ---
+.env
+.env.*
+!.env.example
+.devcontainer/
+.devcontainer.json
+.devenv*
+.direnv
+devenv.local.nix
+devenv.local.yaml
+
+# --- Dependencies ---
+node_modules/
+elm-app/node_modules/
+
+# --- Haskell build artifacts ---
+dist-newstyle/
+
+# --- Elm build artifacts ---
+elm-app/elm-stuff/
+elm-app/.elm-tailwind/
+review/elm-stuff/
+
+# --- Build output ---
+/dist/
+
+# --- Generated static files ---
+assets/images/
+
+# --- Editor & OS ---
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# --- Misc / local ---
+.claude/
+TODO*
+reference/

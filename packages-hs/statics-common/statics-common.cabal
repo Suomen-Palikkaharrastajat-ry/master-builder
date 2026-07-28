@@ -1,0 +1,26 @@
+cabal-version: 2.2
+
+name:           statics-common
+version:        0.1.0.0
+synopsis:       Shared modules for the statics generators of the app repos
+description:    PocketBase-agnostic helpers shared by the Haskell static-asset
+                generators (event-calendar, service-map): HTML-safe text
+                rendering and concurrent image fetching.
+author:         Suomen Palikkaharrastajat ry
+maintainer:     https://github.com/Suomen-Palikkaharrastajat-ry
+license:        BSD-3-Clause
+build-type:     Simple
+
+library
+  exposed-modules:
+    DescriptionHtml
+    ImageFetcher
+  hs-source-dirs: src
+  build-depends:
+    base          >=4.7 && <5,
+    text,
+    bytestring,
+    async,
+    http-conduit
+  default-language: Haskell2010
+  ghc-options: -Wall

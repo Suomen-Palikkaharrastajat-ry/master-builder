@@ -1,0 +1,88 @@
+name: Deploy content site
+
+# Reusable workflow that builds a content repo (logo, website, guides, …) with
+# this master-builder pipeline and deploys it to GitHub Pages.
+#
+# Content repos call it with a thin caller workflow:
+#
+#   jobs:
+#     deploy:
+#       uses: Suomen-Palikkaharrastajat-ry/master-builder/.github/workflows/deploy-content.yml@main
+#       permissions:
+#         contents: read
+#         pages: write
+#         id-token: write
+#
+# The caller's own repository is checked out into `content/`; this repo (the
+# build engine) is checked out at `builder_ref` into the workspace root.
+
+on:
+  workflow_call:
+    inputs:
+      builder_ref:
+        description: "master-builder branch/tag/SHA to build with"
+        required: false
+        type: string
+        default: main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout master-builder (build engine)
+        uses: actions/checkout@v4
+        with:
+          repository: Suomen-Palikkaharrastajat-ry/master-builder
+          ref: ${{ inputs.builder_ref }}
+
+      - name: Checkout content
+        uses: actions/checkout@v4
+        with:
+          path: content
+
+      - name: Setup Nix + devenv
+        uses: ./.github/actions/setup-nix
+        with:
+          cachix-auth-token: ${{ secrets.CACHIX_AUTH_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Restore Elm cache
+        id: elm-cache-restore
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            ~/.elm
+            elm-stuff
+          key: elm-${{ runner.os }}-${{ hashFiles('elm.json') }}
+          restore-keys: elm-${{ runner.os }}-
+
+      - name: Build
+        run: devenv shell -- env CONTENT_DIR=content make build
+
+      - name: Save Elm cache
+        if: steps.elm-cache-restore.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            ~/.elm
+            elm-stuff
+          key: ${{ steps.elm-cache-restore.outputs.cache-primary-key }}
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    outputs:
+      page_url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

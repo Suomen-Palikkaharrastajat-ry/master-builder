@@ -32,9 +32,14 @@ by `deploy/fetch-content.sh`. Local development uses `template/` (bundled exampl
 |---|---|
 | `app/` | elm-pages routes (`Route/Index.elm`, `Route/Slug_.elm`, `Route/Blog/Slug_.elm`) |
 | `src/` | Shared modules: `MarkdownRenderer`, `Frontmatter`, `ContentDir`, `SiteMeta`, `TailwindTokens`, `TailwindExtra` |
-| `vendor/ui-components/` or `packages/ui-components/` | 34 UI components exposed as a vendored Elm package (Component.* modules: Accordion, Alert, Badge, Button, Card, Dialog, Hero, etc.) |
+| `packages/ui-components/` | 34 UI components exposed as a local Elm package (Component.* modules: Accordion, Alert, Badge, Button, Card, Dialog, Hero, etc.) |
+| `packages/app-toolkit/` | Shared Elm app plumbing consumed by the app repos (Geocoding, View.MapWidget, View.Icons) |
+| `packages-hs/statics-common/` | Shared Haskell modules for the app repos' static generators (DescriptionHtml, ImageFetcher) |
 | `vendor/design-guide/` | Git submodule — Haskell pipeline: TOML → W3C Design Tokens JSON + typed Elm package |
-| `vendor/design-tokens/` or `packages/design-tokens/` | Generated Elm package (`DesignTokens.*` modules), committed to git |
+| `packages/design-tokens/` | Generated Elm package (`DesignTokens.*` modules), committed to git |
+| `docs/` | Family-wide `conventions.md` and starter `templates/` for new repos |
+| `.github/actions/setup-nix/` | Composite action (nix + cachix + devenv) shared by every repo's CI |
+| `.github/workflows/deploy-content.yml` | Reusable `workflow_call` deploy used by the content repos |
 | `content/` | Content repo mount point (Markdown + static assets). Has its own git repo in production |
 | `content/reference/` | Previous design-guide site (elm-pages app) — kept as reference for component implementations |
 | `template/` | Bundled example content for `make dev` |
@@ -66,7 +71,7 @@ by `deploy/fetch-content.sh`. Local development uses `template/` (bundled exampl
 `vendor/design-guide/` is a git submodule containing a Haskell pipeline that generates
 W3C Design Tokens (2025.10) JSON and a typed Elm package from 9 TOML source files.
 
-The generated Elm package is vendored into `vendor/design-tokens/` and committed to git,
+The generated Elm package is copied into `packages/design-tokens/` and committed to git,
 so daily builds do **not** require the submodule to be checked out or built.
 
 ### Token modules
@@ -102,7 +107,7 @@ classes [ Tw.bg_simple TC.brand, Tw.text_simple TC.textOnDark ]
 
 ## Component library
 
-The UI components are published as an internal Elm package available from `vendor/ui-components/` (or optionally `packages/ui-components/`). Import modules as `Component.*` as before; the import paths are unchanged.
+The UI components are published as an internal Elm package available from `packages/ui-components/`. Import modules as `Component.*` as before; the import paths are unchanged.
 
 ```elm
 import Component.Card as Card
@@ -157,6 +162,13 @@ Four custom rules in `review/src/LlmAgent/` enforce LLM-friendly code:
 Run: `devenv shell -- make check`
 
 ## Design system
+
+This section is the **single source of truth** for the design system across the
+repo family — the app repos (planet, event-calendar, service-map) link here
+instead of copying the token tables. The upstream machine-readable token
+definitions live in the `design-guide` repo's `content/*.toml` (vendored here at
+`vendor/design-guide/` and generated into `packages/design-tokens/`); the LEGO
+color catalog the brand primitives derive from is `design-guide/reference/allowed-colors.csv`.
 
 **CSS reference:** Fetch `https://logo.palikkaharrastajat.fi/brand.css` for the canonical
 `@theme`, `@utility type-*`, `@font-face`, and reduced-motion rule.
@@ -228,7 +240,7 @@ Minimum clear space: 25% of logo width. Minimum size: 80px (square), 200px (hori
 
 - Do **not** commit `TODO.md` (workspace-local planning file)
 - `content/` is a separate repository; do not commit content changes to this repo
-- `vendor/design-tokens/` IS committed (generated but vendored)
+- `packages/design-tokens/` IS committed (generated but vendored)
 - `vendor/design-guide/` is a submodule — do not modify directly
 - `dist/`, `elm-stuff/`, `.elm-pages/`, `.elm-tailwind/`, `gen/` are gitignored
 
