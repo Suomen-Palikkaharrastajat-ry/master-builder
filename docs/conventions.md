@@ -25,6 +25,7 @@ The family:
 | Shared elm-review LlmAgent rules | `master-builder/review/src/LlmAgent/` |
 | Shared npm-tools Nix builder | `master-builder/pkgs/mk-npm-tools.nix` |
 | CI Nix setup (composite action) | `master-builder/.github/actions/setup-nix/` |
+| CI native frontend build (composite action) | `master-builder/.github/actions/build-frontend/` |
 | Reusable content deploy workflow | `master-builder/.github/workflows/deploy-content.yml` |
 
 Apps consume all of the above through the pinned `vendor/master-builder` submodule
@@ -35,9 +36,23 @@ Apps consume all of the above through the pinned `vendor/master-builder` submodu
 
 - `devenv.yaml`: pin nothing in the URL — use `url: github:nixos/nixpkgs`
   (lowercase). Reproducibility comes from the committed `devenv.lock`.
-- Update deliberately with `devenv update`; commit the resulting `devenv.lock`.
+- **All family repos share one `devenv.lock` revision.** Bump them together, never
+  one at a time: a repo on its own nixpkgs revision cannot reuse the shared cachix
+  cache, and divergence is how you end up with one repo's CI failing to evaluate
+  while its siblings are green. Run `devenv update` in one repo, then copy the
+  resulting `devenv.lock` to the others.
 - Toolchain baseline: **GHC 9.6**, **nodejs_22**, `profile: shell`.
-- devenv.nix defines `shell` and (for apps) `ci` profiles; `imports = [ shell ]`.
+- devenv.nix defines `shell` and (for apps) a `ci` profile, wired as
+  `profiles.<name>.module = { imports = [ … ]; }`. The bare `profiles.<name> = …`
+  form does not work with devenv v2.1.2.
+- **Do not apply overlays in the `ci` profile.** An overlay re-instantiates the
+  whole package set, so every derivation hash changes and CI can no longer pull
+  from the shared cachix cache. Repo-local package pins (PocketBase versions and
+  the like) belong in the `shell` profile only. Haskell overrides are different —
+  they go through `overrides.nix` / `hpkgsFor`, which only touches the Haskell set.
+- The `ci` profile puts the Nix-built generator binary on `PATH` so `make dist-ci`
+  never compiles Haskell; it also needs `elm-review` and `elm-json` because CI
+  runs `make check`.
 - CI installs devenv **v2.1.2** via the shared `setup-nix` composite action.
 
 ## Makefile vocabulary
@@ -58,7 +73,58 @@ target first). Standard target names:
 | `clean` | Remove build artifacts |
 
 Apps namespace language-specific targets: `elm-*` (elm-build, elm-check,
-elm-review, elm-test, elm-format) and `statics-*` (Haskell generator).
+elm-review, elm-test, elm-format) and `statics-*` (statics-build, statics-test,
+statics-check, statics-format — the Haskell generator).
+
+`check` and `test` are siblings, not a chain: `test: elm-test statics-test` and
+`check: elm-check statics-check`. CI runs both as separate steps so a lint
+failure and a test failure are distinguishable in the job log.
+
+## Cabal invocations
+
+The repo root holds `cabal.project`, not a package — `packages: statics/` means
+the root is **not** a package directory. Always name the target explicitly:
+
+```sh
+cabal build statics          # not: cabal build
+cabal test statics-test      # not: cabal test
+cabal install statics …      # not: cabal install
+cd statics && cabal check    # cabal check has no target argument
+```
+
+A bare invocation fails with `[Cabal-7134] No targets given and there is no
+package in the current directory`. This is the single most common way these
+repos break after the Haskell sources move under `statics/`.
+
+## CI checkouts
+
+Any job that reads `cabal.project` needs the shared `statics-common` package from
+the submodule, so its checkout must request submodules:
+
+```yaml
+- uses: actions/checkout@v4
+  with:
+    submodules: true
+```
+
+This applies to the `build-update-binary` job as much as to `build` — it is easy
+to miss because the job fails only at link time.
+
+## Vite inside devenv
+
+`enterShell` points `node_modules` and `elm-app/node_modules` at the Nix store,
+which is read-only. Vite's default config loader bundles `vite.config.mjs` into
+`node_modules/.vite-temp/` first, so a plain `vite build` fails with
+`ENOENT: … mkdir '…/node_modules/.vite-temp'`. Every build target therefore runs
+
+```make
+VITE_FLAGS ?= --configLoader runner
+	cd elm-app && vite build $(VITE_FLAGS)
+```
+
+`runner` loads the config directly and never writes the temp file. The scheduled
+workflows are unaffected — they use a real `pkgs/node_modules` directory — but
+they inherit the flag harmlessly.
 
 ## Artifact directory
 
@@ -77,6 +143,10 @@ pkgs/               npm-tools.nix (thin wrapper) + package.json / package-lock.j
 review/             elm-review config sourcing shared rules from vendor/master-builder
 vendor/master-builder  Pinned submodule (shared Elm/Haskell packages, CI tooling)
 ```
+
+`elm-app/packages` is a **committed** symlink (`git add -f` it — the `.gitignore`
+must not cover it). Do not generate it from `make vendor`: elm-review and the
+Vite build both resolve it before any make target has necessarily run.
 
 Note the deliberate split: **`statics/`** is the Haskell package directory;
 **`assets/`** is the verbatim-copied asset directory. Do not reintroduce a

@@ -1,0 +1,57 @@
+name: 'Build frontend (native)'
+description: >
+  Install the Node/Elm toolchain natively (without Nix) and produce the Vite
+  build in dist/. Used by the scheduled update workflows of the app repos, which
+  need to be fast and do not require the full devenv shell.
+
+  Expects the standard app layout: pkgs/package-lock.json for the npm manifest
+  and elm-app/ for the SPA (see docs/conventions.md).
+
+inputs:
+  node-version:
+    description: 'Node major version'
+    required: false
+    default: '22'
+  elm-version:
+    description: 'Exact Elm compiler version to install'
+    required: false
+    default: '0.19.1'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup Node
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs.node-version }}
+        cache: 'npm'
+        cache-dependency-path: pkgs/package-lock.json
+
+    - name: Restore node_modules
+      id: node-cache
+      uses: actions/cache@v4
+      with:
+        path: pkgs/node_modules
+        key: node-${{ runner.os }}-${{ hashFiles('pkgs/package-lock.json') }}
+
+    - name: Install frontend dependencies
+      if: steps.node-cache.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        cd pkgs
+        npm ci
+        npm install --no-save elm@${{ inputs.elm-version }} elm-review
+
+    - name: Link node_modules
+      shell: bash
+      run: ln -sfn ../pkgs/node_modules elm-app/node_modules
+
+    - name: Build frontend
+      shell: bash
+      run: |
+        export PATH="$PWD/pkgs/node_modules/.bin:$PATH"
+        cd elm-app
+        elm-tailwind-classes gen
+        mkdir -p .elm-tailwind
+        touch .elm-tailwind/.stamp
+        vite build
