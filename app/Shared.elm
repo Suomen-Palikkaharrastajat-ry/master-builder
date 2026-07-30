@@ -469,6 +469,7 @@ viewMobileDrawer currentPath model toMsg navItems breakpoint =
     MobileDrawer.view
         { isOpen = model.menuOpen
         , id = "mobile-nav"
+        , label = "Mobiilivalikko"
         , onClose = close
         , breakpoint = breakpoint
         , content =

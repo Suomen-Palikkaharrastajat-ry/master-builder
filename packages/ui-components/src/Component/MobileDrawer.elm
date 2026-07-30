@@ -69,10 +69,19 @@ viewOverlay config =
 
 {-| Slide-in drawer panel. Supply navigation markup (and any extra content such
 as auth controls) via `content`.
+
+`label` is the drawer's accessible name, announced when focus enters the dialog.
+
+When closed the panel is only translated off-screen, so it stays in the layout
+and keeps its transition. `inert` is what actually takes it out of the tab order
+and the accessibility tree — without it, tabbing past the header walks into an
+invisible menu.
+
 -}
 view :
     { isOpen : Bool
     , id : String
+    , label : String
     , onClose : msg
     , breakpoint : Breakpoint
     , content : List (Html msg)
@@ -80,7 +89,7 @@ view :
     -> Html msg
 view config =
     Html.div
-        [ classes
+        ([ classes
             [ breakpointTw config.breakpoint
             , Tw.fixed
             , TwEx.inset_y_0
@@ -101,8 +110,18 @@ view config =
               else
                 Tw.neg_translate_x_full
             ]
-        , Attr.id config.id
-        ]
+         , Attr.id config.id
+         , Attr.attribute "role" "dialog"
+         , Attr.attribute "aria-modal" "true"
+         , Attr.attribute "aria-label" config.label
+         ]
+            ++ (if config.isOpen then
+                    []
+
+                else
+                    [ Attr.attribute "inert" "" ]
+               )
+        )
         (Html.button
             [ Html.Events.onClick config.onClose
             , classes [ Tw.sr_only ]
