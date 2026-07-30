@@ -45,7 +45,7 @@ formatDaySelector : Translations -> DaySelector -> String
 formatDaySelector i18n sel =
     case sel of
         SingleDay d -> dayToString i18n d
-        DayRange start end -> dayToString i18n start ++ " - " ++ dayToString i18n end
+        DayRange start end -> dayToString i18n start ++ "–" ++ dayToString i18n end
         PublicHoliday -> i18n.publicHolidays
 
 dayToString : Translations -> Day -> String
@@ -68,7 +68,7 @@ formatTimeSpans i18n spans =
 formatTimeSpan : Translations -> TimeSpan -> String
 formatTimeSpan i18n span =
     case span of
-        TimeRange start end -> formatTime start ++ " - " ++ formatTime end
+        TimeRange start end -> formatTime start ++ "–" ++ formatTime end
         OpenEnded start -> formatTime start ++ i18n.onwards
 
 formatTime : Time -> String
