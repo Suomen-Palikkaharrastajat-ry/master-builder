@@ -10,6 +10,7 @@
     "elm-version": "0.19.1",
     "dependencies": {
         "direct": {
+            "1602/elm-feather": "2.3.5",
             "avh4/elm-color": "1.0.0",
             "danfishgold/base64-bytes": "1.1.0",
             "danyx23/elm-mimetype": "4.0.1",
@@ -31,7 +32,6 @@
             "elm-community/dict-extra": "2.4.0",
             "elm-community/list-extra": "8.7.0",
             "elm-community/result-extra": "2.4.0",
-            "feathericons/elm-feather": "1.5.0",
             "jluckyiv/elm-utc-date-strings": "1.0.0",
             "justinmimbs/date": "4.1.0",
             "mdgriffith/elm-codegen": "6.0.1",

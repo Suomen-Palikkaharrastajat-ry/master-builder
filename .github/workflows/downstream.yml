@@ -1,0 +1,129 @@
+name: Downstream
+
+# Compiles every app repo against the hub commit under test, so a breaking
+# change to packages/ is caught before it is merged. See docs/conventions.md
+# ("Changing shared package APIs").
+
+on:
+  pull_request:
+    paths:
+      - "packages/**"
+      - "packages-hs/**"
+      - "review/**"
+      - "pkgs/**"
+      - "script/**"
+      - ".github/actions/**"
+      - ".github/workflows/downstream.yml"
+  push:
+    branches: [main]
+    paths:
+      - "packages/**"
+      - "packages-hs/**"
+      - "review/**"
+      - "pkgs/**"
+      - "script/**"
+      - ".github/actions/**"
+      - ".github/workflows/downstream.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: downstream-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  downstream:
+    name: ${{ matrix.app }}
+    runs-on: ubuntu-latest
+    # TEMPORARY: event-calendar and planet are pinned before e150ad8
+    # (MobileDrawer.view gained a required `label`), so they stay red until
+    # Suomen-Palikkaharrastajat-ry/event-calendar#3 and
+    # Suomen-Palikkaharrastajat-ry/planet#3 land. Remove `allow-failure`
+    # from the matrix below afterwards.
+    continue-on-error: ${{ matrix.allow-failure }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - app: event-calendar
+            allow-failure: true
+          - app: planet
+            allow-failure: true
+          - app: service-map
+            allow-failure: false
+
+    steps:
+      - name: Checkout ${{ matrix.app }}
+        uses: actions/checkout@v4
+        with:
+          repository: Suomen-Palikkaharrastajat-ry/${{ matrix.app }}
+          path: app
+          submodules: false
+
+      # Replace the pinned submodule with the commit under test. Do NOT run
+      # the app's `make vendor` afterwards: it would reset this to the pin.
+      - name: Checkout hub under test
+        uses: actions/checkout@v4
+        with:
+          path: app/vendor/master-builder
+
+      - name: Setup Nix + devenv
+        uses: ./app/vendor/master-builder/.github/actions/setup-nix
+        with:
+          # Absent on fork PRs; the action then uses read-only cache pulls.
+          cachix-auth-token: ${{ secrets.CACHIX_AUTH_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Restore Elm cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.elm
+            app/elm-app/elm-stuff
+          key: elm-${{ runner.os }}-${{ matrix.app }}-${{ hashFiles('app/elm-app/elm.json') }}
+          restore-keys: elm-${{ runner.os }}-${{ matrix.app }}-
+
+      - name: Check shared package dependencies
+        working-directory: app
+        run: node vendor/master-builder/script/check-consumer-deps.mjs elm-app/elm.json
+
+      - name: Build Elm app
+        working-directory: app
+        run: devenv shell --profile ci -- make elm-build
+
+      - name: Run Elm tests
+        working-directory: app
+        run: devenv shell --profile ci -- make elm-test
+
+      # Only apps whose cabal.project includes statics-common need Haskell.
+      - name: Detect statics-common usage
+        id: statics
+        working-directory: app
+        run: |
+          if [ -f cabal.project ] && grep -q 'vendor/master-builder/packages-hs/statics-common' cabal.project; then
+            echo "used=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "used=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Restore Cabal caches
+        if: steps.statics.outputs.used == 'true'
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cabal/packages
+            ~/.cabal/store
+          key: cabal-${{ runner.os }}-${{ matrix.app }}-${{ hashFiles('app/cabal.project.freeze', 'app/devenv.lock', 'app/devenv.nix') }}
+          restore-keys: cabal-${{ runner.os }}-${{ matrix.app }}-
+
+      - name: Update Cabal package index
+        if: steps.statics.outputs.used == 'true'
+        working-directory: app
+        run: devenv shell --profile ci -- cabal update
+
+      - name: Build statics (compiles statics-common)
+        if: steps.statics.outputs.used == 'true'
+        working-directory: app
+        run: devenv shell --profile ci -- make statics-build

@@ -1000,7 +1000,8 @@ resolveIcon name =
             FeatherIcons.info
 
         "key" ->
-            FeatherIcons.key
+            -- 1602/elm-feather lacks key; fallback to lock
+            FeatherIcons.lock
 
         "link" ->
             FeatherIcons.link
@@ -1030,7 +1031,8 @@ resolveIcon name =
             FeatherIcons.terminal
 
         "tool" ->
-            FeatherIcons.tool
+            -- 1602/elm-feather lacks tool; fallback to settings
+            FeatherIcons.settings
 
         "trash" ->
             FeatherIcons.trash

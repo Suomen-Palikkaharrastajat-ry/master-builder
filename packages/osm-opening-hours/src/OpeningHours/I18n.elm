@@ -1,5 +1,6 @@
 module OpeningHours.I18n exposing (Translations, finnish)
 
+
 type alias Translations =
     { editorLabel : String
     , editorPlaceholder : String
@@ -27,6 +28,7 @@ type alias Translations =
     , errSyntax : String
     , errUnknown : String
     }
+
 
 finnish : Translations
 finnish =

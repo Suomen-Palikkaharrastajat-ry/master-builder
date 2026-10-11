@@ -18,6 +18,7 @@ module Config exposing
 
 import BackendTask exposing (BackendTask)
 import BackendTask.Custom
+import ContentDir
 import FatalError exposing (FatalError)
 import Json.Decode as Decode exposing (Decoder)
 import Json.Encode as Encode
@@ -143,9 +144,13 @@ type alias FooterLink =
 
 task : BackendTask FatalError Config
 task =
-    BackendTask.Custom.run "readToml"
-        (Encode.string "content/config.toml")
-        decoder
+    ContentDir.backendTask
+        |> BackendTask.andThen
+            (\dir ->
+                BackendTask.Custom.run "readToml"
+                    (Encode.string (dir ++ "/config.toml"))
+                    decoder
+            )
         |> BackendTask.allowFatal
 
 
@@ -235,9 +240,9 @@ brandingDecoder : Decoder BrandingConfig
 brandingDecoder =
     Decode.succeed BrandingConfig
         |> andMap (Decode.field "logo_light" Decode.string)
-        |> andMap (Decode.field "logo_light_mobile" Decode.string)
+        |> andMap (Decode.oneOf [ Decode.field "logo_light_mobile" Decode.string, Decode.field "logo_light" Decode.string ])
         |> andMap (Decode.field "logo_dark" Decode.string)
-        |> andMap (Decode.field "logo_dark_mobile" Decode.string)
+        |> andMap (Decode.oneOf [ Decode.field "logo_dark_mobile" Decode.string, Decode.field "logo_dark" Decode.string ])
         |> andMap (Decode.field "logo_alt" Decode.string)
         |> andMap (optionalField "logo_square" Decode.string "/logo/square/svg/square-smile.svg")
 

@@ -17,6 +17,8 @@ The family:
 | Concern | Canonical home |
 |---|---|
 | Design tokens (machine) | `design-guide/content/*.toml` → generated into `master-builder/packages/design-tokens/` |
+| Design tokens CSS | `packages/design-tokens/design-tokens.css` (generated from `design-guide/dist/design-tokens.css`) |
+| Shared component styles & safelist | `packages/ui-components/ui-components.css` |
 | Design system (prose: colors, typography, logos, WCAG) | `master-builder/AGENTS.md` → "Design system" |
 | LEGO color catalog (reference) | `design-guide/reference/allowed-colors.csv` |
 | Shared Elm UI components | `master-builder/packages/ui-components/` |
@@ -159,6 +161,79 @@ Apps and design-guide run the shared LlmAgent rules from
 RequireTypeAnnotation, NoExposingEverything) — rules tuned to keep generated code
 legible to LLM coding agents. `make elm-check` runs `elm-format --validate` +
 `elm-review`.
+
+## Changing shared package APIs
+
+Shared packages (`packages/ui-components`, `app-toolkit`, `design-tokens`,
+`osm-opening-hours`, `packages-hs/statics-common`) are consumed by every app
+repo, so API changes follow SemVer with Elm's `elm diff` rules. Notably, adding
+a field to a record argument (e.g. `Button.view`'s config) is a **MAJOR**
+change, because every caller constructs that record.
+
+**Prefer additive changes.** Do not add a field to an existing `view` record.
+Instead use one of:
+
+- **Option A — builder (recommended for new or heavily-optioned components):**
+
+  ```elm
+  Button.new { label = "Tallenna", onClick = Save }
+      |> Button.withVariant Button.Primary
+      |> Button.withIcon FeatherIcons.save
+      |> Button.asSubmit
+      |> Button.toHtml
+  ```
+
+  Options are opaque, so adding one is a MINOR change.
+
+- **Option B — `viewWith`:** keep `view` unchanged and add
+  `viewWith : Options -> Config msg -> Html msg` plus `defaultOptions`.
+
+**Process rules**
+
+- A MAJOR change must be merged together with (or after) PRs that fix every
+  app. The `downstream` workflow must be green, or red only for apps with an
+  open, linked fix PR.
+- Every PR touching `packages/` (or `packages-hs/`) updates the relevant
+  `CHANGELOG.md` under "Unreleased" (Keep a Changelog format).
+- Apps record the hub version they are on in their own CHANGELOG or commit
+  message when moving the `vendor/master-builder` pin.
+
+The `downstream` workflow (`.github/workflows/downstream.yml`) compiles every
+app (event-calendar, planet, service-map) against hub changes to `packages/`,
+`packages-hs/`, `review/`, `pkgs/` and `.github/actions/`, by replacing each
+app's pinned `vendor/master-builder` with the commit under test. A red
+`downstream` job means an app needs a matching change before the hub change is
+merged (see the policy above). It runs `make elm-build`, `make elm-test` and,
+for apps using `statics-common`, `make statics-build`; it does not run
+`make check` yet.
+
+## Consuming shared Elm packages
+
+Apps compile the shared packages as **source directories**, not through the Elm
+package registry, so a package's declared `dependencies` are not enforced by
+the compiler. The contract is therefore:
+
+- List every needed `packages/*/src` directory in the app's
+  `source-directories`, and include **each package's dependencies** (see its
+  `elm.json`) in the app's own `elm.json`, within the declared ranges.
+  `node script/check-consumer-deps.mjs <path/to/app/elm.json>` verifies this
+  (the `downstream` workflow runs it).
+- `elm-tailwind-classes` must be exactly the version in
+  `pkgs/package.json` (currently `0.6.1`). Apps run `elm-tailwind-classes gen`
+  before compiling, which generates the `Tailwind*` modules the components
+  import. Because of these generated imports, `ui-components` cannot be built
+  standalone with `elm make --docs`; verify it with an app build instead.
+- Feather icons: **`1602/elm-feather` 2.x** (module `FeatherIcons`) everywhere.
+  Do not use `feathericons/elm-feather`.
+- Shared CSS and safelists: apps should `@import` the tokens and component CSS
+  rather than hand-copying `@theme` blocks:
+
+  ```css
+  @import "tailwindcss";
+  @import "./vendor/master-builder/packages/design-tokens/design-tokens.css";
+  @import "./vendor/master-builder/packages/ui-components/ui-components.css";
+  @source "./src";
+  ```
 
 ## Commit style
 

@@ -1,11 +1,13 @@
 module OpeningHours.Parser exposing (parse)
 
-import Parser exposing (Parser, (|.), (|=), symbol, keyword, succeed, int, spaces, oneOf, end, sequence, lazy, backtrackable, getChompedString, chompWhile, andThen, problem)
 import OpeningHours exposing (..)
+import Parser exposing ((|.), (|=), Parser, andThen, backtrackable, chompWhile, end, getChompedString, int, keyword, lazy, oneOf, problem, sequence, spaces, succeed, symbol)
+
 
 parse : String -> Result (List Parser.DeadEnd) OpeningHours
 parse input =
     Parser.run (openingHoursParser |. end) (String.trim input)
+
 
 openingHoursParser : Parser OpeningHours
 openingHoursParser =
@@ -13,6 +15,7 @@ openingHoursParser =
         [ succeed Open247 |. keyword "24/7"
         , succeed Rules |= rulesParser
         ]
+
 
 rulesParser : Parser (List Rule)
 rulesParser =
@@ -25,6 +28,7 @@ rulesParser =
         , trailing = Parser.Optional
         }
 
+
 ruleParser : Parser Rule
 ruleParser =
     succeed Rule
@@ -33,6 +37,7 @@ ruleParser =
         |. spaces
         |= lazy (\_ -> ruleStatusParser)
 
+
 monthsWithColonParser : Parser (List MonthSelector)
 monthsWithColonParser =
     succeed identity
@@ -40,6 +45,7 @@ monthsWithColonParser =
         |. spaces
         |. symbol ":"
         |. spaces
+
 
 monthSelectorsParser : Parser (List MonthSelector)
 monthSelectorsParser =
@@ -51,11 +57,16 @@ monthSelectorsParser =
         , item = lazy (\_ -> monthSelectorParser)
         , trailing = Parser.Forbidden
         }
-        |> andThen (\list ->
-            case list of
-                [] -> problem "empty months"
-                _ -> succeed list
-        )
+        |> andThen
+            (\list ->
+                case list of
+                    [] ->
+                        problem "empty months"
+
+                    _ ->
+                        succeed list
+            )
+
 
 monthSelectorParser : Parser MonthSelector
 monthSelectorParser =
@@ -68,6 +79,7 @@ monthSelectorParser =
         , succeed SingleMonth
             |= monthParser
         ]
+
 
 monthParser : Parser Month
 monthParser =
@@ -86,6 +98,7 @@ monthParser =
         , succeed Dec |. keyword "Dec"
         ]
 
+
 daysParser : Parser (List DaySelector)
 daysParser =
     sequence
@@ -96,11 +109,16 @@ daysParser =
         , item = lazy (\_ -> daySelectorParser)
         , trailing = Parser.Forbidden
         }
-        |> andThen (\list ->
-            case list of
-                [] -> problem "empty days"
-                _ -> succeed list
-        )
+        |> andThen
+            (\list ->
+                case list of
+                    [] ->
+                        problem "empty days"
+
+                    _ ->
+                        succeed list
+            )
+
 
 daySelectorParser : Parser DaySelector
 daySelectorParser =
@@ -115,14 +133,17 @@ daySelectorParser =
             |= dayParser
         ]
 
+
+
 -- Wait, "Mo,We,Fr" parsed as sequence gives `[SingleDay Mo, SingleDay We, SingleDay Fr]`.
--- But my test says: `[DayList [Mo, We, Fr]]` for "Mo,We,Fr". 
+-- But my test says: `[DayList [Mo, We, Fr]]` for "Mo,We,Fr".
 -- Actually, the OSM spec treats comma separated as a list of selectors.
 -- Let's change the domain model or adapt the parser to match the test.
--- The test expects: DayList [Mo, We, Fr]. 
+-- The test expects: DayList [Mo, We, Fr].
 -- But wait! It's simpler if "Mo,We,Fr" is parsed as [SingleDay Mo, SingleDay We, SingleDay Fr] by the sequence!
 -- Let's stick to sequence for daysParser, and I'll adjust the test instead, because comma separation just means a list of selectors in OSM.
 -- I'll use the sequence as is. Let's write the day parser.
+
 
 dayParser : Parser Day
 dayParser =
@@ -136,12 +157,14 @@ dayParser =
         , succeed Su |. keyword "Su"
         ]
 
+
 ruleStatusParser : Parser RuleStatus
 ruleStatusParser =
     oneOf
         [ succeed Off |. keyword "off"
         , succeed Open |= timeSpansParser
         ]
+
 
 timeSpansParser : Parser (List TimeSpan)
 timeSpansParser =
@@ -153,11 +176,16 @@ timeSpansParser =
         , item = lazy (\_ -> timeSpanParser)
         , trailing = Parser.Forbidden
         }
-        |> andThen (\list ->
-            case list of
-                [] -> problem "empty times"
-                _ -> succeed list
-        )
+        |> andThen
+            (\list ->
+                case list of
+                    [] ->
+                        problem "empty times"
+
+                    _ ->
+                        succeed list
+            )
+
 
 timeSpanParser : Parser TimeSpan
 timeSpanParser =
@@ -172,6 +200,7 @@ timeSpanParser =
             |. symbol "+"
         ]
 
+
 timeParser : Parser Time
 timeParser =
     succeed Time
@@ -179,14 +208,20 @@ timeParser =
         |. symbol ":"
         |= intParser
 
+
 intParser : Parser Int
 intParser =
     getChompedString (chompWhile Char.isDigit)
-        |> andThen (\str ->
-            case String.toInt str of
-                Just n -> succeed n
-                Nothing -> problem "invalid int"
-        )
+        |> andThen
+            (\str ->
+                case String.toInt str of
+                    Just n ->
+                        succeed n
+
+                    Nothing ->
+                        problem "invalid int"
+            )
+
 
 optional : Parser a -> Parser (Maybe a)
 optional p =

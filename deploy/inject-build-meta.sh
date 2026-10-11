@@ -11,9 +11,10 @@ if [ -n "${GITHUB_REPOSITORY:-}" ]; then
   REPO="${GITHUB_REPOSITORY##*/}"
 else
   REMOTE=$(git remote get-url origin 2>/dev/null || echo "")
-  # Handle both SSH (git@github.com:owner/repo.git) and HTTPS
-  OWNER=$(echo "$REMOTE" | sed 's|.*[:/]\([^/]*\)/[^/]*\.git|\1|')
-  REPO=$(echo "$REMOTE"  | sed 's|.*/\([^/]*\)\.git|\1|')
+  # Handle both SSH (git@github.com:owner/repo[.git]) and HTTPS
+  CLEAN_REMOTE=$(echo "$REMOTE" | sed -e 's|.*github\.com[:/]||' -e 's|\.git$||')
+  OWNER="${CLEAN_REMOTE%%/*}"
+  REPO="${CLEAN_REMOTE##*/}"
 fi
 
 OAUTH_CLIENT_ID="${OAUTH_CLIENT_ID:-}"
@@ -27,6 +28,15 @@ config_value() {
   local section="$1"
   local key="$2"
   local fallback="$3"
+  local config_file="content/config.toml"
+
+  if [ ! -f "$config_file" ]; then
+    config_file="template/config.toml"
+  fi
+  if [ ! -f "$config_file" ]; then
+    echo "$fallback"
+    return
+  fi
 
   awk -v section="$section" -v key="$key" -v fallback="$fallback" '
     $0 ~ "^\\[" section "\\]" { in_section = 1; next }
@@ -42,7 +52,7 @@ config_value() {
     END {
       if (!found) print fallback
     }
-  ' content/config.toml 2>/dev/null
+  ' "$config_file" 2>/dev/null
 }
 
 ADMIN_ENABLED="$(config_value admin enabled false)"

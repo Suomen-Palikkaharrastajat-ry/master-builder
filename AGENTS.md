@@ -256,10 +256,10 @@ capture the base classes. The `.elm-tailwind/safelist.txt` therefore never conta
 `hover:text-brand`, `hover:bg-brand/5`, `group-hover:text-brand`, `motion-safe:transition-colors`, etc.
 
 **Fix:** List all required `hover:`, `group-hover:`, and `motion-safe:` variants of semantic
-token classes explicitly as `@source inline()` directives in `style.css`. This file is read
+token classes explicitly as `@source inline()` directives in `packages/ui-components/ui-components.css` (imported by `style.css`). This is read
 for **both** dev and production builds, unlike the plugin-generated wrapper CSS.
 
-Current coverage (see `style.css`):
+Current coverage (see `packages/ui-components/ui-components.css`):
 ```css
 @source inline("hover:text-brand hover:bg-brand hover:border-brand … hover:bg-brand/5 …");
 @source inline("group-hover:text-brand group-hover:bg-brand/5 …");

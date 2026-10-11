@@ -21,14 +21,16 @@ fetch-content: ## Sync content/ from external repo (set CONTENT_OWNER, CONTENT_R
 
 .PHONY: sync-assets
 sync-assets: ## Copy non-markdown assets from $(CONTENT_DIR) to public/
-	@find "$(CONTENT_DIR)" -type f -not -name "*.md" -not -name "config.toml" -not -path "*/.git/*" -not -path "*/.github/*" -not -path "*/reference/*" | while IFS= read -r f; do \
-		rel="$${f#$(CONTENT_DIR)/}"; \
-		dest="public/$$rel"; \
-		mkdir -p "$$(dirname "$$dest")"; \
-		cp "$$f" "$$dest"; \
-	done
-	@if [ -d "$(CONTENT_DIR)/public" ]; then \
-		cp -r "$(CONTENT_DIR)/public/." public/; \
+	@if [ -d "$(CONTENT_DIR)" ]; then \
+		find "$(CONTENT_DIR)" -type f -not -name "*.md" -not -name "config.toml" -not -path "*/.git/*" -not -path "*/.github/*" -not -path "*/reference/*" | while IFS= read -r f; do \
+			rel="$${f#$(CONTENT_DIR)/}"; \
+			dest="public/$$rel"; \
+			mkdir -p "$$(dirname "$$dest")"; \
+			cp "$$f" "$$dest"; \
+		done; \
+		if [ -d "$(CONTENT_DIR)/public" ]; then \
+			cp -r "$(CONTENT_DIR)/public/." public/; \
+		fi; \
 	fi
 
 # ── Clean ────────────────────────────────────────────────────────────────────
@@ -53,6 +55,9 @@ design-tokens: ## Regenerate design tokens from vendor/design-guide (requires su
 	mkdir -p packages/design-tokens/src
 	cp -r vendor/design-guide/dist/design-tokens-elm/src/* packages/design-tokens/src/
 	cp vendor/design-guide/dist/design-tokens-elm/elm.json packages/design-tokens/elm.json
+	@if [ -f vendor/design-guide/dist/design-tokens.css ]; then \
+		cp vendor/design-guide/dist/design-tokens.css packages/design-tokens/design-tokens.css; \
+	fi
 	@echo "Design tokens updated in packages/design-tokens/"
 
 # ── Build ────────────────────────────────────────────────────────────────────
@@ -132,6 +137,7 @@ deploy: ## Commit and push to trigger CI deploy (requires clean working tree)
 
 .PHONY: check
 check: ## Check Elm formatting and elm-review rules (no changes)
+	$(ELM_TAILWIND) gen
 	elm-format --validate app/ src/ admin-app/src/
 	cd admin-app && elm make src/Main.elm --output=/tmp/master-builder-admin-check.js
 	node --test admin-app/GitHubCommit.test.mjs

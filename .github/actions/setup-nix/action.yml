@@ -4,7 +4,8 @@ description: 'Install Nix, configure Cachix, install devenv'
 inputs:
   cachix-auth-token:
     description: 'Cachix auth token'
-    required: true
+    required: false
+    default: ''
   github-token:
     description: 'GitHub token for Nix'
     required: true

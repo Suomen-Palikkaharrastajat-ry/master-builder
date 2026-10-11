@@ -35,7 +35,11 @@ view config =
                 , Tw.h Th.s6
                 , Tw.rounded_full
                 , Tw.transition_colors
-                , if config.checked then Tw.bg_simple TC.brand else Tw.bg_color (Th.gray Th.s300)
+                , if config.checked then
+                    Tw.bg_simple TC.brand
+
+                  else
+                    Tw.bg_color (Th.gray Th.s300)
                 , Bp.withVariant "peer-focus-visible" [ Tw.ring_2, TwEx.ring_brand, Tw.ring_offset_2 ]
                 , Bp.withVariant "peer-disabled" [ Tw.opacity_50, Tw.cursor_not_allowed ]
                 ]
@@ -51,7 +55,11 @@ view config =
                     , Tw.bg_simple Th.white
                     , Tw.shadow
                     , Tw.transition_all
-                    , if config.checked then TwEx.translate_x_5 else TwEx.translate_x_0
+                    , if config.checked then
+                        TwEx.translate_x_5
+
+                      else
+                        TwEx.translate_x_0
                     ]
                 ]
                 []
