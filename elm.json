@@ -64,14 +64,15 @@
             "wolfadex/elm-ansi": "3.0.0",
             "MaybeJustJames/yaml": "2.1.7",
             "dillonkearns/elm-ts-json": "2.1.2",
-            "elm-explorations/test": "2.2.1",
             "elmcraft/core-extra": "2.3.0",
             "pithub/elm-parser-bug-workaround": "1.0.0",
             "pithub/elm-parser-extra": "1.0.0"
         }
     },
     "test-dependencies": {
-        "direct": {},
+        "direct": {
+            "elm-explorations/test": "2.2.1"
+        },
         "indirect": {}
     }
 }

@@ -1,4 +1,4 @@
-module Component.Footer exposing (LinkGroup, view)
+module Component.Footer exposing (LinkGroup, view, viewWith)
 
 {-| Site footer component — dark brand-coloured background.
 
@@ -9,6 +9,8 @@ Supports two layout modes:
   - **Groups layout** — each `LinkGroup` is rendered as a column with a
     heading and list of links, copyright at the bottom. Used when `logo`
     is `Nothing`.
+
+@docs LinkGroup, view, viewWith
 
 -}
 
@@ -27,6 +29,53 @@ type alias LinkGroup =
     }
 
 
+{-| Renders the site footer with custom topMargin and extra column content options.
+-}
+viewWith :
+    { topMargin : Bool
+    , extra : List (Html msg)
+    }
+    ->
+        { logo : Maybe (Html msg)
+        , siteLabel : Maybe String
+        , links : List { label : String, href : String }
+        , groups : List LinkGroup
+        , copyright : String
+        , disclaimer : Maybe (List String)
+        }
+    -> Html msg
+viewWith options config =
+    let
+        useBrandLayout =
+            case config.logo of
+                Just _ ->
+                    True
+
+                Nothing ->
+                    not (List.isEmpty config.links)
+
+        marginClass =
+            if options.topMargin then
+                Tw.mt Th.s16
+
+            else
+                Tw.mt_auto
+    in
+    Html.footer
+        [ classes [ Tw.bg_simple TC.brand, Tw.text_simple Th.white, marginClass, Tw.py Th.s12, Tw.px Th.s4 ] ]
+        [ Html.div
+            [ classes [ TwEx.max_w_5xl, Tw.mx_auto ] ]
+            (if useBrandLayout then
+                [ viewBrandLayout options.extra config ]
+
+             else
+                viewGroupsLayout config
+            )
+        ]
+
+
+{-| Default footer view with top margin and no extra items.
+-}
 view :
     { logo : Maybe (Html msg)
     , siteLabel : Maybe String
@@ -36,39 +85,22 @@ view :
     , disclaimer : Maybe (List String)
     }
     -> Html msg
-view config =
-    let
-        useBrandLayout =
-            case config.logo of
-                Just _ ->
-                    True
-
-                Nothing ->
-                    not (List.isEmpty config.links)
-    in
-    Html.footer
-        [ classes [ Tw.bg_simple TC.brand, Tw.text_simple Th.white, Tw.mt Th.s16, Tw.py Th.s12, Tw.px Th.s4 ] ]
-        [ Html.div
-            [ classes [ TwEx.max_w_5xl, Tw.mx_auto ] ]
-            (if useBrandLayout then
-                [ viewBrandLayout config ]
-
-             else
-                viewGroupsLayout config
-            )
-        ]
+view =
+    viewWith { topMargin = True, extra = [] }
 
 
 viewBrandLayout :
-    { a
-        | logo : Maybe (Html msg)
-        , siteLabel : Maybe String
-        , links : List { label : String, href : String }
-        , copyright : String
-        , disclaimer : Maybe (List String)
-    }
+    List (Html msg)
+    ->
+        { a
+            | logo : Maybe (Html msg)
+            , siteLabel : Maybe String
+            , links : List { label : String, href : String }
+            , copyright : String
+            , disclaimer : Maybe (List String)
+        }
     -> Html msg
-viewBrandLayout config =
+viewBrandLayout extra config =
     Html.div
         [ classes [ Tw.grid, Tw.gap Th.s8, Bp.sm [ Tw.items_end, Tw.grid_cols_5 ] ] ]
         [ Html.div [ classes [ Tw.flex, Tw.items_start, Tw.gap Th.s4, Bp.sm [ Tw.col_span_3 ] ] ]
@@ -109,6 +141,7 @@ viewBrandLayout config =
                                 |> List.map (\d -> Just (Html.p [] [ Html.text d ]))
                            )
                     )
+                    ++ extra
                 )
             ]
         ]

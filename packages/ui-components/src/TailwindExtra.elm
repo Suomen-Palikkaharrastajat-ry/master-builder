@@ -17,6 +17,7 @@ module TailwindExtra exposing
     , border_t_gray_900
     , border_transparent
     , border_white_10
+    , bottom_0
     , bottom_4
     , divide_color
     , feature_grid_body_flex
@@ -53,6 +54,7 @@ module TailwindExtra exposing
     , left_0
     , left_0_5
     , left_2
+    , left_4
     , left_half
     , li_before_content_check
     , li_before_text_brand_yellow
@@ -65,6 +67,7 @@ module TailwindExtra exposing
     , max_w_5xl
     , max_w_7xl
     , max_w_lg
+    , max_w_sm
     , ms_12
     , ms_8
     , neg_start_6
@@ -73,8 +76,10 @@ module TailwindExtra exposing
     , p_my_0
     , p_text_inherit
     , peer
+    , right_0
     , right_2
     , right_4
+    , right_52
     , ring_brand
     , ring_brand_yellow
     , scroll_mt
@@ -90,6 +95,7 @@ module TailwindExtra exposing
     , top_0
     , top_0_5
     , top_2
+    , top_4
     , translate_x_0
     , translate_x_5
     , type_body
@@ -245,6 +251,13 @@ max_w_7xl =
 max_w_lg : Tailwind
 max_w_lg =
     Tailwind "max-w-lg"
+
+
+{-| Caps width at Tailwind's `sm` container size (24 rem / 384 px).
+-}
+max_w_sm : Tailwind
+max_w_sm =
+    Tailwind "max-w-sm"
 
 
 {-| White text at 50 % opacity.
@@ -566,6 +579,13 @@ left_2 =
     Tailwind "left-2"
 
 
+{-| Positions element at `left: 1rem (16px)`.
+-}
+left_4 : Tailwind
+left_4 =
+    Tailwind "left-4"
+
+
 {-| Positions element at `left: 50%` — used with `-translate-x-1/2` to centre.
 -}
 left_half : Tailwind
@@ -594,6 +614,20 @@ top_2 =
     Tailwind "top-2"
 
 
+{-| Positions element at `top: 1rem (16px)`.
+-}
+top_4 : Tailwind
+top_4 =
+    Tailwind "top-4"
+
+
+{-| Positions element at `right: 0`.
+-}
+right_0 : Tailwind
+right_0 =
+    Tailwind "right-0"
+
+
 {-| Positions element at `right: 0.5rem (8px)`.
 -}
 right_2 : Tailwind
@@ -606,6 +640,20 @@ right_2 =
 right_4 : Tailwind
 right_4 =
     Tailwind "right-4"
+
+
+{-| Positions element at `right: 13rem (208px)`.
+-}
+right_52 : Tailwind
+right_52 =
+    Tailwind "right-52"
+
+
+{-| Positions element at `bottom: 0`.
+-}
+bottom_0 : Tailwind
+bottom_0 =
+    Tailwind "bottom-0"
 
 
 {-| Positions element at `bottom: 1rem (16px)`.

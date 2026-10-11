@@ -7,6 +7,7 @@ import BackendTask exposing (BackendTask)
 import BackendTask.Glob as Glob
 import Browser.Events
 import Component.Footer as Footer
+import Component.Footer.Family as Family
 import Component.MobileDrawer as MobileDrawer
 import Component.Navbar as Navbar
 import Config exposing (Config)
@@ -376,23 +377,19 @@ view sharedData page model toMsg pageView =
                         }
                     , Html.main_ [ Attr.id "main-content", classes [ Tw.flex_1, TwEx.max_w_5xl, Tw.mx_auto, Tw.px s6, Tw.py s10, Tw.w_full ] ] pageView.body
                     , Footer.view
-                        { logo =
-                            Just
-                                (Html.img
-                                    [ Attr.src config.footer.footerLogo
-                                    , Attr.alt ""
-                                    , Attr.attribute "aria-hidden" "true"
-                                    , classes [ TwEx.h_35, TwEx.w_35, Tw.shrink_0 ]
-                                    ]
-                                    []
-                                )
+                        { logo = Just Family.logo
                         , siteLabel = Just config.footer.siteLabel
-                        , links = config.footer.links
+                        , links =
+                            if List.isEmpty config.footer.links then
+                                Family.links
+
+                            else
+                                config.footer.links
                         , groups = []
                         , copyright = config.footer.copyright
                         , disclaimer =
                             if List.isEmpty config.footer.disclaimer then
-                                Nothing
+                                Just Family.disclaimer
 
                             else
                                 Just config.footer.disclaimer
