@@ -22,7 +22,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning: [S
 ### Fixed
 
 - `ui-components.css`: safelist the `space-y-*` classes that `TailwindExtra.space_y` builds at runtime; they were missing from app production CSS unless the app happened to use the same class itself. `script/check-safelist.mjs` (run by `make check` and the Downstream workflow) keeps the list complete.
-- `Component.Footer`: the brand layout matches the family reference footer (kalenteri.palikkaharrastajat.fi): 12px uppercase label, 14px links in a single column, 12px legal text (#6).
+- `Component.Footer`: the brand layout matches the family reference footer (kalenteri.palikkaharrastajat.fi): 12px uppercase label, 14px links in two columns from `sm` up (one column below), 12px legal text (#6).
 - `Component.Footer.Family`: `links` no longer lists `planeetta.palikkaharrastajat.fi`, which is not a family site (#6).
 - `Component.FeedLinks`: a single panel (feeds only, no cards) spans the full width instead of one third (#12).
 - `Component.Form`: text inputs, textareas, file inputs and checkboxes use `border-border-brand` instead of `border-border-default`, whose 1.2:1 contrast against the page background failed WCAG 1.4.11 (#9).

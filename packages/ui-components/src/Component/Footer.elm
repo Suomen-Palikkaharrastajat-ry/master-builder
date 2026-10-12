@@ -7,7 +7,8 @@ Supports two layout modes:
   - **Brand layout** — logo + flat link list on the left, copyright and
     optional disclaimer on the right. Activated when `logo` is `Just`.
     Its typography is the family reference (kalenteri.palikkaharrastajat.fi):
-    12px uppercase label, 14px links in one column, 12px legal text. These use
+    12px uppercase label, 14px links, 12px legal text. Links are a two-column
+    grid from `sm` up and one column below it. These use
     plain `text-xs`/`text-sm` on purpose; no `type-*` class has those metrics.
   - **Groups layout** — each `LinkGroup` is rendered as a column with a
     heading and list of links, copyright at the bottom. Used when `logo`
@@ -127,7 +128,7 @@ viewBrandLayout extra config =
                               else
                                 Just
                                     (Html.ul
-                                        [ classes [ TwEx.space_y Th.s2, Tw.list_none, Tw.m Th.s0, Tw.p Th.s0 ] ]
+                                        [ classes [ Tw.list_none, Tw.m Th.s0, Tw.p Th.s0, Tw.grid, Tw.gap_x Th.s6, Tw.gap_y Th.s2, Bp.sm [ Tw.grid_cols_2 ] ] ]
                                         (List.map viewFlatLink config.links)
                                     )
                             ]

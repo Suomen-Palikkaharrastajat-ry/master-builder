@@ -248,7 +248,7 @@ Every site renders its footer through `Component.Footer.Family` in
   whose `config.toml` `[footer] links` override the canonical list when present).
 
 The reference look is kalenteri.palikkaharrastajat.fi: 12px uppercase label,
-14px links in one column, 12px legal text. `tests/FooterTest.elm` pins the
+14px links in two columns (one below `sm`), 12px legal text. `tests/FooterTest.elm` pins the
 canonical link list, order, layout and typography, and each app has a test
 that its layout footer equals `Family.view`/`viewWith`. Change the footer in
 the hub and bump the pins; do not restyle it in an app.

@@ -132,14 +132,17 @@ suite =
                             [ Selector.classes [ "text-xs", "font-semibold", "tracking-wider" ]
                             , Selector.text Family.siteLabel
                             ]
-            , test "links are 14px in a single column" <|
+            , test "links are 14px in two columns from sm up, one below" <|
                 \_ ->
                     canonicalFooter
                         |> Query.fromHtml
                         |> Query.find [ Selector.tag "ul" ]
                         |> Expect.all
-                            [ Query.has [ Selector.classes [ "space-y-2", "list-none" ] ]
-                            , Query.hasNot [ Selector.class "grid" ]
+                            [ Query.has [ Selector.classes [ "grid", "sm:grid-cols-2", "gap-x-6", "gap-y-2", "list-none" ] ]
+
+                            -- space-y-* on a grid offsets every row but the first
+                            , Query.hasNot [ Selector.class "space-y-2" ]
+                            , Query.hasNot [ Selector.class "grid-cols-2" ]
                             , Query.findAll [ Selector.tag "a" ]
                                 >> Query.each (Query.has [ Selector.classes [ "text-sm", "underline" ] ])
                             ]
