@@ -89,6 +89,10 @@ jobs:
         working-directory: app
         run: node vendor/master-builder/script/check-consumer-deps.mjs elm-app/elm.json
 
+      - name: Check shared component safelist
+        working-directory: app
+        run: node vendor/master-builder/script/check-safelist.mjs
+
       - name: Build Elm app
         working-directory: app
         run: devenv shell --profile ci -- make elm-build
