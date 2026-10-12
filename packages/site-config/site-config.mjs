@@ -68,6 +68,8 @@ export const SCHEMA = {
       manifest_path: 'string',
       start_url: 'string',
       display: 'string',
+      scope: 'string',
+      orientation: 'string',
       background_color: 'string',
       theme_color: 'string',
       mobile_web_app_capable: 'bool',
@@ -125,6 +127,10 @@ const REQUIRED = {
 const NAVBAR_VARIANTS = ['standard', 'compact', 'app']
 const LANG_RE = /^[a-z]{2}$/
 
+// The languages the shared Elm code knows (Lang.elm, UiStrings.elm, Locale.elm).
+// A language has to be added there before a site can declare it.
+export const SUPPORTED_LANGUAGES = ['fi', 'en']
+
 const isTable = (v) => v !== null && typeof v === 'object' && !Array.isArray(v)
 
 const TYPE_CHECKS = {
@@ -152,6 +158,11 @@ function readI18n(raw, name, problems) {
     problems.push(`${name}: [i18n] default "${def}" is not listed in languages`)
   }
   if (new Set(languages).size !== languages.length) problems.push(`${name}: [i18n] languages has duplicates`)
+  for (const lang of languages) {
+    if (!SUPPORTED_LANGUAGES.includes(lang)) {
+      problems.push(`${name}: [i18n] language "${lang}" is not supported (supported: ${SUPPORTED_LANGUAGES.join(', ')})`)
+    }
+  }
   return { default: def, languages }
 }
 
@@ -196,13 +207,47 @@ function splitSection(raw, section, i18n, name, problems) {
   return out
 }
 
+// Merges tables key by key, so a site or a language overrides single values
+// of a nested table ([pwa.icons], [app.strings]) without losing the rest.
+function deepMerge(...tables) {
+  const out = {}
+  for (const table of tables) {
+    for (const [key, value] of Object.entries(table ?? {})) {
+      out[key] = isTable(value) && isTable(out[key]) ? deepMerge(out[key], value) : value
+    }
+  }
+  return out
+}
+
 // [app] is free-form: language-neutral keys directly in it, per-language
-// overrides in [app.<lang>].
-function splitApp(raw, i18n) {
+// overrides in [app.<lang>]. Language tables follow the same rules as in the
+// other sections; a table a language overrides must be overridden completely.
+function splitApp(raw, i18n, problems) {
   const out = { neutral: {}, byLang: Object.fromEntries(i18n.languages.map((l) => [l, {}])) }
   for (const [key, value] of Object.entries(raw ?? {})) {
-    if (i18n.languages.includes(key) && key !== i18n.default && isTable(value)) out.byLang[key] = value
-    else out.neutral[key] = value
+    if (!(LANG_RE.test(key) && isTable(value))) {
+      out.neutral[key] = value
+    } else if (key === i18n.default) {
+      problems.push(`config.toml: [app.${key}] is the default language; put its values directly in [app]`)
+    } else if (!i18n.languages.includes(key)) {
+      problems.push(`config.toml: [app.${key}] but "${key}" is not listed in [i18n] languages`)
+    } else {
+      out.byLang[key] = value
+    }
+  }
+  const missing = (base, override, path, lang) => {
+    for (const [key, value] of Object.entries(base)) {
+      if (!(key in override)) {
+        problems.push(`config.toml: [app.${lang}.${path}] ${key} is missing (set in [app.${path}] for "${i18n.default}")`)
+      } else if (isTable(value) && isTable(override[key])) {
+        missing(value, override[key], `${path}.${key}`, lang)
+      }
+    }
+  }
+  for (const [lang, table] of Object.entries(out.byLang)) {
+    for (const [key, value] of Object.entries(table)) {
+      if (isTable(value) && isTable(out.neutral[key])) missing(out.neutral[key], value, key, lang)
+    }
   }
   return out
 }
@@ -236,7 +281,7 @@ export function resolve(siteRaw, familyRaw = {}, options = {}) {
       family: splitSection(familyRaw[section], section, familyI18n, 'family.toml', problems),
     }
   }
-  const app = splitApp(siteRaw.app, i18n)
+  const app = splitApp(siteRaw.app, i18n, problems)
 
   const configs = {}
   for (const lang of i18n.languages) {
@@ -244,12 +289,7 @@ export function resolve(siteRaw, familyRaw = {}, options = {}) {
     const untranslated = new Set()
     for (const section of Object.keys(SCHEMA)) {
       const { site, family } = sections[section]
-      config[section] = {
-        ...family.neutral,
-        ...(family.byLang[lang] ?? {}),
-        ...site.neutral,
-        ...site.byLang[lang],
-      }
+      config[section] = deepMerge(family.neutral, family.byLang[lang], site.neutral, site.byLang[lang])
       // No silent fallback: text the site sets in its default language must
       // be set for every other language too.
       if (lang !== i18n.default) {
@@ -261,7 +301,7 @@ export function resolve(siteRaw, familyRaw = {}, options = {}) {
         }
       }
     }
-    config.app = { ...app.neutral, ...app.byLang[lang] }
+    config.app = deepMerge(app.neutral, app.byLang[lang])
 
     const { site, pwa, footer } = config
     pwa.application_name ??= site.title
@@ -283,8 +323,11 @@ export function resolve(siteRaw, familyRaw = {}, options = {}) {
 
     for (const [section, keys] of Object.entries(REQUIRED)) {
       for (const key of keys) {
-        if (config[section][key] === undefined && !untranslated.has(`${section}.${key}`)) {
+        const value = config[section][key]
+        if (value === undefined && !untranslated.has(`${section}.${key}`)) {
           problems.push(`[${section}] ${key} is missing for language "${lang}"`)
+        } else if (typeof value === 'string' && value.trim() === '') {
+          problems.push(`[${section}] ${key} is empty for language "${lang}"`)
         }
       }
     }

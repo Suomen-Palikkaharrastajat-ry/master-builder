@@ -17,6 +17,8 @@ const RESOLVED_ID = '\0' + VIRTUAL_ID
 
 const absolute = (site, path) => (/^https?:\/\//.test(path) ? path : site.url.replace(/\/+$/, '') + path)
 const yesNo = (flag) => (flag ? 'yes' : 'no')
+// Vite escapes attribute values but writes a tag's children as they are.
+const escapeHtml = (text) => text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 
 /** The document title: the site title, followed by the organisation when it differs. */
 export function documentTitle(config) {
@@ -24,8 +26,12 @@ export function documentTitle(config) {
   return metadata.author && metadata.author !== site.title ? `${site.title} — ${metadata.author}` : site.title
 }
 
-/** The <head> tags of a language's configuration, as Vite tag descriptors. */
-export function headTags(config) {
+/**
+ * The <head> tags of a language's configuration, as Vite tag descriptors.
+ * `others` are the site's configurations in its other languages, for the
+ * alternate-language links.
+ */
+export function headTags(config, others = []) {
   const { site, metadata, icons, pwa } = config
   const title = documentTitle(config)
   const meta = (name, content) => ({ tag: 'meta', attrs: { name, content } })
@@ -35,7 +41,7 @@ export function headTags(config) {
   const apple = (size, href) => link({ rel: 'apple-touch-icon', sizes: `${size}x${size}`, href })
   const image = absolute(site, metadata.default_social_image)
   return [
-    { tag: 'title', children: title },
+    { tag: 'title', children: escapeHtml(title) },
     meta('description', site.description),
     meta('robots', metadata.robots),
     ...(metadata.author ? [meta('author', metadata.author)] : []),
@@ -54,6 +60,10 @@ export function headTags(config) {
     property('og:image:alt', metadata.default_social_image_alt),
     property('og:site_name', site.title),
     property('og:locale', metadata.locale),
+    ...others.map((other) => property('og:locale:alternate', other.metadata.locale)),
+    ...(others.length > 0
+      ? [config, ...others].map((c) => link({ rel: 'alternate', hreflang: c.lang, href: `${site.url}?lang=${c.lang}` }))
+      : []),
     meta('twitter:card', metadata.twitter_card),
     ...(metadata.twitter_site ? [meta('twitter:site', metadata.twitter_site)] : []),
     meta('twitter:title', title),
@@ -95,7 +105,9 @@ export function webManifest(config) {
     description: pwa.description,
     lang,
     start_url: pwa.start_url,
+    ...(pwa.scope ? { scope: pwa.scope } : {}),
     display: pwa.display,
+    ...(pwa.orientation ? { orientation: pwa.orientation } : {}),
     background_color: pwa.background_color,
     theme_color: pwa.theme_color,
     icons: [icon(pwa.icons.icon_192, 'any'), icon(pwa.icons.icon_512, 'any'), icon(pwa.icons.maskable_icon, 'maskable')],
@@ -138,7 +150,10 @@ export default function siteConfig(options = {}) {
       const config = defaultConfig()
       return {
         html: html.replace(/<html\b[^>]*>/i, `<html lang="${config.lang}">`),
-        tags: headTags(config),
+        tags: headTags(
+          config,
+          resolved.languages.filter((lang) => lang !== config.lang).map((lang) => resolved.configs[lang]),
+        ),
       }
     },
 

@@ -95,7 +95,7 @@ jobs:
 
       - name: Check display text stays in translation modules
         working-directory: app
-        run: node vendor/master-builder/script/check-i18n.mjs elm-app/src elm-app/main.js
+        run: node vendor/master-builder/script/check-i18n.mjs elm-app/src elm-app/main.js statics/src statics/app
 
       - name: Build Elm app
         working-directory: app

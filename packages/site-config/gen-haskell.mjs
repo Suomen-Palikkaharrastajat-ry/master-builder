@@ -44,10 +44,26 @@ const hsValue = (value) => (Array.isArray(value) ? `[${value.map(hs).join(', ')}
 const isText = (value) => typeof value === 'string' || (Array.isArray(value) && value.every((x) => typeof x === 'string'))
 
 const definitions = []
+const problems = []
+const KEY = /^[a-z][a-z0-9_]*$/
+// Lists the generators index by position must have a fixed length.
+const LENGTHS = { months: 12, weekdays: 7 }
+const shape = (value) => (Array.isArray(value) ? 'list' : 'string')
 const constant = (name, doc, value) =>
   definitions.push({ name, text: `-- | ${doc}\n${name} :: String\n${name} = ${hs(value)}` })
 const perLang = (name, doc, get) => {
+  if (definitions.some((d) => d.name === name)) {
+    problems.push(`two keys map to the Haskell name ${name}`)
+    return
+  }
   const sample = get(resolved.configs[resolved.default])
+  for (const lang of langs) {
+    const value = get(resolved.configs[lang])
+    if (!isText(value) || shape(value) !== shape(sample)) {
+      problems.push(`${name}: the value for "${lang}" is not a ${shape(sample)} like the one for "${resolved.default}"`)
+      return
+    }
+  }
   const type = Array.isArray(sample) ? '[String]' : 'String'
   const clauses = langs.map((lang) => `${name} ${con(lang)} = ${hsValue(get(resolved.configs[lang]))}`)
   definitions.push({ name, text: `-- | ${doc}\n${name} :: Lang -> ${type}\n${clauses.join('\n')}` })
@@ -59,11 +75,29 @@ perLang('siteDescription', '@[site] description@.', (c) => c.site.description)
 perLang('author', '@[metadata] author@: the organisation behind the site.', (c) => c.metadata.author ?? '')
 
 const app = resolved.configs[resolved.default].app
-for (const [key, value] of Object.entries(app)) {
-  if (isText(value)) perLang(camel('app', key), `@[app] ${key}@.`, (c) => c.app[key])
+const addTable = (table, prefix, where, get) => {
+  for (const [key, value] of Object.entries(table)) {
+    if (!isText(value)) continue
+    if (!KEY.test(key)) {
+      problems.push(`${where} ${key}: keys used by the generators must match ${KEY}`)
+      continue
+    }
+    for (const lang of langs) {
+      const translated = get(resolved.configs[lang])?.[key]
+      if (LENGTHS[key] && Array.isArray(translated) && translated.length !== LENGTHS[key]) {
+        problems.push(`${where} ${key} must have ${LENGTHS[key]} entries for "${lang}"`)
+      }
+    }
+    perLang(camel(prefix, key), `@${where} ${key}@.`, (c) => get(c)?.[key])
+  }
 }
-for (const [key, value] of Object.entries(app.statics ?? {})) {
-  if (isText(value)) perLang(camel('statics', key), `@[app.statics] ${key}@.`, (c) => c.app.statics[key])
+addTable(app, 'app', '[app]', (c) => c.app)
+addTable(app.statics ?? {}, 'statics', '[app.statics]', (c) => c.app.statics)
+
+if (problems.length > 0) {
+  console.error(`${relative(process.cwd(), configPath)} cannot be turned into a Haskell module:`)
+  for (const problem of problems) console.error('  - ' + problem)
+  process.exit(1)
 }
 
 const source = `{- | The site's resolved configuration.

@@ -205,3 +205,69 @@ test('web manifest comes from the configuration', () => {
     ],
   )
 })
+
+// ── Nested tables and [app] ──────────────────────────────────────────────────
+
+test('a site overrides one value of a nested table without losing the rest', () => {
+  const { fi } = resolve(site('[pwa.icons]\nicon_192 = "/own-192.png"\n'), family, { year: 2026 }).configs
+  assert.deepEqual(fi.pwa.icons, { icon_192: '/own-192.png', icon_512: '/icon-512.png', maskable_icon: '/icon-maskable.png' })
+})
+
+test('[app] language tables follow the same rules as the other sections', () => {
+  assert.match(problems('[site]\nurl="u"\ntitle="t"\ndescription="d"\n[app.fi]\nx = "1"\n')[0], /\[app\.fi\] is the default language/)
+  assert.match(problems('[site]\nurl="u"\ntitle="t"\ndescription="d"\n[app.en]\nx = "1"\n')[0], /\[app\.en\] but "en" is not listed/)
+})
+
+test('a table translated in [app.<lang>] must be translated completely', () => {
+  const found = problems(
+    bilingual +
+      `[site.en]
+title = "T"
+description = "D"
+[app.strings]
+open = "Avaa"
+close = "Sulje"
+[app.en.strings]
+open = "Open"
+`,
+  )
+  assert.deepEqual(found, ['config.toml: [app.en.strings] close is missing (set in [app.strings] for "fi")'])
+})
+
+test('a language keeps the language-neutral [app] values', () => {
+  const { en } = resolve(
+    parse(bilingual + '[site.en]\ntitle = "T"\ndescription = "D"\n[app]\nurl = "https://x"\n[app.strings]\na = "A"\n[app.en.strings]\na = "B"\n'),
+    family,
+    { year: 2026 },
+  ).configs
+  assert.deepEqual(en.app, { url: 'https://x', strings: { a: 'B' } })
+})
+
+test('only languages the shared code knows can be declared', () => {
+  assert.match(problems('[i18n]\ndefault = "fi"\nlanguages = ["fi", "sv"]\n[site]\nurl="u"\ntitle="t"\ndescription="d"\n')[0], /language "sv" is not supported/)
+})
+
+test('required text may not be empty', () => {
+  assert.deepEqual(problems('[site]\nurl="u"\ntitle=""\ndescription="d"\n'), ['[site] title is empty for language "fi"'])
+})
+
+test('a bilingual head links its languages and the title is escaped', () => {
+  const resolved = resolve(parse(bilingual.replace('"Otsikko"', '"A & B"') + '[site.en]\ntitle = "T"\ndescription = "D"\n'), family, { year: 2026 })
+  const tags = headTags(resolved.configs.fi, [resolved.configs.en])
+  assert.equal(tags.find((t) => t.tag === 'title').children, 'A &amp; B — Suomen Palikkaharrastajat ry')
+  assert.deepEqual(
+    tags.filter((t) => t.attrs?.rel === 'alternate').map((t) => [t.attrs.hreflang, t.attrs.href]),
+    [
+      ['fi', 'https://x.example?lang=fi'],
+      ['en', 'https://x.example?lang=en'],
+    ],
+  )
+  assert.equal(tags.find((t) => t.attrs?.property === 'og:locale:alternate').attrs.content, 'en_GB')
+})
+
+test('manifest scope and orientation are optional', () => {
+  assert.equal('scope' in webManifest(calendar), false)
+  const { fi } = resolve(site('[pwa]\nscope = "/"\norientation = "portrait"\n'), family, { year: 2026 }).configs
+  assert.equal(webManifest(fi).scope, '/')
+  assert.equal(webManifest(fi).orientation, 'portrait')
+})

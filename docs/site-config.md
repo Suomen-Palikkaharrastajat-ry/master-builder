@@ -58,10 +58,15 @@ Which keys are translatable is declared once, in `SCHEMA` in `site-config.mjs`.
 
 `{year}` in `[footer] copyright` is replaced with the build year.
 
+Nested tables (`[pwa.icons]`, `[app.strings]`) are merged key by key, so a site
+overrides single values without repeating the rest.
+
 ## App settings
 
 `[app]` is free-form and belongs to the app: language-neutral settings directly
-in it, per-language overrides in `[app.<lang>]`. Decode it in Elm with
+in it, per-language overrides in `[app.<lang>]`. A table a language overrides
+(`[app.en.strings]`) must contain every key of the default one; there is no
+silent fallback there either. Decode it in Elm with
 `SiteSettings.appDecoder`.
 
 ## Using the configuration
@@ -108,6 +113,7 @@ Downstream workflow.
 
 ## Adding a language
 
-1. Add it to `Lang`, `UiStrings.forLang` and `Locale.forCode`.
+1. Add it to `Lang`, `UiStrings.forLang`, `Locale.forCode` and to
+   `SUPPORTED_LANGUAGES` in `site-config.mjs`.
 2. Translate the family defaults: add `[<section>.<lang>]` tables to `family.toml`.
 3. In the site: list it in `[i18n] languages` and translate what the site sets itself.

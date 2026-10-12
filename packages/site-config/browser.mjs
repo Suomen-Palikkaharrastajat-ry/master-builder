@@ -6,24 +6,28 @@ const STORAGE_KEY = 'lang'
 let requested
 
 /**
- * The language the visitor asked for, if any: `?lang=` in the address, or an
- * earlier choice. A request in the address is remembered and then removed from
- * it, so the address stays shareable and later navigation does not repeat it.
- * The app shows the language only when the site declares it
- * (SiteSettings.pickLang).
+ * The language the visitor asked for, if the site declares it: `?lang=` in
+ * the address, or an earlier choice. A request in the address is remembered
+ * and then removed from it, so the address stays shareable and later
+ * navigation does not repeat it. A request for a language the site does not
+ * declare is ignored and leaves an earlier choice alone.
  */
-export function requestedLang() {
+export function requestedLang(siteConfig) {
   if (requested !== undefined) return requested
+  const declared = (code) => {
+    const lang = (code || '').slice(0, 2).toLowerCase()
+    return siteConfig.languages.includes(lang) ? lang : null
+  }
   const url = new URL(window.location.href)
-  const fromUrl = url.searchParams.get('lang')
+  const fromUrl = declared(url.searchParams.get('lang'))
   let stored = null
   try {
     if (fromUrl) window.localStorage.setItem(STORAGE_KEY, fromUrl)
-    stored = window.localStorage.getItem(STORAGE_KEY)
+    stored = declared(window.localStorage.getItem(STORAGE_KEY))
   } catch {
     // Storage can be unavailable (private mode); the address still works.
   }
-  if (fromUrl) {
+  if (url.searchParams.has('lang')) {
     url.searchParams.delete('lang')
     window.history.replaceState(window.history.state, '', url)
   }
@@ -41,8 +45,7 @@ export function setDocumentLang(lang) {
  * the site's default. Mirrors SiteSettings.pickLang in Elm.
  */
 export function pickLang(siteConfig) {
-  const code = (requestedLang() || '').slice(0, 2).toLowerCase()
-  return siteConfig.languages.includes(code) ? code : siteConfig.default
+  return requestedLang(siteConfig) || siteConfig.default
 }
 
 /** The free-form [app] table of a language (the site's default one unless given). */
