@@ -1,0 +1,15 @@
+# Changelog
+
+All notable changes to `palikkaharrastajat/finnish-datepicker` will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [1.0.0] - 2026-10-12
+
+### Added
+
+- `FinnishDatePicker` module wrapping `CurrySoftware/elm-datepicker` with Finnish defaults and accessible `field` wrapper.
+- `FinnishDate` module providing Finnish month and weekday naming, and date parse/format functions.
+- `finnish-datepicker.css` providing token-aligned stylesheet for the datepicker popup.
+- Unit tests for date parsing and formatting round-trips.
