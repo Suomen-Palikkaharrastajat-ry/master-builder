@@ -1,9 +1,9 @@
-module PocketBaseAuth exposing (AuthState(..), AuthUser, decodeAuthUser, fetchOAuthToken, restoreAuthFromFlags)
+module PocketBaseAuth exposing (AuthState(..), AuthUser, decodeAuthUser, decodeOAuthUserResponse, fetchOAuthToken, fetchOAuthUser, restoreAuthFromFlags)
 
 {-| PocketBase authentication helpers: token restore from flags, user JSON decoding,
 and msg-polymorphic OAuth2 token exchange.
 
-@docs AuthState, AuthUser, decodeAuthUser, fetchOAuthToken, restoreAuthFromFlags
+@docs AuthState, AuthUser, decodeAuthUser, decodeOAuthUserResponse, fetchOAuthToken, fetchOAuthUser, restoreAuthFromFlags
 
 -}
 
@@ -41,6 +41,16 @@ decodeAuthUser =
         (Decode.succeed "")
 
 
+{-| JSON decoder for the PocketBase OAuth2 response, which contains `token` and `record`.
+Returns an `AuthUser` with `token` populated.
+-}
+decodeOAuthUserResponse : Decoder AuthUser
+decodeOAuthUserResponse =
+    Decode.map2 (\token user -> { user | token = token })
+        (Decode.field "token" Decode.string)
+        (Decode.field "record" decodeAuthUser)
+
+
 {-| Restores authentication state from stored token and user model JSON flags.
 Returns `NotAuthenticated` if either value is absent or if the user JSON fails to decode.
 -}
@@ -64,8 +74,37 @@ restoreAuthFromFlags maybeToken maybeModel =
             NotAuthenticated
 
 
-{-| Exchange an OAuth2 authorization code and code verifier with PocketBase for an auth token.
+{-| Exchange an OAuth2 authorization code and code verifier with PocketBase for an `AuthUser`.
 This is msg-polymorphic, allowing any application Msg type to receive the HTTP result.
+-}
+fetchOAuthUser :
+    String
+    -> String
+    -> String
+    -> String
+    -> String
+    -> (Result Http.Error AuthUser -> msg)
+    -> Cmd msg
+fetchOAuthUser pbBaseUrl code codeVerifier redirectUrl state toMsg =
+    let
+        body =
+            Encode.object
+                [ ( "provider", Encode.string "oidc" )
+                , ( "code", Encode.string code )
+                , ( "codeVerifier", Encode.string codeVerifier )
+                , ( "redirectUrl", Encode.string redirectUrl )
+                , ( "state", Encode.string state )
+                ]
+    in
+    Http.post
+        { url = pbBaseUrl ++ "/api/collections/users/auth-with-oauth2"
+        , body = Http.jsonBody body
+        , expect = Http.expectJson toMsg decodeOAuthUserResponse
+        }
+
+
+{-| Exchange an OAuth2 authorization code and code verifier with PocketBase for an `AuthState`.
+This wraps `fetchOAuthUser` and maps `Ok user` to `Ok (Authenticated user)`.
 -}
 fetchOAuthToken :
     String
@@ -87,9 +126,7 @@ fetchOAuthToken pbBaseUrl code codeVerifier redirectUrl state toMsg =
                 ]
 
         decoder =
-            Decode.map2 (\token user -> Authenticated { user | token = token })
-                (Decode.field "token" Decode.string)
-                (Decode.field "record" decodeAuthUser)
+            Decode.map Authenticated decodeOAuthUserResponse
     in
     Http.post
         { url = pbBaseUrl ++ "/api/collections/users/auth-with-oauth2"

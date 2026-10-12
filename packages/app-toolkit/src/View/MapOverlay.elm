@@ -33,7 +33,7 @@ panel : { position : Position, label : Maybe String } -> List (Html msg) -> Html
 panel config children =
     let
         classes =
-            "absolute z-10 bg-bg-page/90 backdrop-blur rounded shadow p-4 "
+            "absolute z-[1000] bg-bg-page/90 backdrop-blur rounded shadow p-4 "
                 ++ positionClasses config.position
     in
     case config.label of
@@ -102,11 +102,12 @@ detailPanelWithHeaderActions config children =
 
     else
         Html.node "aside"
-            [ Attr.attribute "role" "region"
+            [ Attr.id "map-detail-panel"
+            , Attr.attribute "role" "region"
             , Attr.attribute "aria-label" config.title
             , Attr.tabindex -1
             , onEscape config.onClose
-            , Attr.class "absolute inset-x-0 bottom-0 max-h-[80vh] md:max-h-full md:inset-y-0 md:right-0 md:left-auto md:w-[22rem] z-20 bg-bg-page shadow-xl overflow-y-auto flex flex-col rounded-t-xl md:rounded-none"
+            , Attr.class "absolute inset-x-0 bottom-0 max-h-[80vh] md:max-h-full md:inset-y-0 md:right-0 md:left-auto md:w-[22rem] z-[1010] bg-bg-page shadow-xl overflow-y-auto flex flex-col rounded-t-xl md:rounded-none"
             ]
             [ Html.div
                 [ Attr.class "flex items-start justify-between gap-2 p-4 border-b border-border-default" ]
@@ -127,6 +128,7 @@ closeButton : msg -> String -> Html msg
 closeButton onClose closeLabel =
     Html.button
         [ Attr.type_ "button"
+        , Attr.id "map-detail-close"
         , Events.onClick onClose
         , Attr.attribute "aria-label" closeLabel
         , Attr.class "text-text-subtle hover:text-text-primary mt-0.5 flex-shrink-0 cursor-pointer"

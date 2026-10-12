@@ -66,6 +66,9 @@ app.ports.focusElement.subscribe(function (id) {
 })
 ```
 
+`View.MapOverlay.detailPanel` assigns `id="map-detail-panel"` to the container and `id="map-detail-close"` to the close button. When opening the detail panel (e.g. on marker click), dispatch `Ports.focusElement "map-detail-close"` so keyboard focus lands inside the panel immediately, allowing the built-in Escape key listener and close button to be operated by keyboard users.
+
+
 ## Non-Unified Modules (`Api`, `Route`, `I18n`)
 
 The following modules remain intentionally application-specific and are **not** unified into `app-toolkit`:

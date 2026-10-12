@@ -3,8 +3,37 @@ module FinnishTimeTest exposing (suite)
 {-| Test suite for FinnishTime module.
 -}
 
+import Date
 import Expect
-import FinnishTime exposing (..)
+import FinnishTime
+    exposing
+        ( DateParts
+        , daysInMonth
+        , finnishDateInputToIsoDate
+        , finnishMonthName
+        , finnishWeekdayAbbr
+        , firstDayOfWeek
+        , formDateTimeToUtc
+        , formatFinnishDate
+        , formatFullDate
+        , formatShortDate
+        , formatTime
+        , helsinkiOffset
+        , helsinkiZone
+        , isDst
+        , isoDateToFinnishDateInput
+        , monthGrid
+        , monthName
+        , monthToInt
+        , nextMonth
+        , parseFinnishDate
+        , parseUtcString
+        , prevMonth
+        , toHelsinkiParts
+        , utcStringToHelsinkiDateInput
+        , utcStringToHelsinkiTimeInput
+        , weekdayAbbr
+        )
 import Test exposing (Test, describe, test)
 import Time exposing (Month(..), Posix, Weekday(..))
 
@@ -52,6 +81,35 @@ suite =
                         |> isDst
                         |> Expect.equal True
             ]
+        , describe "helsinkiZone and toHelsinkiParts"
+            [ test "helsinkiZone produces correct local hour" <|
+                \_ ->
+                    let
+                        posix =
+                            Time.millisToPosix 1750075200000
+
+                        -- 12:00 UTC -> 15:00 Helsinki (UTC+3)
+                        zone =
+                            helsinkiZone posix
+                    in
+                    Time.toHour zone posix |> Expect.equal 15
+            , test "toHelsinkiParts decomposes Posix into date parts" <|
+                \_ ->
+                    let
+                        -- 2025-05-05 14:30:00 UTC -> 17:30 Helsinki (Monday)
+                        posix =
+                            Time.millisToPosix 1746455400000
+                    in
+                    toHelsinkiParts posix
+                        |> Expect.equal
+                            { year = 2025
+                            , month = 5
+                            , day = 5
+                            , hour = 17
+                            , minute = 30
+                            , weekday = Mon
+                            }
+            ]
         , describe "formatTime"
             [ test "formats 14:00 UTC in winter (+2h) as 16.00" <|
                 \_ ->
@@ -88,7 +146,7 @@ suite =
                         |> formatFullDate
                         |> Expect.equal "ma 5.5.2025"
             ]
-        , describe "finnishWeekdayAbbr"
+        , describe "finnishWeekdayAbbr and weekdayAbbr"
             [ test "Mon is ma" <| \_ -> finnishWeekdayAbbr Mon |> Expect.equal "ma"
             , test "Tue is ti" <| \_ -> finnishWeekdayAbbr Tue |> Expect.equal "ti"
             , test "Wed is ke" <| \_ -> finnishWeekdayAbbr Wed |> Expect.equal "ke"
@@ -96,17 +154,27 @@ suite =
             , test "Fri is pe" <| \_ -> finnishWeekdayAbbr Fri |> Expect.equal "pe"
             , test "Sat is la" <| \_ -> finnishWeekdayAbbr Sat |> Expect.equal "la"
             , test "Sun is su" <| \_ -> finnishWeekdayAbbr Sun |> Expect.equal "su"
+            , test "weekdayAbbr alias matches" <| \_ -> weekdayAbbr Mon |> Expect.equal "ma"
             ]
-        , describe "finnishMonthName"
+        , describe "finnishMonthName and monthName"
             [ test "January is Tammikuu" <| \_ -> finnishMonthName 1 |> Expect.equal "Tammikuu"
             , test "May is Toukokuu" <| \_ -> finnishMonthName 5 |> Expect.equal "Toukokuu"
             , test "December is Joulukuu" <| \_ -> finnishMonthName 12 |> Expect.equal "Joulukuu"
+            , test "monthName alias matches" <| \_ -> monthName 5 |> Expect.equal "Toukokuu"
             ]
-        , describe "daysInMonth"
+        , describe "monthToInt"
+            [ test "converts Jan to 1" <| \_ -> monthToInt Jan |> Expect.equal 1
+            , test "converts Jun to 6" <| \_ -> monthToInt Jun |> Expect.equal 6
+            , test "converts Dec to 12" <| \_ -> monthToInt Dec |> Expect.equal 12
+            ]
+        , describe "daysInMonth and firstDayOfWeek"
             [ test "February in non-leap year" <| \_ -> daysInMonth 2025 2 |> Expect.equal 28
             , test "February in leap year" <| \_ -> daysInMonth 2024 2 |> Expect.equal 29
             , test "April has 30 days" <| \_ -> daysInMonth 2025 4 |> Expect.equal 30
             , test "May has 31 days" <| \_ -> daysInMonth 2025 5 |> Expect.equal 31
+            , test "firstDayOfWeek 2025-05 starts on Thursday (index 3)" <|
+                \_ ->
+                    firstDayOfWeek 2025 5 |> Expect.equal 3
             ]
         , describe "calendar grid helpers"
             [ test "prevMonth handles January" <|
@@ -139,7 +207,7 @@ suite =
                     formDateTimeToUtc "2025-06-15" "" True
                         |> Expect.equal (Just "2025-06-14T21:00:00.000Z")
             ]
-        , describe "Finnish date input conversions"
+        , describe "Finnish date input conversions and parsing"
             [ test "isoDateToFinnishDateInput: 2026-02-01 → 01.02.2026" <|
                 \_ ->
                     isoDateToFinnishDateInput "2026-02-01"
@@ -156,5 +224,38 @@ suite =
                 \_ ->
                     finnishDateInputToIsoDate "31.02.2026"
                         |> Expect.equal Nothing
+            , test "parseFinnishDate and formatFinnishDate round-trip" <|
+                \_ ->
+                    case parseFinnishDate "05.05.2025" of
+                        Ok date ->
+                            formatFinnishDate date |> Expect.equal "05.05.2025"
+
+                        Err err ->
+                            Expect.fail err
+            , test "parseFinnishDate returns Err on invalid date" <|
+                \_ ->
+                    case parseFinnishDate "invalid" of
+                        Ok _ ->
+                            Expect.fail "Expected error for invalid date"
+
+                        Err _ ->
+                            Expect.pass
+            ]
+        , describe "utcStringToHelsinki inputs"
+            [ test "converts UTC string to Helsinki date input YYYY-MM-DD" <|
+                \_ ->
+                    utcStringToHelsinkiDateInput "2025-06-15T14:00:00.000Z"
+                        |> Expect.equal "2025-06-15"
+            , test "converts UTC string to Helsinki time input HH:MM" <|
+                \_ ->
+                    utcStringToHelsinkiTimeInput "2025-06-15T14:00:00.000Z"
+                        |> Expect.equal "17:00"
+            , test "returns empty string on invalid UTC string" <|
+                \_ ->
+                    Expect.all
+                        [ \_ -> utcStringToHelsinkiDateInput "bad" |> Expect.equal ""
+                        , \_ -> utcStringToHelsinkiTimeInput "bad" |> Expect.equal ""
+                        ]
+                        ()
             ]
         ]

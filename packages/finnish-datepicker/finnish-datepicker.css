@@ -2,6 +2,8 @@
  * Styled with design tokens from Suomen Palikkaharrastajat ry design guide.
  */
 
+@source "./src";
+
 .elm-datepicker--container {
   position: relative;
 }

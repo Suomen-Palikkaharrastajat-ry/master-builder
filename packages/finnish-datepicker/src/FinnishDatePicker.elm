@@ -55,7 +55,7 @@ view :
 view config =
     DatePicker.view
         (isoDateToDate config.selectedIsoDate)
-        (settings (Just config.inputId) Nothing False)
+        (defaultSettingsWithInputId (Just config.inputId))
         config.picker
 
 
@@ -74,7 +74,7 @@ field f config =
         pickerHtml =
             DatePicker.view
                 (isoDateToDate config.selectedIsoDate)
-                (settings (Just f.id) f.error f.disabled)
+                (fieldSettings f)
                 config.picker
                 |> Html.map config.onMsg
     in
@@ -93,20 +93,67 @@ update : DatePicker.Msg -> DatePicker.DatePicker -> ( DatePicker.DatePicker, May
 update datePickerMsg picker =
     let
         ( updatedPicker, dateEvent ) =
-            DatePicker.update (settings Nothing Nothing False) datePickerMsg picker
+            DatePicker.update (defaultSettingsWithInputId Nothing) datePickerMsg picker
     in
     ( updatedPicker, dateEventToIso dateEvent )
 
 
-settings : Maybe String -> Maybe String -> Bool -> DatePicker.Settings
-settings maybeInputId maybeError isDisabled =
+fieldSettings : Field -> DatePicker.Settings
+fieldSettings f =
     let
         hasError =
-            maybeError /= Nothing
+            f.error /= Nothing
+
+        describedBy =
+            case ( f.hint, f.error ) of
+                ( Just _, Just _ ) ->
+                    Just (f.id ++ "-hint " ++ f.id ++ "-error")
+
+                ( Just _, Nothing ) ->
+                    Just (f.id ++ "-hint")
+
+                ( Nothing, Just _ ) ->
+                    Just (f.id ++ "-error")
+
+                ( Nothing, Nothing ) ->
+                    Nothing
+
+        describedByAttrs =
+            case describedBy of
+                Just ids ->
+                    [ Attr.attribute "aria-describedby" ids ]
+
+                Nothing ->
+                    []
+
+        invalidAttrs =
+            if hasError then
+                [ Attr.attribute "aria-invalid" "true" ]
+
+            else
+                []
+
+        requiredAttrs =
+            if f.required then
+                [ Attr.required True
+                , Attr.attribute "aria-required" "true"
+                ]
+
+            else
+                []
+
+        disabledAttrs =
+            if f.disabled then
+                [ Attr.disabled True ]
+
+            else
+                []
     in
     { defaultSettings
         | placeholder = "pp.kk.vvvv"
-        , inputId = maybeInputId
+        , inputId = Just f.id
+        , inputAttributes =
+            describedByAttrs ++ invalidAttrs ++ requiredAttrs ++ disabledAttrs
         , inputClassList =
             [ ( "w-full", True )
             , ( "rounded", True )
@@ -120,7 +167,35 @@ settings maybeInputId maybeError isDisabled =
             , ( "focus-visible:outline-none", True )
             , ( "focus-visible:ring-2", True )
             , ( "focus-visible:ring-brand", True )
-            , ( "opacity-50 cursor-not-allowed", isDisabled )
+            , ( "opacity-50 cursor-not-allowed", f.disabled )
+            ]
+        , parser = FinnishDate.parse
+        , dateFormatter = FinnishDate.format
+        , dayFormatter = FinnishDate.weekdayAbbr
+        , monthFormatter =
+            \month ->
+                FinnishDate.monthName (FinnishDate.monthToInt month)
+        , firstDayOfWeek = Mon
+    }
+
+
+defaultSettingsWithInputId : Maybe String -> DatePicker.Settings
+defaultSettingsWithInputId maybeInputId =
+    { defaultSettings
+        | placeholder = "pp.kk.vvvv"
+        , inputId = maybeInputId
+        , inputClassList =
+            [ ( "w-full", True )
+            , ( "rounded", True )
+            , ( "border", True )
+            , ( "border-border-default", True )
+            , ( "bg-bg-page", True )
+            , ( "px-3", True )
+            , ( "py-2", True )
+            , ( "type-body-small", True )
+            , ( "focus-visible:outline-none", True )
+            , ( "focus-visible:ring-2", True )
+            , ( "focus-visible:ring-brand", True )
             ]
         , parser = FinnishDate.parse
         , dateFormatter = FinnishDate.format

@@ -5,7 +5,14 @@ module PocketBaseAuthTest exposing (suite)
 
 import Expect
 import Json.Decode as Decode
-import PocketBaseAuth exposing (..)
+import PocketBaseAuth
+    exposing
+        ( AuthState(..)
+        , AuthUser
+        , decodeAuthUser
+        , decodeOAuthUserResponse
+        , restoreAuthFromFlags
+        )
 import Test exposing (Test, describe, test)
 
 
@@ -43,6 +50,26 @@ suite =
                                 [ \u -> Expect.equal "usr456" u.id
                                 , \u -> Expect.equal "" u.name
                                 , \u -> Expect.equal "" u.email
+                                ]
+                                user
+
+                        Err err ->
+                            Expect.fail (Decode.errorToString err)
+            ]
+        , describe "decodeOAuthUserResponse"
+            [ test "decodes OAuth response with token and record" <|
+                \_ ->
+                    let
+                        rawJson =
+                            """{"token":"jwt-abc","record":{"id":"usr789","name":"Liisa","email":"liisa@example.com"}}"""
+                    in
+                    case Decode.decodeString decodeOAuthUserResponse rawJson of
+                        Ok user ->
+                            Expect.all
+                                [ \u -> Expect.equal "usr789" u.id
+                                , \u -> Expect.equal "Liisa" u.name
+                                , \u -> Expect.equal "liisa@example.com" u.email
+                                , \u -> Expect.equal "jwt-abc" u.token
                                 ]
                                 user
 

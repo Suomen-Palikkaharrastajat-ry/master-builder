@@ -156,7 +156,12 @@ checkbox field config =
                  , classes
                     [ Tw.rounded
                     , Tw.border
-                    , Tw.border_simple TC.borderDefault
+                    , case field.error of
+                        Just _ ->
+                            Tw.border_simple TC.brandRed
+
+                        Nothing ->
+                            Tw.border_simple TC.borderDefault
                     , Tw.text_simple TC.brand
                     , Bp.focus_visible [ Tw.outline_none, Tw.ring_2, TwEx.ring_brand ]
                     ]
@@ -164,7 +169,7 @@ checkbox field config =
                     ++ ariaAttributes field
                 )
                 []
-            , viewLabel field
+            , viewLabelInline field
             ]
         , viewHint field
         , viewError field
@@ -206,6 +211,15 @@ radioGroup groupConfig optionsConfig =
 
                 Nothing ->
                     []
+
+        requiredAttr =
+            if groupConfig.required then
+                [ Attr.required True
+                , Attr.attribute "aria-required" "true"
+                ]
+
+            else
+                []
     in
     Html.fieldset
         [ classes [ Tw.mb Th.s4 ] ]
@@ -274,6 +288,7 @@ radioGroup groupConfig optionsConfig =
                                      ]
                                         ++ describedByAttr
                                         ++ invalidAttr
+                                        ++ requiredAttr
                                     )
                                     []
                                 , Html.text opt.label
@@ -300,6 +315,7 @@ radioGroup groupConfig optionsConfig =
                                      ]
                                         ++ describedByAttr
                                         ++ invalidAttr
+                                        ++ requiredAttr
                                     )
                                     []
                                 , Html.text opt.label
@@ -374,16 +390,32 @@ fieldRow fields =
 
 viewLabel : Field -> Html msg
 viewLabel field =
+    viewLabelWithMargin True field
+
+
+viewLabelInline : Field -> Html msg
+viewLabelInline field =
+    viewLabelWithMargin False field
+
+
+viewLabelWithMargin : Bool -> Field -> Html msg
+viewLabelWithMargin withMargin field =
     Html.label
         [ Attr.for field.id
         , classes
             (if field.labelHidden then
                 [ Tw.sr_only ]
 
-             else
+             else if withMargin then
                 [ TwEx.type_body_small
                 , Tw.block
                 , Tw.mb Th.s1
+                , Tw.text_simple TC.textPrimary
+                ]
+
+             else
+                [ TwEx.type_body_small
+                , Tw.block
                 , Tw.text_simple TC.textPrimary
                 ]
             )

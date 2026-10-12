@@ -137,8 +137,10 @@ deploy: ## Commit and push to trigger CI deploy (requires clean working tree)
 .PHONY: check
 check: ## Check Elm formatting, tests, and elm-review rules (no changes)
 	$(ELM_TAILWIND) gen
-	elm-format --validate app/ src/ admin-app/src/ packages/ui-components/src/ tests/
+	elm-format --validate app/ src/ admin-app/src/ packages/ui-components/src/ packages/app-toolkit/ packages/finnish-datepicker/ tests/
 	elm-test
+	(cd packages/app-toolkit && elm-test)
+	(cd packages/finnish-datepicker && elm-test)
 	cd admin-app && elm make src/Main.elm --output=/tmp/master-builder-admin-check.js
 	node --test admin-app/GitHubCommit.test.mjs
 	elm-review --config review

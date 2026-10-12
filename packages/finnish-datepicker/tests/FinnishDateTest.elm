@@ -46,6 +46,34 @@ suite =
 
                         Err _ ->
                             Expect.pass
+            , test "handles leap year 29.2.2024" <|
+                \_ ->
+                    case FinnishDate.parse "29.2.2024" of
+                        Ok date ->
+                            Expect.equal "2024-02-29" (Date.toIsoString date)
+
+                        Err err ->
+                            Expect.fail ("Failed leap year date: " ++ err)
+            , test "fails on 29.2.2025 non-leap year" <|
+                \_ ->
+                    case FinnishDate.parse "29.2.2025" of
+                        Ok _ ->
+                            Expect.fail "Should have failed on non-leap year Feb 29"
+
+                        Err _ ->
+                            Expect.pass
+            , test "parses single digit day and month 5.6.2026" <|
+                \_ ->
+                    case FinnishDate.parse "5.6.2026" of
+                        Ok date ->
+                            Expect.all
+                                [ \d -> Expect.equal "2026-06-05" (Date.toIsoString d)
+                                , \d -> Expect.equal "05.06.2026" (FinnishDate.format d)
+                                ]
+                                date
+
+                        Err err ->
+                            Expect.fail ("Failed single digit date: " ++ err)
             , test "fails on non-date strings" <|
                 \_ ->
                     case FinnishDate.parse "invalid" of

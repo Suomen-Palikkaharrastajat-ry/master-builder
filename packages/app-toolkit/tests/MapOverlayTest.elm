@@ -76,10 +76,70 @@ suite =
                         |> Query.fromHtml
                         |> Query.has
                             [ Selector.tag "aside"
+                            , Selector.id "map-detail-panel"
                             , Selector.attribute (Attr.attribute "role" "region")
                             , Selector.attribute (Attr.attribute "aria-label" "Lelumuseo")
                             , Selector.containing [ Selector.text "Lelumuseo" ]
                             , Selector.containing [ Selector.text "Museon kuvaus" ]
                             ]
+            , test "renders close button with id and aria-label" <|
+                \_ ->
+                    MapOverlay.detailPanel
+                        { isOpen = True
+                        , onClose = ()
+                        , closeLabel = "Sulje paneeli"
+                        , title = "Lelumuseo"
+                        }
+                        [ Html.text "Museon kuvaus" ]
+                        |> Query.fromHtml
+                        |> Query.find [ Selector.id "map-detail-close" ]
+                        |> Query.has
+                            [ Selector.tag "button"
+                            , Selector.attribute (Attr.attribute "aria-label" "Sulje paneeli")
+                            ]
+            , test "renders extra header actions when using detailPanelWithHeaderActions" <|
+                \_ ->
+                    MapOverlay.detailPanelWithHeaderActions
+                        { isOpen = True
+                        , onClose = ()
+                        , closeLabel = "Sulje"
+                        , title = "Kohde"
+                        , headerActions = [ Html.a [ Attr.id "edit-btn" ] [ Html.text "Muokkaa" ] ]
+                        }
+                        [ Html.text "Sisältö" ]
+                        |> Query.fromHtml
+                        |> Query.has
+                            [ Selector.id "edit-btn"
+                            , Selector.containing [ Selector.text "Muokkaa" ]
+                            ]
+            ]
+        , describe "positions"
+            [ test "TopCenter includes translate class" <|
+                \_ ->
+                    MapOverlay.panel
+                        { position = MapOverlay.TopCenter
+                        , label = Nothing
+                        }
+                        []
+                        |> Query.fromHtml
+                        |> Query.has [ Selector.class "-translate-x-1/2" ]
+            , test "TopRight includes right-4 class" <|
+                \_ ->
+                    MapOverlay.panel
+                        { position = MapOverlay.TopRight
+                        , label = Nothing
+                        }
+                        []
+                        |> Query.fromHtml
+                        |> Query.has [ Selector.class "right-4" ]
+            , test "BottomRight includes right-4 and bottom-8" <|
+                \_ ->
+                    MapOverlay.panel
+                        { position = MapOverlay.BottomRight
+                        , label = Nothing
+                        }
+                        []
+                        |> Query.fromHtml
+                        |> Query.has [ Selector.class "right-4", Selector.class "bottom-8" ]
             ]
         ]
