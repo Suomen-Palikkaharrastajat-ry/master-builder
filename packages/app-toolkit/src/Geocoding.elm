@@ -1,15 +1,11 @@
-module Geocoding exposing
-    ( GeoPoint
-    , decodeGeocodeResponse
-    , decodeReverseGeocode
-    , geocode
-    , reverseGeocode
-    )
+module Geocoding exposing (GeoPoint, geocode, reverseGeocode, decodeGeocodeResponse, decodeReverseGeocode)
 
 {-| Geocoding and reverse geocoding via the Nominatim (OpenStreetMap) API.
 
 `GeoPoint` is a structural alias (`{ lat : Float, lon : Float }`), so it
 unifies with an identical alias defined in the consuming application.
+
+@docs GeoPoint, geocode, reverseGeocode, decodeGeocodeResponse, decodeReverseGeocode
 
 -}
 
@@ -18,6 +14,8 @@ import Json.Decode as Json exposing (Decoder)
 import Url
 
 
+{-| Geographic coordinate pair (latitude and longitude in decimal degrees).
+-}
 type alias GeoPoint =
     { lat : Float
     , lon : Float
@@ -80,6 +78,8 @@ reverseGeocode lat lon toMsg =
 -- DECODERS
 
 
+{-| Decoder for Nominatim search responses, returning the first matching GeoPoint.
+-}
 decodeGeocodeResponse : Decoder (Maybe GeoPoint)
 decodeGeocodeResponse =
     Json.list decodeGeocodingResult
@@ -120,6 +120,8 @@ decodeStringFloat =
             )
 
 
+{-| Decoder for Nominatim reverse-geocoding responses, returning the display name.
+-}
 decodeReverseGeocode : Decoder String
 decodeReverseGeocode =
     Json.field "display_name" Json.string

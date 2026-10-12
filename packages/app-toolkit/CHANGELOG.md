@@ -7,7 +7,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning: [S
 
 ### Added
 
-- `elm.json` declaring the package dependencies (`1602/elm-feather`, `elm/http`, `elm/json`, `elm/url`, …) (#2).
+- `View.MapOverlay`: overlay panels for map controls, filter groups, and responsive detail sheets/drawers (`panel`, `filterGroup`, `detailPanel`, `detailPanelWithHeaderActions`) (#13).
+- `FinnishTime`: shared Helsinki timezone and Finnish date/time manipulation and formatting functions (`formatShortDate`, `formatTime`, `formatFullDate`, `parseFinnishDate`, `formatFinnishDate`, `formDateTimeToUtc`, `monthGrid`, …) (#14).
+- `PocketBaseAuth`: msg-polymorphic OAuth token fetch (`fetchOAuthToken`), auth state restoration (`restoreAuthFromFlags`), and user JSON decoding (`decodeAuthUser`) (#14).
+- `packages/app-toolkit/js/pocketbase-auth.js`: shared JavaScript helpers for token persistence, background refresh, and port subscription wiring (#14).
+- `elm.json` declaring the package dependencies (`1602/elm-feather`, `elm/http`, `elm/json`, `elm/url`, `elm/time`, `justinmimbs/date`, `rtfeldman/elm-iso8601-date-strings`) (#2, #14).
 
 ## [1.0.0]
 

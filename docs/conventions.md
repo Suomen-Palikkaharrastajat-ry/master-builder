@@ -22,7 +22,8 @@ The family:
 | Design system (prose: colors, typography, logos, WCAG) | `master-builder/AGENTS.md` → "Design system" |
 | LEGO color catalog (reference) | `design-guide/reference/allowed-colors.csv` |
 | Shared Elm UI components | `master-builder/packages/ui-components/` |
-| Shared Elm app plumbing (Geocoding, MapWidget, Icons) | `master-builder/packages/app-toolkit/` |
+| Shared Finnish date picker | `master-builder/packages/finnish-datepicker/` |
+| Shared Elm app plumbing (FinnishTime, PocketBaseAuth, MapOverlay, Geocoding, MapWidget, Icons) | `master-builder/packages/app-toolkit/` |
 | Shared Haskell statics modules (DescriptionHtml, ImageFetcher) | `master-builder/packages-hs/statics-common/` |
 | Shared elm-review LlmAgent rules | `master-builder/review/src/LlmAgent/` |
 | Shared npm-tools Nix builder | `master-builder/pkgs/mk-npm-tools.nix` |
@@ -165,7 +166,7 @@ legible to LLM coding agents. `make elm-check` runs `elm-format --validate` +
 ## Changing shared package APIs
 
 Shared packages (`packages/ui-components`, `app-toolkit`, `design-tokens`,
-`osm-opening-hours`, `packages-hs/statics-common`) are consumed by every app
+`finnish-datepicker`, `osm-opening-hours`, `packages-hs/statics-common`) are consumed by every app
 repo, so API changes follow SemVer with Elm's `elm diff` rules. Notably, adding
 a field to a record argument (e.g. `Button.view`'s config) is a **MAJOR**
 change, because every caller constructs that record.

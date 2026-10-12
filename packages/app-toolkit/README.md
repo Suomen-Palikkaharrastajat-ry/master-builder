@@ -1,0 +1,75 @@
+# palikkaharrastajat/app-toolkit
+
+Shared Elm app plumbing for Suomen Palikkaharrastajat ry applications (`event-calendar`, `service-map`, `planet`).
+
+## Modules
+
+- **`FinnishTime`**: Helsinki timezone conversion (EET/EEST, daylight saving transitions), Finnish numerical and textual date formatting (`formatShortDate`, `formatTime`, `formatFullDate`, `parseFinnishDate`, `formatFinnishDate`), form input converters, and 6×7 calendar month grid generation (`monthGrid`).
+- **`PocketBaseAuth`**: Msg-polymorphic OAuth2 token exchange (`fetchOAuthToken`), auth state restoration from flags (`restoreAuthFromFlags`), and PocketBase user decoding (`decodeAuthUser`).
+- **`View.MapOverlay`**: Responsive, accessible overlays for interactive maps without inline styles (`panel`, `filterGroup`, `detailPanel`, `detailPanelWithHeaderActions`).
+- **`View.MapWidget`**: Container element for Leaflet and MapLibre map initialization.
+- **`View.Icons`**: Accessible Feather icon renderer (`featherIcon`) with `aria-hidden="true"` and `focusable="false"`.
+- **`Geocoding`**: OpenStreetMap / Nominatim geocoding and reverse geocoding API clients.
+
+## PocketBase Auth Ports
+
+Elm packages cannot define ports directly. Consuming applications define the following port signatures in their app-local `Ports.elm`:
+
+```elm
+port initiateOAuth : String -> Cmd msg
+port saveAuthToken : { token : String, model : String } -> Cmd msg
+port clearAuthToken : () -> Cmd msg
+port getCallbackParams : () -> Cmd msg
+port callbackParams : ({ codeVerifier : String, state : String } -> msg) -> Sub msg
+port oauthPopupResult : ({ token : String, model : String } -> msg) -> Sub msg
+```
+
+### JavaScript Helper
+
+`packages/app-toolkit/js/pocketbase-auth.js` provides ready-to-use helpers to wire these ports and handle token caching in `localStorage`:
+
+```javascript
+import {
+  getInitAuth,
+  wirePocketBaseAuthPorts,
+  triggerBackgroundAuthRefresh
+} from '../vendor/master-builder/packages/app-toolkit/js/pocketbase-auth.js'
+
+const initAuth = getInitAuth()
+const app = Elm.Main.init({ node, flags: { ...initAuth, pbBaseUrl } })
+
+wirePocketBaseAuthPorts(app)
+triggerBackgroundAuthRefresh(pbBaseUrl, initAuth)
+```
+
+## Focus Management (`focusElement` Port Pattern)
+
+For accessible focus transitions when opening and closing panels (such as `View.MapOverlay.detailPanel` or mobile drawers), apps use a `focusElement` port:
+
+```elm
+port focusElement : String -> Cmd msg
+```
+
+JavaScript subscriber implementation in `main.js`:
+
+```javascript
+app.ports.focusElement.subscribe(function (id) {
+  requestAnimationFrame(function () {
+    const el = document.getElementById(id)
+    if (el) {
+      const target = el.matches('button, a, input, select, textarea, [tabindex]')
+        ? el
+        : (el.querySelector('button, a, input, select, textarea, [tabindex]') || el)
+      target.focus({ focusVisible: true })
+    }
+  })
+})
+```
+
+## Non-Unified Modules (`Api`, `Route`, `I18n`)
+
+The following modules remain intentionally application-specific and are **not** unified into `app-toolkit`:
+
+1. **`Api`**: Each application defines unique PocketBase collections, query expand parameters, filters, and domain record schemas (`Event`, `Location`, `FeedItem`).
+2. **`Route`**: URL structures and hash-routing variants are unique to each app's page hierarchy.
+3. **`I18n`**: Localized translation keys and vocabularies are tailored to the distinct domain concepts of each app.
