@@ -87,6 +87,16 @@ brandColors =
             , "highlights"
             ]
       }
+    , { hex = "#237841"
+      , id = "green"
+      , name = "Green"
+      , description = "Perinteinen LEGO-vihreä. Käytetään karttamerkinnöissä, luontoteemoissa ja korostuksissa."
+      , usage =
+            [ "accent"
+            , "map markers"
+            , "nature"
+            ]
+      }
     ]
 
 

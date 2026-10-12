@@ -1,15 +1,17 @@
-/* Generated from design tokens — do not edit manually.
-   Source: vendor/design-guide/content/*.toml (version: 2025.10) */
+/* Generated file, do not edit.
+ * Source: design-guide content/*.toml
+ * Version: 2025.10
+ */
 
 @theme {
   /* ── Font ─────────────────────────────────────────────────────────────── */
   --font-sans: "Outfit", system-ui, sans-serif;
-  --font-mono: ui-monospace, monospace;
 
   /* ── Brand palette ────────────────────────────────────────────────────── */
   --color-brand:              #05131D;
   --color-brand-yellow:       #FAC80A;
   --color-brand-red:          #C91A09;
+  --color-brand-green:        #237841;
   --color-brand-nougat-light: #F6D7B3;
   --color-brand-nougat:       #D09168;
   --color-brand-nougat-dark:  #AD6140;
@@ -17,20 +19,20 @@
   /* ── Semantic text ────────────────────────────────────────────────────── */
   --color-text-primary: #05131D;
   --color-text-on-dark: #FFFFFF;
-  --color-text-muted:   #6B7280;
-  --color-text-subtle:  #9CA3AF;
+  --color-text-muted: #6B7280;
+  --color-text-subtle: #9CA3AF;
 
   /* ── Semantic backgrounds ─────────────────────────────────────────────── */
-  --color-bg-page:   #FFFFFF;
-  --color-bg-dark:   #05131D;
-  --color-bg-subtle: #F9FAFB;
-  --color-bg-accent: #FAC80A;
+  --color-bg-page:    #FFFFFF;
+  --color-bg-dark:    #05131D;
+  --color-bg-subtle:  #F9FAFB;
+  --color-bg-accent:  #FAC80A;
 
   /* ── Semantic borders ─────────────────────────────────────────────────── */
   --color-border-default: #E5E7EB;
   --color-border-brand:   #05131D;
 
-  /* ── Motion ───────────────────────────────────────────────────────────── */
+  /* ── Motion ──────────────────────────────────────────────────────────── */
   --duration-fast: 150ms;
   --duration-base: 300ms;
   --duration-slow: 500ms;
@@ -38,8 +40,6 @@
   --ease-decelerate: cubic-bezier(0.0, 0.0, 0.2, 1.0);
   --ease-accelerate: cubic-bezier(0.4, 0.0, 1.0, 1.0);
 }
-
-/* ── Typography scale ─────────────────────────────────────────────────────── */
 
 @utility type-display {
   font-size: 3rem;
@@ -96,7 +96,7 @@
   font-size: 0.875rem;
   font-weight: 400;
   line-height: 1.6;
-  font-family: ui-monospace, monospace;
+  font-family: ui-monospace, "Cascadia Code", "Source Code Pro", Menlo, Consolas, "DejaVu Sans Mono", monospace;
 }
 
 @utility type-overline {

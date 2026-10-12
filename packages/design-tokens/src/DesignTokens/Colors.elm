@@ -6,6 +6,7 @@ module DesignTokens.Colors exposing
     , borderBrand
     , borderDefault
     , brandRed
+    , green
     , legoBlack
     , legoWhite
     , legoYellow
@@ -60,6 +61,13 @@ legoWhite =
 red : String
 red =
     "#C91A09"
+
+
+{-| Green — Classic LEGO green. Used for map markers, nature themes, and accent highlights.
+-}
+green : String
+green =
+    "#237841"
 
 
 {-| Yellow — Classic LEGO minifig yellow. Brand accent color.

@@ -55,9 +55,8 @@ design-tokens: ## Regenerate design tokens from vendor/design-guide (requires su
 	mkdir -p packages/design-tokens/src
 	cp -r vendor/design-guide/dist/design-tokens-elm/src/* packages/design-tokens/src/
 	cp vendor/design-guide/dist/design-tokens-elm/elm.json packages/design-tokens/elm.json
-	@if [ -f vendor/design-guide/dist/design-tokens.css ]; then \
-		cp vendor/design-guide/dist/design-tokens.css packages/design-tokens/design-tokens.css; \
-	fi
+	cp vendor/design-guide/dist/design-tokens.css packages/design-tokens/design-tokens.css
+	elm-format --yes packages/design-tokens/src
 	@echo "Design tokens updated in packages/design-tokens/"
 
 # ── Build ────────────────────────────────────────────────────────────────────

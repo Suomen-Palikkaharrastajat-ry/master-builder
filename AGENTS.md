@@ -193,13 +193,14 @@ Use semantic Tailwind classes from `style.css` — never hardcode hex values:
 | `border-border-default` | `#E5E7EB` | Default borders |
 | `border-border-brand` | `#05131D` | Brand borders |
 | `text-brand-red` | `#C91A09` | Error/danger states |
+| `text-brand-green` / `bg-brand-green` | `#237841` | Accent highlights, map markers |
 
 All colour usage must pass WCAG AA contrast.
 
 ### Typography
 
 Font: **Outfit variable** (100–900), self-hosted from `public/fonts/`. Never substitute.
-Use `type-*` utility classes from `style.css`. Never use raw Tailwind size/weight combos.
+Use `type-*` utility classes from `packages/design-tokens/design-tokens.css` (imported by `style.css`). Never use raw Tailwind size/weight combos.
 
 | Class | Size | Weight | Notes |
 |---|---|---|---|
