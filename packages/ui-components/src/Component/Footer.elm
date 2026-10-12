@@ -6,6 +6,9 @@ Supports two layout modes:
 
   - **Brand layout** — logo + flat link list on the left, copyright and
     optional disclaimer on the right. Activated when `logo` is `Just`.
+    Its typography is the family reference (kalenteri.palikkaharrastajat.fi):
+    12px uppercase label, 14px links in one column, 12px legal text. These use
+    plain `text-xs`/`text-sm` on purpose; no `type-*` class has those metrics.
   - **Groups layout** — each `LinkGroup` is rendered as a column with a
     heading and list of links, copyright at the bottom. Used when `logo`
     is `Nothing`.
@@ -109,12 +112,12 @@ viewBrandLayout extra config =
                     (\logoHtml -> Html.div [ classes [ Tw.shrink_0 ] ] [ logoHtml ])
                     config.logo
                 , Just
-                    (Html.div [ classes [ TwEx.space_y Th.s4 ] ]
+                    (Html.div [ classes [ TwEx.space_y Th.s3 ] ]
                         (List.filterMap identity
                             [ Maybe.map
                                 (\label ->
                                     Html.p
-                                        [ classes [ Tw.type_overline, TwEx.text_white_50 ] ]
+                                        [ classes [ Tw.text_xs, Tw.font_semibold, TwEx.text_white_50, Tw.uppercase, Tw.tracking_wider ] ]
                                         [ Html.text label ]
                                 )
                                 config.siteLabel
@@ -124,7 +127,7 @@ viewBrandLayout extra config =
                               else
                                 Just
                                     (Html.ul
-                                        [ classes [ Tw.list_none, Tw.m Th.s0, Tw.p Th.s0, Tw.grid, Tw.grid_cols_2, Tw.gap_x Th.s6, Tw.gap_y Th.s2 ] ]
+                                        [ classes [ TwEx.space_y Th.s2, Tw.list_none, Tw.m Th.s0, Tw.p Th.s0 ] ]
                                         (List.map viewFlatLink config.links)
                                     )
                             ]
@@ -132,8 +135,8 @@ viewBrandLayout extra config =
                     )
                 ]
             )
-        , Html.div [ classes [ TwEx.space_y Th.s1, Tw.pl Th.s4, Bp.sm [ Tw.text_right, Tw.col_span_2 ] ] ]
-            [ Html.div [ classes [ TwEx.space_y Th.s1, Tw.type_caption, TwEx.text_white_50 ] ]
+        , Html.div [ classes [ TwEx.space_y Th.s1, Bp.sm [ Tw.text_right, Tw.col_span_2 ] ] ]
+            [ Html.div [ classes [ TwEx.space_y Th.s1, Tw.text_xs, TwEx.text_white_50 ] ]
                 (List.filterMap identity
                     (Just (Html.p [] [ Html.text config.copyright ])
                         :: (config.disclaimer
@@ -199,7 +202,7 @@ viewFlatLink link =
     Html.li []
         [ Html.a
             [ Attr.href link.href
-            , classes [ Tw.type_body_small, TwEx.text_white_80, Bp.hover [ Tw.text_simple Th.white ], Tw.underline, Tw.transition_colors ]
+            , classes [ Tw.text_sm, TwEx.text_white_80, Bp.hover [ Tw.text_simple Th.white ], Tw.underline, Tw.transition_colors ]
             ]
             [ Html.text link.label ]
         ]

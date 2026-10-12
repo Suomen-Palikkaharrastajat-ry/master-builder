@@ -269,7 +269,7 @@ adminDecoder =
 footerDecoder : Decoder FooterConfig
 footerDecoder =
     Decode.map5 FooterConfig
-        (Decode.field "links" (Decode.list footerLinkDecoder))
+        (optionalField "links" (Decode.list footerLinkDecoder) [])
         (Decode.field "copyright" Decode.string)
         (optionalField "disclaimer" (Decode.list Decode.string) [])
         (Decode.field "logo" Decode.string)

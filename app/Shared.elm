@@ -6,7 +6,6 @@ module Shared exposing (Data, Model, Msg(..), SharedMsg(..), template)
 import BackendTask exposing (BackendTask)
 import BackendTask.Glob as Glob
 import Browser.Events
-import Component.Footer as Footer
 import Component.Footer.Family as Family
 import Component.MobileDrawer as MobileDrawer
 import Component.Navbar as Navbar
@@ -376,23 +375,23 @@ view sharedData page model toMsg pageView =
                                 Navbar.Dark
                         }
                     , Html.main_ [ Attr.id "main-content", classes [ Tw.flex_1, TwEx.max_w_5xl, Tw.mx_auto, Tw.px s6, Tw.py s10, Tw.w_full ] ] pageView.body
-                    , Footer.view
-                        { logo = Just Family.logo
-                        , siteLabel = Just config.footer.siteLabel
+                    , Family.viewWith
+                        { topMargin = True
+                        , extra = []
+                        , siteLabel = config.footer.siteLabel
                         , links =
                             if List.isEmpty config.footer.links then
-                                Family.links
+                                Family.linksExcept config.site.url
 
                             else
                                 config.footer.links
-                        , groups = []
                         , copyright = config.footer.copyright
                         , disclaimer =
                             if List.isEmpty config.footer.disclaimer then
-                                Just Family.disclaimer
+                                Family.disclaimer
 
                             else
-                                Just config.footer.disclaimer
+                                config.footer.disclaimer
                         }
                     , MobileDrawer.viewOverlay
                         { isOpen = model.menuOpen

@@ -9,6 +9,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning: [S
 
 - `Component.Navbar`: `viewBrand`, `viewMenuToggle`, and `viewAppHeader` for Compact application headers (#5).
 - `Component.Footer.Family`: canonical links, copyright, disclaimer, and logo for the repository family (#6).
+- `Component.Footer.Family`: `view` (canonical content) and `viewWith` (configurable label, links, copyright, disclaimer) render the one family footer; `linksExcept` and `siteLabel` helpers; `links` gains Palikkakartta and Tietosuoja (#6).
 - `Component.Footer`: `viewWith` supporting `topMargin` toggle (`mt-auto` vs `mt-16`) and `extra` column content slot (#6).
 - `Component.Button`: `Accent` variant and builder API (`new`, `submit`, `link`, `withVariant`, `withSize`, `withIcon`, `iconOnly`, `withDisabled`, `withLoading`, `withPressed`, `withTarget`, `toHtml`) (#7).
 - `Component.Toast`: optional title, `viewToast`, and `region` aria-live container; refactored styling to semantic design tokens (#8).
@@ -20,7 +21,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning: [S
 
 ### Fixed
 
-- `Component.Footer`: the brand layout's two-column link list has a column gap and even row spacing, so long labels no longer run into the next column (#6).
+- `Component.Footer`: the brand layout matches the family reference footer (kalenteri.palikkaharrastajat.fi): 12px uppercase label, 14px links in a single column, 12px legal text (#6).
 - `Component.Footer.Family`: `links` no longer lists `planeetta.palikkaharrastajat.fi`, which is not a family site (#6).
 - `Component.FeedLinks`: a single panel (feeds only, no cards) spans the full width instead of one third (#12).
 - `Component.Form`: text inputs, textareas, file inputs and checkboxes use `border-border-brand` instead of `border-border-default`, whose 1.2:1 contrast against the page background failed WCAG 1.4.11 (#9).
