@@ -161,7 +161,7 @@ checkbox field config =
                             Tw.border_simple TC.brandRed
 
                         Nothing ->
-                            Tw.border_simple TC.borderDefault
+                            Tw.border_simple TC.borderBrand
                     , Tw.text_simple TC.brand
                     , Bp.focus_visible [ Tw.outline_none, Tw.ring_2, TwEx.ring_brand ]
                     ]
@@ -519,7 +519,7 @@ inputClasses error =
             Tw.border_simple TC.brandRed
 
         Nothing ->
-            Tw.border_simple TC.borderDefault
+            Tw.border_simple TC.borderBrand
     , Tw.bg_simple TC.bgPage
     , Tw.px Th.s3
     , Tw.py Th.s2

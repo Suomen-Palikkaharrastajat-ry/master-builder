@@ -18,6 +18,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning: [S
 - `Component.FeedLinks`: shared subscribe and export section with accessible cards and feed links (#12).
 - `Component.Form`: accessible form field components (`textInput`, `textarea`, `checkbox`, `radioGroup`, `fileInput`, `fieldRow`) (#9).
 
+### Fixed
+
+- `Component.Footer`: the brand layout's two-column link list has a column gap and even row spacing, so long labels no longer run into the next column (#6).
+- `Component.Footer.Family`: `links` no longer lists `planeetta.palikkaharrastajat.fi`, which is not a family site (#6).
+- `Component.FeedLinks`: a single panel (feeds only, no cards) spans the full width instead of one third (#12).
+- `Component.Form`: text inputs, textareas, file inputs and checkboxes use `border-border-brand` instead of `border-border-default`, whose 1.2:1 contrast against the page background failed WCAG 1.4.11 (#9).
+
 ## [2.0.0]
 
 ### Changed

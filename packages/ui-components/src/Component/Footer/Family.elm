@@ -20,7 +20,6 @@ links =
     [ { label = "Kotisivut", href = "https://palikkaharrastajat.fi" }
     , { label = "Palikkakalenteri", href = "https://kalenteri.palikkaharrastajat.fi" }
     , { label = "Palikkakartta", href = "https://kartta.palikkaharrastajat.fi" }
-    , { label = "Palikkaplaneetta", href = "https://planeetta.palikkaharrastajat.fi" }
     , { label = "Palikkalinkit", href = "https://linkit.palikkaharrastajat.fi" }
     , { label = "Jäsenfoorumi", href = "https://forum.palikkaharrastajat.fi" }
     , { label = "Jäsenkortti", href = "https://kortti.palikkaharrastajat.fi" }

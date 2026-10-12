@@ -158,7 +158,7 @@ fieldSettings f =
             [ ( "w-full", True )
             , ( "rounded", True )
             , ( "border", True )
-            , ( "border-border-default", not hasError )
+            , ( "border-border-brand", not hasError )
             , ( "border-brand-red", hasError )
             , ( "bg-bg-page", True )
             , ( "px-3", True )

@@ -46,6 +46,17 @@ view :
     }
     -> Html msg
 view config =
+    let
+        items =
+            List.map (viewCard config.newTabHint) config.cards
+                ++ (case config.feeds of
+                        Just fg ->
+                            [ viewFeedGroup config.newTabHint fg ]
+
+                        Nothing ->
+                            []
+                   )
+    in
     Html.section
         [ Attr.attribute "aria-label" config.label
         , classes
@@ -63,18 +74,17 @@ view config =
                 , TwEx.max_w_5xl
                 , Tw.grid_cols_1
                 , Tw.gap Th.s6
-                , Bp.md [ Tw.grid_cols_3 ]
+                , Bp.md
+                    [ -- A lone panel spans the full width instead of a third of it.
+                      if List.length items == 1 then
+                        Tw.grid_cols_1
+
+                      else
+                        Tw.grid_cols_3
+                    ]
                 ]
             ]
-            (List.map (viewCard config.newTabHint) config.cards
-                ++ (case config.feeds of
-                        Just fg ->
-                            [ viewFeedGroup config.newTabHint fg ]
-
-                        Nothing ->
-                            []
-                   )
-            )
+            items
         ]
 
 

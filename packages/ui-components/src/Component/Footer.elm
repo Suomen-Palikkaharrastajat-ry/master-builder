@@ -124,7 +124,7 @@ viewBrandLayout extra config =
                               else
                                 Just
                                     (Html.ul
-                                        [ classes [ TwEx.space_y Th.s2, Tw.list_none, Tw.m Th.s0, Tw.p Th.s0, Tw.grid, Tw.grid_cols_2 ] ]
+                                        [ classes [ Tw.list_none, Tw.m Th.s0, Tw.p Th.s0, Tw.grid, Tw.grid_cols_2, Tw.gap_x Th.s6, Tw.gap_y Th.s2 ] ]
                                         (List.map viewFlatLink config.links)
                                     )
                             ]
