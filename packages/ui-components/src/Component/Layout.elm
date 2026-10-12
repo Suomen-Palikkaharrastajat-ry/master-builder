@@ -21,6 +21,7 @@ import FeatherIcons
 import Html exposing (Html)
 import Html.Attributes as Attr
 import Html.Events as Events
+import Lang
 import SiteSettings exposing (SiteSettings)
 import Tailwind as Tw exposing (classes)
 import Tailwind.Breakpoints as Bp
@@ -55,7 +56,8 @@ type alias Menu msg =
   - `menu` — the mobile menu; `Nothing` leaves out the menu button and drawer.
   - `main` — the site's `<main id="main-content">`.
   - `aboveFooter` — full-width blocks between main and footer.
-  - `footer` — `Nothing` on pages without a footer.
+  - `footer` — `Nothing` on pages without a footer. A site with several
+    languages gets a link to the others under its `extra` lines.
   - `scrollToTop` — `Nothing` on sites without the floating button.
   - `toasts` — notifications of the live region; `Nothing` leaves the region out.
   - `overlays` — anything else rendered over the page.
@@ -108,7 +110,10 @@ view config =
             , config.aboveFooter
             , case config.footer of
                 Just options ->
-                    [ Family.view options config.site.footer ]
+                    [ Family.view
+                        { options | extra = options.extra ++ viewLanguageLinks config.site }
+                        config.site.footer
+                    ]
 
                 Nothing ->
                     []
@@ -160,6 +165,38 @@ view config =
                     []
            )
         ++ config.overlays
+
+
+{-| A footer line linking to the site's other languages, each named in its
+own language. Empty for a site with a single language.
+-}
+viewLanguageLinks : SiteSettings -> List (Html msg)
+viewLanguageLinks site =
+    case List.filter (\lang -> lang /= site.lang) site.languages of
+        [] ->
+            []
+
+        others ->
+            [ Html.p [ classes [ Tw.flex, Tw.gap Th.s3, Bp.sm [ Tw.justify_end ] ] ]
+                (List.map
+                    (\lang ->
+                        Html.a
+                            [ Attr.href (Lang.switchQuery lang)
+                            , Attr.attribute "hreflang" (Lang.toString lang)
+                            , Attr.lang (Lang.toString lang)
+                            , classes
+                                [ TwEx.text_white_80
+                                , Bp.hover [ Tw.text_simple Th.white ]
+                                , Tw.underline
+                                , Bp.withVariant "motion-safe" [ Tw.transition_colors ]
+                                , Bp.focus_visible [ Tw.outline_none, Tw.ring_2, TwEx.ring_brand_yellow ]
+                                ]
+                            ]
+                            [ Html.text (UiStrings.forLang lang).thisLanguage ]
+                    )
+                    others
+                )
+            ]
 
 
 isStandard : Config msg -> Bool

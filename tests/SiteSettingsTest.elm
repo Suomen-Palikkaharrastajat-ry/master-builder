@@ -66,6 +66,11 @@ suite =
             \_ ->
                 ( inLang Fi .lang, inLang En .lang )
                     |> Expect.equal ( Just Fi, Just En )
+        , test "Lang.isSwitch is true only for a request for another language" <|
+            \_ ->
+                [ Just "lang=en", Just "a=1&lang=en", Just "lang=fi", Just "lang=sv", Just "language=en", Just "", Nothing ]
+                    |> List.map (Lang.isSwitch Fi)
+                    |> Expect.equal [ True, True, False, False, False, False, False ]
         , test "an app decodes its own [app] settings" <|
             \_ ->
                 Decode.decodeString

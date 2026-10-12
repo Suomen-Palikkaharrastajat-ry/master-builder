@@ -2,19 +2,33 @@
 
 const STORAGE_KEY = 'lang'
 
+// Read once: the request is removed from the address after the first read.
+let requested
+
 /**
- * The language the visitor asked for, if any: `?lang=` in the address (which
- * is then remembered), or an earlier choice. The app shows it only when the
- * site declares that language (SiteSettings.pickLang).
+ * The language the visitor asked for, if any: `?lang=` in the address, or an
+ * earlier choice. A request in the address is remembered and then removed from
+ * it, so the address stays shareable and later navigation does not repeat it.
+ * The app shows the language only when the site declares it
+ * (SiteSettings.pickLang).
  */
 export function requestedLang() {
-  const fromUrl = new URLSearchParams(window.location.search).get('lang')
+  if (requested !== undefined) return requested
+  const url = new URL(window.location.href)
+  const fromUrl = url.searchParams.get('lang')
+  let stored = null
   try {
     if (fromUrl) window.localStorage.setItem(STORAGE_KEY, fromUrl)
-    return fromUrl || window.localStorage.getItem(STORAGE_KEY)
+    stored = window.localStorage.getItem(STORAGE_KEY)
   } catch {
-    return fromUrl
+    // Storage can be unavailable (private mode); the address still works.
   }
+  if (fromUrl) {
+    url.searchParams.delete('lang')
+    window.history.replaceState(window.history.state, '', url)
+  }
+  requested = fromUrl || stored
+  return requested
 }
 
 /** Sets the document language, for assistive technology and hyphenation. */
@@ -27,8 +41,8 @@ export function setDocumentLang(lang) {
  * the site's default. Mirrors SiteSettings.pickLang in Elm.
  */
 export function pickLang(siteConfig) {
-  const requested = (requestedLang() || '').slice(0, 2).toLowerCase()
-  return siteConfig.languages.includes(requested) ? requested : siteConfig.default
+  const code = (requestedLang() || '').slice(0, 2).toLowerCase()
+  return siteConfig.languages.includes(code) ? code : siteConfig.default
 }
 
 /** The free-form [app] table of a language (the site's default one unless given). */

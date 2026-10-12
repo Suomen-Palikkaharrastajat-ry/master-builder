@@ -139,6 +139,17 @@ suite =
             \_ ->
                 shell (\c -> { c | site = withVariant "standard" c.site }) Fi
                     |> has [ Selector.containing [ Selector.tag "img", Selector.attribute (Attr.alt "Suomen Palikkaharrastajat ry") ] ]
+        , test "the footer links to the site's other languages, named in their own language" <|
+            \_ ->
+                Expect.all
+                    [ \_ -> shell identity Fi |> has [ Selector.containing [ Selector.tag "footer", Selector.containing [ Selector.tag "a", Selector.attribute (Attr.href "?lang=en"), Selector.text "In English" ] ] ]
+                    , \_ -> shell identity En |> has [ Selector.containing [ Selector.tag "footer", Selector.containing [ Selector.tag "a", Selector.attribute (Attr.href "?lang=fi"), Selector.text "Suomeksi" ] ] ]
+                    , \_ ->
+                        shell (\c -> { c | site = singleLanguage c.site }) Fi
+                            |> Query.fromHtml
+                            |> Query.hasNot [ Selector.attribute (Attr.href "?lang=en") ]
+                    ]
+                    ()
         , test "toast region is labelled in the current language" <|
             \_ ->
                 shell identity En
@@ -153,3 +164,8 @@ withVariant variant settings =
             settings.navbar
     in
     { settings | navbar = { navbar | variant = variant } }
+
+
+singleLanguage : SiteSettings -> SiteSettings
+singleLanguage settings =
+    { settings | languages = [ settings.lang ] }

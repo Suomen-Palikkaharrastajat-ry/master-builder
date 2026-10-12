@@ -32,7 +32,8 @@ type alias Localized =
     }
 
 
-{-| A site's configuration in one language.
+{-| A site's configuration in one language. `languages` lists every language
+the site declares, so the chrome can link to the others.
 
 The free-form `[app]` table is not part of it: each app decodes its own
 settings with `appDecoder`.
@@ -40,6 +41,7 @@ settings with `appDecoder`.
 -}
 type alias SiteSettings =
     { lang : Lang
+    , languages : List Lang
     , site : Site
     , metadata : Metadata
     , icons : Icons
@@ -213,6 +215,7 @@ tested against the resolver, so this is not expected to be shown.
 placeholder : Lang -> SiteSettings
 placeholder lang =
     { lang = lang
+    , languages = [ lang ]
     , site = { title = "", description = "", url = "" }
     , metadata =
         { author = Nothing
@@ -330,6 +333,7 @@ decoder : Decoder SiteSettings
 decoder =
     Decode.succeed SiteSettings
         |> andMap (Decode.field "lang" langDecoder)
+        |> andMap (Decode.field "languages" (Decode.list langDecoder))
         |> andMap (Decode.field "site" siteDecoder)
         |> andMap (Decode.field "metadata" metadataDecoder)
         |> andMap (Decode.field "icons" iconsDecoder)

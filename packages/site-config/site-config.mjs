@@ -240,7 +240,7 @@ export function resolve(siteRaw, familyRaw = {}, options = {}) {
 
   const configs = {}
   for (const lang of i18n.languages) {
-    const config = { lang }
+    const config = { lang, languages: i18n.languages }
     const untranslated = new Set()
     for (const section of Object.keys(SCHEMA)) {
       const { site, family } = sections[section]

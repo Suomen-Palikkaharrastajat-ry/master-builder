@@ -13,9 +13,14 @@ import Lang exposing (Lang(..))
 
 
 {-| Every label the shared layout and components render themselves.
+
+`thisLanguage` is the text of a link that switches to this language, written
+in the language itself ("Suomeksi", "In English").
+
 -}
 type alias UiStrings =
-    { skipToContent : String
+    { thisLanguage : String
+    , skipToContent : String
     , mainNav : String
     , mobileMenu : String
     , openMenu : String
@@ -55,7 +60,8 @@ forLang : Lang -> UiStrings
 forLang lang =
     case lang of
         Fi ->
-            { skipToContent = "Siirry pääsisältöön"
+            { thisLanguage = "Suomeksi"
+            , skipToContent = "Siirry pääsisältöön"
             , mainNav = "Päävalikko"
             , mobileMenu = "Mobiilivalikko"
             , openMenu = "Avaa valikko"
@@ -89,7 +95,8 @@ forLang lang =
             }
 
         En ->
-            { skipToContent = "Skip to main content"
+            { thisLanguage = "In English"
+            , skipToContent = "Skip to main content"
             , mainNav = "Main menu"
             , mobileMenu = "Mobile menu"
             , openMenu = "Open menu"
