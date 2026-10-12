@@ -147,10 +147,11 @@ renderToast maybeCloseLabel config =
                     , classes
                         [ Tw.shrink_0
                         , Tw.text_simple TC.textMuted
+                        , Tw.rounded
                         , Bp.hover [ Tw.text_simple TC.textPrimary ]
                         , Tw.transition_colors
                         , Tw.cursor_pointer
-                        , Bp.focus_visible [ Tw.outline_none, Tw.ring_2, TwEx.ring_brand, Tw.rounded ]
+                        , Bp.focus_visible [ Tw.outline_none, Tw.ring_2, TwEx.ring_brand ]
                         ]
                     , Attr.attribute "aria-label" closeLabel
                     , Events.onClick onClose

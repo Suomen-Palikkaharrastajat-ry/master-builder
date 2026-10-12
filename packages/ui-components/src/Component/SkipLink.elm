@@ -23,6 +23,7 @@ view config =
         [ Attr.href ("#" ++ config.target)
         , classes
             [ Tw.sr_only
+            , Tw.type_body_small
             , Bp.focus
                 [ Tw.not_sr_only
                 , Tw.fixed
@@ -34,7 +35,6 @@ view config =
                 , Tw.bg_simple TC.brand
                 , Tw.text_simple TC.textOnDark
                 , Tw.rounded_lg
-                , Tw.type_body_small
                 ]
             , Bp.focus_visible [ Tw.outline_none, Tw.ring_2, TwEx.ring_brand_yellow ]
             ]

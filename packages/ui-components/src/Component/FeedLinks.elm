@@ -155,8 +155,9 @@ viewFeedLink newTabHint link =
             [ Tw.mx Th.s1
             , Tw.text_simple TC.brand
             , Tw.no_underline
+            , Tw.rounded
             , Bp.hover [ Tw.underline ]
-            , Bp.focus_visible [ Tw.outline_none, Tw.ring_2, TwEx.ring_brand, Tw.rounded ]
+            , Bp.focus_visible [ Tw.outline_none, Tw.ring_2, TwEx.ring_brand ]
             ]
         ]
         [ Html.text link.label

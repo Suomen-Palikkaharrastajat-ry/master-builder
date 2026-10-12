@@ -220,7 +220,7 @@ toHtml (Button config) =
             classes
                 (buttonTw config.variant config.size
                     ++ (if isInactive then
-                            [ Tw.cursor_not_allowed, Tw.opacity_50, Tw.pointer_events_none ]
+                            [ Tw.cursor_not_allowed, Tw.opacity_50 ]
 
                         else
                             []

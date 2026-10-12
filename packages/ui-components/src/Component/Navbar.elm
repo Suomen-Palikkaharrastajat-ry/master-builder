@@ -245,7 +245,8 @@ viewBrand config =
                 [ Tw.flex
                 , Tw.items_center
                 , Tw.gap Th.s2
-                , Bp.focus_visible [ Tw.outline_none, Tw.ring_2, TwEx.ring_brand_yellow, Tw.rounded ]
+                , Tw.rounded
+                , Bp.focus_visible [ Tw.outline_none, Tw.ring_2, TwEx.ring_brand_yellow ]
                 ]
             ]
                 ++ (case config.onClick of
@@ -386,8 +387,9 @@ viewAppHeaderLink link =
          , classes
             [ Tw.type_caption
             , TwEx.text_white_80
+            , Tw.rounded
             , Bp.hover [ Tw.text_simple Th.white, Tw.underline ]
-            , Bp.focus_visible [ Tw.outline_none, Tw.ring_2, TwEx.ring_brand_yellow, Tw.rounded ]
+            , Bp.focus_visible [ Tw.outline_none, Tw.ring_2, TwEx.ring_brand_yellow ]
             ]
          ]
             ++ (if link.isActive then
