@@ -16,6 +16,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning: [S
 - `Component.ScrollToTop`: floating scroll-to-top button with right sidebar clearance option (#11).
 - `Component.LoadState`: remote data state helper (`Loading`, `Failure` with Alert & retry, `Success`) and floating `badge` (#11).
 - `Component.FeedLinks`: shared subscribe and export section with accessible cards and feed links (#12).
+- `Component.Form`: accessible form field components (`textInput`, `textarea`, `checkbox`, `radioGroup`, `fileInput`, `fieldRow`) (#9).
 
 ## [2.0.0]
 

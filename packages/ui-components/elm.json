@@ -22,6 +22,7 @@
         "Component.FeedLinks",
         "Component.Footer",
         "Component.Footer.Family",
+        "Component.Form",
         "Component.Gallery",
         "Component.Hero",
         "Component.ListGroup",
@@ -51,6 +52,7 @@
     "elm-version": "0.19.0 <= v < 0.20.0",
     "dependencies": {
         "elm/core": "1.0.0 <= v < 2.0.0",
+        "elm/file": "1.0.0 <= v < 2.0.0",
         "elm/html": "1.0.0 <= v < 2.0.0",
         "elm/json": "1.1.0 <= v < 2.0.0",
         "1602/elm-feather": "2.3.5 <= v < 3.0.0"
