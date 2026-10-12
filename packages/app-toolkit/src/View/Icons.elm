@@ -1,6 +1,9 @@
 module View.Icons exposing (featherIcon)
 
 {-| Helpers for rendering Feather icons at a given size.
+
+@docs featherIcon
+
 -}
 
 import FeatherIcons
