@@ -1,107 +1,82 @@
-module FinnishDate exposing (format, monthName, monthToInt, parse, weekdayAbbr)
+module FinnishDate exposing (DateLocale, format, monthName, monthToInt, parse, weekdayAbbr)
 
-{-| Finnish date localization and formatting helpers.
+{-| Date formatting and parsing for the date picker, in a given locale.
 
-@docs format, monthName, monthToInt, parse, weekdayAbbr
+The locale is any record with the fields of `DateLocale`; `Locale.fi` from
+the app toolkit is one.
+
+@docs DateLocale, format, monthName, monthToInt, parse, weekdayAbbr
 
 -}
 
 import Date exposing (Date)
-import Time exposing (Month(..), Weekday(..))
+import Time exposing (Month(..), Weekday)
 
 
-{-| Formats a date in Finnish numerical format (`DD.MM.YYYY`).
+{-| The date conventions the picker needs from a locale.
+
+  - `dateSeparator` — between day, month and year (`05.05.2025`).
+  - `datePlaceholder` — hint shown in the empty input (`pp.kk.vvvv`).
+  - `invalidDate` — message for a date that cannot be parsed.
+  - `weekdayAbbr`, `monthName` — names shown in the calendar.
+  - `firstDayOfWeek` — first column of the calendar.
+
 -}
-format : Date -> String
-format date =
+type alias DateLocale a =
+    { a
+        | dateSeparator : String
+        , datePlaceholder : String
+        , invalidDate : String
+        , weekdayAbbr : Weekday -> String
+        , monthName : Int -> String
+        , firstDayOfWeek : Weekday
+    }
+
+
+{-| Formats a date in the locale's numerical format (`DD.MM.YYYY`).
+-}
+format : DateLocale a -> Date -> String
+format locale date =
     pad2 (Date.day date)
-        ++ "."
+        ++ locale.dateSeparator
         ++ pad2 (Date.monthNumber date)
-        ++ "."
+        ++ locale.dateSeparator
         ++ String.fromInt (Date.year date)
 
 
-{-| Parses a Finnish date string (`D.M.YYYY` or `DD.MM.YYYY`) into a `Date`.
-Returns an `Err` message for invalid formats or non-existent calendar dates.
+{-| Parses a date string in the locale's format (`D.M.YYYY` or `DD.MM.YYYY`)
+into a `Date`. Returns the locale's error message for invalid formats or
+non-existent calendar dates.
 -}
-parse : String -> Result String Date
-parse finnishDate =
-    let
-        trimmed =
-            String.trim finnishDate
-    in
-    case String.split "." trimmed of
+parse : DateLocale a -> String -> Result String Date
+parse locale input =
+    case String.split locale.dateSeparator (String.trim input) of
         [ dayStr, monthStr, yearStr ] ->
             case ( String.toInt dayStr, String.toInt monthStr, String.toInt yearStr ) of
                 ( Just day, Just month, Just year ) ->
-                    let
-                        isoCandidate =
-                            String.fromInt year
-                                ++ "-"
-                                ++ pad2 month
-                                ++ "-"
-                                ++ pad2 day
-                    in
-                    Date.fromIsoString isoCandidate
-                        |> Result.mapError (\_ -> "Virheellinen päivämäärä")
+                    (String.fromInt year ++ "-" ++ pad2 month ++ "-" ++ pad2 day)
+                        |> Date.fromIsoString
+                        |> Result.mapError (\_ -> locale.invalidDate)
 
                 _ ->
-                    Err "Virheellinen päivämäärä"
+                    Err locale.invalidDate
 
         _ ->
-            Err "Virheellinen päivämäärä"
+            Err locale.invalidDate
 
 
-{-| Converts a month number (1–12) to its Finnish name with a capital letter.
+{-| The locale's name of a month number (1–12), with a capital letter.
 -}
-monthName : Int -> String
-monthName m =
-    case m of
-        1 ->
-            "Tammikuu"
-
-        2 ->
-            "Helmikuu"
-
-        3 ->
-            "Maaliskuu"
-
-        4 ->
-            "Huhtikuu"
-
-        5 ->
-            "Toukokuu"
-
-        6 ->
-            "Kesäkuu"
-
-        7 ->
-            "Heinäkuu"
-
-        8 ->
-            "Elokuu"
-
-        9 ->
-            "Syyskuu"
-
-        10 ->
-            "Lokakuu"
-
-        11 ->
-            "Marraskuu"
-
-        12 ->
-            "Joulukuu"
-
-        _ ->
-            ""
+monthName : DateLocale a -> Int -> String
+monthName locale =
+    locale.monthName
 
 
-{-| Converts a `Time.Month` to its 1-based index (1–12).
+{-| Converts a `Time.Month` to its number (1–12).
 -}
 monthToInt : Month -> Int
-monthToInt m =
-    case m of
+monthToInt month =
+    case month of
         Jan ->
             1
 
@@ -139,31 +114,11 @@ monthToInt m =
             12
 
 
-{-| Returns the standard 2-letter Finnish weekday abbreviation.
+{-| The locale's weekday abbreviation.
 -}
-weekdayAbbr : Weekday -> String
-weekdayAbbr w =
-    case w of
-        Mon ->
-            "ma"
-
-        Tue ->
-            "ti"
-
-        Wed ->
-            "ke"
-
-        Thu ->
-            "to"
-
-        Fri ->
-            "pe"
-
-        Sat ->
-            "la"
-
-        Sun ->
-            "su"
+weekdayAbbr : DateLocale a -> Weekday -> String
+weekdayAbbr locale =
+    locale.weekdayAbbr
 
 
 pad2 : Int -> String

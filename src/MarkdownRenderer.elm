@@ -14,6 +14,7 @@ import Tailwind as Tw exposing (classes)
 import Tailwind.Theme exposing (s4)
 import TailwindExtra as TwEx
 import TailwindTokens as TC
+import UiStrings exposing (UiStrings)
 
 
 type alias RenderContext =
@@ -21,6 +22,7 @@ type alias RenderContext =
     , sectionSlug : Maybe String
     , pageDir : String
     , isIndex : Bool
+    , strings : UiStrings
     }
 
 
@@ -53,6 +55,7 @@ renderMarkdown context markdown =
             , pageDir = context.pageDir
             , isIndex = context.isIndex
             , headings = extractHeadings markdown
+            , strings = context.strings
             }
     in
     case

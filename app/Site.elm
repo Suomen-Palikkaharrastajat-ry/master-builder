@@ -7,9 +7,6 @@ import BackendTask exposing (BackendTask)
 import Config
 import FatalError exposing (FatalError)
 import Head
-import LanguageTag
-import LanguageTag.Language
-import LanguageTag.Region
 import Metadata
 import MimeType
 import Pages.Url
@@ -42,20 +39,10 @@ head =
                     pwa =
                         config_.pwa
 
-                    subtags =
-                        LanguageTag.emptySubtags
-
-                    rootLanguage =
-                        LanguageTag.Language.fi
-                            |> LanguageTag.build
-                                { subtags
-                                    | region = Just LanguageTag.Region.fi
-                                }
-
                     iconUrl path =
                         Pages.Url.external path
                 in
-                [ Head.rootLanguage rootLanguage
+                [ Head.rootLanguage (Config.languageTag config_)
                 , Head.metaName "viewport" (Head.raw "width=device-width,initial-scale=1")
                 , Head.metaProperty "og:locale" (Head.raw metadata.locale)
                 , Head.metaName "theme-color" (Head.raw metadata.themeColor)

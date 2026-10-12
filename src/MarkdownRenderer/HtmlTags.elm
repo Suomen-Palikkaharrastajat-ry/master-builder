@@ -31,9 +31,10 @@ import Tailwind.Breakpoints as Bp
 import Tailwind.Theme as Th exposing (s0_dot_5, s1, s10, s1_dot_5, s2, s2_dot_5, s3, s4, s6, s8, white)
 import TailwindExtra as TwEx
 import TailwindTokens as TC
+import UiStrings exposing (UiStrings)
 
 
-htmlRenderer : { childPages : List TocNode, sectionSlug : Maybe String, pageDir : String, isIndex : Bool, headings : List HeadingItem } -> Markdown.Html.Renderer (List (Html msg) -> Html msg)
+htmlRenderer : { childPages : List TocNode, sectionSlug : Maybe String, pageDir : String, isIndex : Bool, headings : List HeadingItem, strings : UiStrings } -> Markdown.Html.Renderer (List (Html msg) -> Html msg)
 htmlRenderer context =
     Markdown.Html.oneOf
         [ -- <callout type="info|success|warning|error" icon="…">…</callout>
@@ -315,7 +316,7 @@ htmlRenderer context =
         , -- <gallery-item id="…" description="…" ... />
           Markdown.Html.tag "gallery-item"
             (\id description theme animated withText bold highlight svg png webp gif _ ->
-                LogoCard.view
+                LogoCard.view context.strings.recommended
                     { id = id
                     , description = description
                     , theme = Maybe.withDefault "light" theme
@@ -430,6 +431,7 @@ htmlRenderer context =
                     , title = title
                     , body = Maybe.withDefault "" body
                     , onClose = Nothing
+                    , closeLabel = context.strings.close
                     }
             )
             |> Markdown.Html.withOptionalAttribute "variant"
@@ -444,7 +446,7 @@ htmlRenderer context =
         , -- <search livesearch="true" /> — inline search widget; defaults to normal /haku navigation.
           Markdown.Html.tag "search"
             (\liveSearch _ ->
-                viewSearchWidget (parseBoolAttribute liveSearch)
+                viewSearchWidget context.strings (parseBoolAttribute liveSearch)
             )
             |> Markdown.Html.withOptionalAttribute "livesearch"
         , -- <tab-group name="…"><preview>…</preview><example>…</example></tab-group>
@@ -476,13 +478,13 @@ htmlRenderer context =
                             , Attr.class "tab-preview-label cursor-pointer px-4 py-2.5 text-sm font-medium border-b-2 border-transparent"
                             , Attr.style "color" "var(--color-text-muted)"
                             ]
-                            [ Html.text "Preview" ]
+                            [ Html.text context.strings.preview ]
                         , Html.label
                             [ Attr.for (name ++ "-c")
                             , Attr.class "tab-code-label cursor-pointer px-4 py-2.5 text-sm font-medium border-b-2 border-transparent"
                             , Attr.style "color" "var(--color-text-muted)"
                             ]
-                            [ Html.text "Example" ]
+                            [ Html.text context.strings.example ]
                         ]
                      ]
                         ++ children
@@ -551,7 +553,7 @@ htmlRenderer context =
                             Html.text ""
 
                 else
-                    viewAnchorToc context.headings maxDepth classAttr
+                    viewAnchorToc context.strings context.headings maxDepth classAttr
             )
             |> Markdown.Html.withOptionalAttribute "depth"
             |> Markdown.Html.withOptionalAttribute "class"
@@ -612,8 +614,8 @@ htmlRenderer context =
         ]
 
 
-viewSearchWidget : Bool -> Html msg
-viewSearchWidget liveSearch =
+viewSearchWidget : UiStrings -> Bool -> Html msg
+viewSearchWidget strings liveSearch =
     Html.section
         (classes
             [ TwEx.not_prose
@@ -639,11 +641,11 @@ viewSearchWidget liveSearch =
                    )
                 ++ [ classes [ Tw.flex, Tw.items_center, Tw.gap s2 ] ]
             )
-            [ Html.label [ classes [ Tw.sr_only ] ] [ Html.text "Hae sivustolta" ]
+            [ Html.label [ classes [ Tw.sr_only ] ] [ Html.text strings.search ]
             , Html.input
                 ([ Attr.name "q"
                  , Attr.type_ "search"
-                 , Attr.placeholder "Hae sivustolta"
+                 , Attr.placeholder strings.search
                  , Attr.attribute "autocomplete" "off"
                  , Attr.attribute "data-search-widget-autofocus" "true"
                  ]
@@ -693,7 +695,7 @@ viewSearchWidget liveSearch =
                         , Attr.attribute "aria-live" "polite"
                         ]
                         [ Html.p [ Attr.class "search-widget-hint" ]
-                            [ Html.text "Kirjoita hakusana ja tulokset päivittyvät automaattisesti." ]
+                            [ Html.text strings.searchHint ]
                         ]
                     ]
 
@@ -1166,8 +1168,8 @@ parseToastVariant s =
             Toast.Default
 
 
-viewAnchorToc : List HeadingItem -> Int -> Maybe String -> Html msg
-viewAnchorToc allHeadings maxDepth extraClass =
+viewAnchorToc : UiStrings -> List HeadingItem -> Int -> Maybe String -> Html msg
+viewAnchorToc strings allHeadings maxDepth extraClass =
     let
         headings =
             List.filter (\h -> h.level >= 2 && h.level <= 1 + maxDepth) allHeadings
@@ -1187,7 +1189,7 @@ viewAnchorToc allHeadings maxDepth extraClass =
             ]
             [ Html.p
                 [ classes [ Tw.type_body_small, Tw.font_semibold, Tw.text_simple TC.textPrimary, Tw.mb s2 ] ]
-                [ Html.text "Sisällys" ]
+                [ Html.text strings.tableOfContents ]
             , Html.ol
                 [ classes [ Tw.list_none, Tw.m Th.s0, Tw.p Th.s0, TwEx.space_y s1 ] ]
                 (viewAnchorGroups headings)

@@ -1,14 +1,15 @@
-module FinnishTime exposing (DateParts, daysInMonth, finnishDateInputToIsoDate, finnishMonthName, finnishWeekdayAbbr, firstDayOfWeek, formDateTimeToUtc, formatFinnishDate, formatFullDate, formatShortDate, formatTime, helsinkiOffset, helsinkiZone, isDst, isoDateToFinnishDateInput, monthGrid, monthName, monthToInt, nextMonth, parseFinnishDate, parseUtcString, prevMonth, toHelsinkiParts, utcStringToHelsinkiDateInput, utcStringToHelsinkiTimeInput, weekdayAbbr)
+module FinnishTime exposing (DateParts, daysInMonth, dateInputToIsoDate, firstDayOfWeek, formDateTimeToUtc, formatDate, formatFullDate, formatShortDate, formatTime, helsinkiOffset, helsinkiZone, isDst, isoDateToDateInput, monthGrid, monthName, monthToInt, nextMonth, parseDate, parseUtcString, prevMonth, toHelsinkiParts, utcStringToHelsinkiDateInput, utcStringToHelsinkiTimeInput, weekdayAbbr)
 
-{-| Finnish date and time utilities: UTC/Helsinki timezone conversion, formatting,
-calendar grids, and localized date parsing.
+{-| Date and time utilities for Helsinki time: UTC/Helsinki conversion, calendar
+grids, and formatting and parsing in a given `Locale`.
 
-@docs DateParts, daysInMonth, finnishDateInputToIsoDate, finnishMonthName, finnishWeekdayAbbr, firstDayOfWeek, formDateTimeToUtc, formatFinnishDate, formatFullDate, formatShortDate, formatTime, helsinkiOffset, helsinkiZone, isDst, isoDateToFinnishDateInput, monthGrid, monthName, monthToInt, nextMonth, parseFinnishDate, parseUtcString, prevMonth, toHelsinkiParts, utcStringToHelsinkiDateInput, utcStringToHelsinkiTimeInput, weekdayAbbr
+@docs DateParts, daysInMonth, dateInputToIsoDate, firstDayOfWeek, formDateTimeToUtc, formatDate, formatFullDate, formatShortDate, formatTime, helsinkiOffset, helsinkiZone, isDst, isoDateToDateInput, monthGrid, monthName, monthToInt, nextMonth, parseDate, parseUtcString, prevMonth, toHelsinkiParts, utcStringToHelsinkiDateInput, utcStringToHelsinkiTimeInput, weekdayAbbr
 
 -}
 
 import Date exposing (Date)
 import Iso8601
+import Locale exposing (Locale)
 import Time exposing (Month(..), Posix, Weekday(..), Zone)
 
 
@@ -231,135 +232,56 @@ parseUtcString s =
             Nothing
 
 
-{-| Two-letter abbreviation for a Finnish weekday (`"ma"`, `"ti"`, etc.).
+{-| Abbreviated weekday name in the locale (`"ma"`, `"Mon"`).
 -}
-finnishWeekdayAbbr : Weekday -> String
-finnishWeekdayAbbr w =
-    case w of
-        Mon ->
-            "ma"
-
-        Tue ->
-            "ti"
-
-        Wed ->
-            "ke"
-
-        Thu ->
-            "to"
-
-        Fri ->
-            "pe"
-
-        Sat ->
-            "la"
-
-        Sun ->
-            "su"
+weekdayAbbr : Locale -> Weekday -> String
+weekdayAbbr locale =
+    locale.weekdayAbbr
 
 
-{-| Alias for `finnishWeekdayAbbr`.
+{-| Capitalized month name in the locale for month index 1–12 (`"Tammikuu"`).
 -}
-weekdayAbbr : Weekday -> String
-weekdayAbbr =
-    finnishWeekdayAbbr
+monthName : Locale -> Int -> String
+monthName locale =
+    locale.monthName
 
 
-{-| Capitalized Finnish month name for month index 1–12 (`"Tammikuu"`, etc.).
+{-| Formats a Posix instant as a date without year (`"5.5."`) in Helsinki time.
 -}
-finnishMonthName : Int -> String
-finnishMonthName m =
-    case m of
-        1 ->
-            "Tammikuu"
-
-        2 ->
-            "Helmikuu"
-
-        3 ->
-            "Maaliskuu"
-
-        4 ->
-            "Huhtikuu"
-
-        5 ->
-            "Toukokuu"
-
-        6 ->
-            "Kesäkuu"
-
-        7 ->
-            "Heinäkuu"
-
-        8 ->
-            "Elokuu"
-
-        9 ->
-            "Syyskuu"
-
-        10 ->
-            "Lokakuu"
-
-        11 ->
-            "Marraskuu"
-
-        12 ->
-            "Joulukuu"
-
-        _ ->
-            ""
-
-
-{-| Alias for `finnishMonthName`.
--}
-monthName : Int -> String
-monthName =
-    finnishMonthName
-
-
-{-| Formats a Posix instant as `"D.M."` in Helsinki time.
--}
-formatShortDate : Posix -> String
-formatShortDate posix =
+formatShortDate : Locale -> Posix -> String
+formatShortDate locale posix =
     let
         parts =
             toHelsinkiParts posix
     in
-    String.fromInt parts.day ++ "." ++ String.fromInt parts.month ++ "."
+    String.fromInt parts.day ++ locale.dateSeparator ++ String.fromInt parts.month ++ locale.shortDateSuffix
 
 
-{-| Formats a Posix instant as `"H.MM"` (Finnish time format) in Helsinki time.
+{-| Formats a Posix instant as a time of day (`"9.05"`) in Helsinki time.
 -}
-formatTime : Posix -> String
-formatTime posix =
-    let
-        parts =
-            toHelsinkiParts posix
-
-        paddedMin =
-            if parts.minute < 10 then
-                "0" ++ String.fromInt parts.minute
-
-            else
-                String.fromInt parts.minute
-    in
-    String.fromInt parts.hour ++ "." ++ paddedMin
-
-
-{-| Formats a Posix instant as `"ma 5.5.2025"` in Helsinki time.
--}
-formatFullDate : Posix -> String
-formatFullDate posix =
+formatTime : Locale -> Posix -> String
+formatTime locale posix =
     let
         parts =
             toHelsinkiParts posix
     in
-    finnishWeekdayAbbr parts.weekday
+    String.fromInt parts.hour ++ locale.timeSeparator ++ pad2 parts.minute
+
+
+{-| Formats a Posix instant as weekday and date (`"ma 5.5.2025"`) in Helsinki time.
+-}
+formatFullDate : Locale -> Posix -> String
+formatFullDate locale posix =
+    let
+        parts =
+            toHelsinkiParts posix
+    in
+    locale.weekdayAbbr parts.weekday
         ++ " "
         ++ String.fromInt parts.day
-        ++ "."
+        ++ locale.dateSeparator
         ++ String.fromInt parts.month
-        ++ "."
+        ++ locale.dateSeparator
         ++ String.fromInt parts.year
 
 
@@ -443,48 +365,36 @@ utcStringToHelsinkiTimeInput utcStr =
             pad2 parts.hour ++ ":" ++ pad2 parts.minute
 
 
-{-| Convert an ISO date string (`"YYYY-MM-DD"`) to Finnish display format (`"DD.MM.YYYY"`).
+{-| Convert an ISO date string (`"YYYY-MM-DD"`) to the locale's date input
+format (`"DD.MM.YYYY"`).
 -}
-isoDateToFinnishDateInput : String -> String
-isoDateToFinnishDateInput isoDate =
+isoDateToDateInput : Locale -> String -> String
+isoDateToDateInput locale isoDate =
     case Date.fromIsoString isoDate of
         Ok date ->
             pad2 (Date.day date)
-                ++ "."
+                ++ locale.dateSeparator
                 ++ pad2 (Date.monthNumber date)
-                ++ "."
+                ++ locale.dateSeparator
                 ++ String.fromInt (Date.year date)
 
         Err _ ->
             ""
 
 
-{-| Convert Finnish display format (`"DD.MM.YYYY"`) to ISO date (`"YYYY-MM-DD"`).
+{-| Convert the locale's date input format (`"DD.MM.YYYY"`) to an ISO date
+(`"YYYY-MM-DD"`).
 -}
-finnishDateInputToIsoDate : String -> Maybe String
-finnishDateInputToIsoDate finnishDate =
-    let
-        trimmed =
-            String.trim finnishDate
-    in
-    case String.split "." trimmed of
+dateInputToIsoDate : Locale -> String -> Maybe String
+dateInputToIsoDate locale input =
+    case String.split locale.dateSeparator (String.trim input) of
         [ dayStr, monthStr, yearStr ] ->
             case ( String.toInt dayStr, String.toInt monthStr, String.toInt yearStr ) of
                 ( Just day, Just month, Just year ) ->
-                    let
-                        isoCandidate =
-                            String.fromInt year
-                                ++ "-"
-                                ++ pad2 month
-                                ++ "-"
-                                ++ pad2 day
-                    in
-                    case Date.fromIsoString isoCandidate of
-                        Ok validDate ->
-                            Just (Date.toIsoString validDate)
-
-                        Err _ ->
-                            Nothing
+                    (String.fromInt year ++ "-" ++ pad2 month ++ "-" ++ pad2 day)
+                        |> Date.fromIsoString
+                        |> Result.toMaybe
+                        |> Maybe.map Date.toIsoString
 
                 _ ->
                     Nothing
@@ -493,23 +403,23 @@ finnishDateInputToIsoDate finnishDate =
             Nothing
 
 
-{-| Parse Finnish format date (`"DD.MM.YYYY"`) into a `Date`.
+{-| Parse a date in the locale's input format into a `Date`.
 -}
-parseFinnishDate : String -> Result String Date
-parseFinnishDate finnishDate =
-    case finnishDateInputToIsoDate finnishDate of
+parseDate : Locale -> String -> Result String Date
+parseDate locale input =
+    case dateInputToIsoDate locale input of
         Just isoDate ->
             Date.fromIsoString isoDate
 
         Nothing ->
-            Err "Virheellinen päivämäärä"
+            Err locale.invalidDate
 
 
-{-| Format a `Date` in Finnish numerical format (`"DD.MM.YYYY"`).
+{-| Format a `Date` in the locale's input format (`"DD.MM.YYYY"`).
 -}
-formatFinnishDate : Date -> String
-formatFinnishDate date =
-    isoDateToFinnishDateInput (Date.toIsoString date)
+formatDate : Locale -> Date -> String
+formatDate locale date =
+    isoDateToDateInput locale (Date.toIsoString date)
 
 
 {-| Returns the number of days in a given month (1-indexed). Handles leap years.

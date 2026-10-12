@@ -1,9 +1,10 @@
 module FinnishDatePicker exposing (Field, defaultField, field, update, view)
 
-{-| Date picker component configured with Finnish localization and design-system styling.
+{-| Date picker component with design-system styling, localized by the caller.
 
-Wraps `CurrySoftware/elm-datepicker` with Finnish defaults (`pp.kk.vvvv`, Monday first,
-Finnish weekday/month names) and accessible form field wrappers.
+Wraps `CurrySoftware/elm-datepicker` with the given locale's date format,
+placeholder, first weekday and weekday/month names, and accessible form field
+wrappers. Pass `Locale.fi` from the app toolkit for Finnish.
 
 @docs Field, defaultField, field, update, view
 
@@ -11,7 +12,7 @@ Finnish weekday/month names) and accessible form field wrappers.
 
 import Date exposing (Date)
 import DatePicker exposing (DateEvent(..), InputError(..), defaultSettings)
-import FinnishDate
+import FinnishDate exposing (DateLocale)
 import Html exposing (Html)
 import Html.Attributes as Attr
 import Time exposing (Weekday(..))
@@ -47,34 +48,37 @@ defaultField id label =
 {-| Renders the raw date picker with an input ID.
 -}
 view :
-    { picker : DatePicker.DatePicker
-    , selectedIsoDate : String
-    , inputId : String
-    }
+    DateLocale a
+    ->
+        { picker : DatePicker.DatePicker
+        , selectedIsoDate : String
+        , inputId : String
+        }
     -> Html DatePicker.Msg
-view config =
+view locale config =
     DatePicker.view
         (isoDateToDate config.selectedIsoDate)
-        (defaultSettingsWithInputId (Just config.inputId))
+        (defaultSettingsWithInputId locale (Just config.inputId))
         config.picker
 
 
 {-| Accessible form field wrapper containing label, date picker input, hint, and error messaging.
 -}
 field :
-    Field
+    DateLocale a
+    -> Field
     ->
         { picker : DatePicker.DatePicker
         , selectedIsoDate : String
         , onMsg : DatePicker.Msg -> msg
         }
     -> Html msg
-field f config =
+field locale f config =
     let
         pickerHtml =
             DatePicker.view
                 (isoDateToDate config.selectedIsoDate)
-                (fieldSettings f)
+                (fieldSettings locale f)
                 config.picker
                 |> Html.map config.onMsg
     in
@@ -89,17 +93,17 @@ field f config =
 
 {-| Handles date picker messages, returning the updated picker state and optional picked ISO date.
 -}
-update : DatePicker.Msg -> DatePicker.DatePicker -> ( DatePicker.DatePicker, Maybe String )
-update datePickerMsg picker =
+update : DateLocale a -> DatePicker.Msg -> DatePicker.DatePicker -> ( DatePicker.DatePicker, Maybe String )
+update locale datePickerMsg picker =
     let
         ( updatedPicker, dateEvent ) =
-            DatePicker.update (defaultSettingsWithInputId Nothing) datePickerMsg picker
+            DatePicker.update (defaultSettingsWithInputId locale Nothing) datePickerMsg picker
     in
     ( updatedPicker, dateEventToIso dateEvent )
 
 
-fieldSettings : Field -> DatePicker.Settings
-fieldSettings f =
+fieldSettings : DateLocale a -> Field -> DatePicker.Settings
+fieldSettings locale f =
     let
         hasError =
             f.error /= Nothing
@@ -150,7 +154,7 @@ fieldSettings f =
                 []
     in
     { defaultSettings
-        | placeholder = "pp.kk.vvvv"
+        | placeholder = locale.datePlaceholder
         , inputId = Just f.id
         , inputAttributes =
             describedByAttrs ++ invalidAttrs ++ requiredAttrs ++ disabledAttrs
@@ -169,20 +173,20 @@ fieldSettings f =
             , ( "focus-visible:ring-brand", True )
             , ( "opacity-50 cursor-not-allowed", f.disabled )
             ]
-        , parser = FinnishDate.parse
-        , dateFormatter = FinnishDate.format
-        , dayFormatter = FinnishDate.weekdayAbbr
+        , parser = FinnishDate.parse locale
+        , dateFormatter = FinnishDate.format locale
+        , dayFormatter = FinnishDate.weekdayAbbr locale
         , monthFormatter =
             \month ->
-                FinnishDate.monthName (FinnishDate.monthToInt month)
-        , firstDayOfWeek = Mon
+                FinnishDate.monthName locale (FinnishDate.monthToInt month)
+        , firstDayOfWeek = locale.firstDayOfWeek
     }
 
 
-defaultSettingsWithInputId : Maybe String -> DatePicker.Settings
-defaultSettingsWithInputId maybeInputId =
+defaultSettingsWithInputId : DateLocale a -> Maybe String -> DatePicker.Settings
+defaultSettingsWithInputId locale maybeInputId =
     { defaultSettings
-        | placeholder = "pp.kk.vvvv"
+        | placeholder = locale.datePlaceholder
         , inputId = maybeInputId
         , inputClassList =
             [ ( "w-full", True )
@@ -197,13 +201,13 @@ defaultSettingsWithInputId maybeInputId =
             , ( "focus-visible:ring-2", True )
             , ( "focus-visible:ring-brand", True )
             ]
-        , parser = FinnishDate.parse
-        , dateFormatter = FinnishDate.format
-        , dayFormatter = FinnishDate.weekdayAbbr
+        , parser = FinnishDate.parse locale
+        , dateFormatter = FinnishDate.format locale
+        , dayFormatter = FinnishDate.weekdayAbbr locale
         , monthFormatter =
             \month ->
-                FinnishDate.monthName (FinnishDate.monthToInt month)
-        , firstDayOfWeek = Mon
+                FinnishDate.monthName locale (FinnishDate.monthToInt month)
+        , firstDayOfWeek = locale.firstDayOfWeek
     }
 
 

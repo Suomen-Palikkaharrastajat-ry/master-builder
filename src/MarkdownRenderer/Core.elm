@@ -15,9 +15,10 @@ import Tailwind.Breakpoints as Bp
 import Tailwind.Theme exposing (s0_dot_5, s1, s1_dot_5, s2, s3, s4, s6, s8)
 import TailwindExtra as TwEx
 import TailwindTokens as TC
+import UiStrings exposing (UiStrings)
 
 
-renderer : { childPages : List TocNode, sectionSlug : Maybe String, pageDir : String, isIndex : Bool, headings : List HeadingItem } -> Markdown.Renderer.Renderer (Html msg)
+renderer : { childPages : List TocNode, sectionSlug : Maybe String, pageDir : String, isIndex : Bool, headings : List HeadingItem, strings : UiStrings } -> Markdown.Renderer.Renderer (Html msg)
 renderer context =
     { heading = viewHeading
     , paragraph = Html.p [ classes [ Tw.my s4, TwEx.leading_7, Tw.text_simple TC.textPrimary ] ]

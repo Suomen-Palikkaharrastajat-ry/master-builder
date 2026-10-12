@@ -1,0 +1,21 @@
+# A bilingual app configuration, used to pin the contract between the
+# resolver and the Elm decoder (tests/SiteSettingsFixture.elm).
+
+[i18n]
+default   = "fi"
+languages = ["fi", "en"]
+
+[site]
+url         = "https://kalenteri.palikkaharrastajat.fi"
+title       = "Palikkakalenteri"
+description = "Suomen Palikkaharrastajat ry:n tapahtumakalenteri"
+
+[site.en]
+title       = "Brick Calendar"
+description = "Event calendar of Suomen Palikkaharrastajat ry"
+
+[navbar]
+variant = "app"
+
+[app]
+pocketbase_url = "https://data.palikkaharrastajat.fi"

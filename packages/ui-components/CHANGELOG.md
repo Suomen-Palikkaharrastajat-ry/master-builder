@@ -7,9 +7,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning: [S
 
 ### Added
 
+- `Component.Layout`: the page shell shared by every site (skip link, header, mobile drawer, main, footer, scroll-to-top, toast region), driven by the site's resolved configuration and layout strings.
+- `SiteSettings`: types and decoders for a site's `config.toml` as resolved per language by `packages/site-config`.
+- `Lang`: the supported languages; `UiStrings`: the layout and component labels per language (Finnish and English).
 - `Component.Navbar`: `viewBrand`, `viewMenuToggle`, and `viewAppHeader` for Compact application headers (#5).
-- `Component.Footer.Family`: canonical links, copyright, disclaimer, and logo for the repository family (#6).
-- `Component.Footer.Family`: `view` (canonical content) and `viewWith` (configurable label, links, copyright, disclaimer) render the one family footer; `linksExcept` and `siteLabel` helpers; `links` gains Palikkakartta and Tietosuoja (#6).
 - `Component.Footer`: `viewWith` supporting `topMargin` toggle (`mt-auto` vs `mt-16`) and `extra` column content slot (#6).
 - `Component.Button`: `Accent` variant and builder API (`new`, `submit`, `link`, `withVariant`, `withSize`, `withIcon`, `iconOnly`, `withDisabled`, `withLoading`, `withPressed`, `withTarget`, `toHtml`) (#7).
 - `Component.Toast`: optional title, `viewToast`, and `region` aria-live container; refactored styling to semantic design tokens (#8).
@@ -18,6 +19,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning: [S
 - `Component.LoadState`: remote data state helper (`Loading`, `Failure` with Alert & retry, `Success`) and floating `badge` (#11).
 - `Component.FeedLinks`: shared subscribe and export section with accessible cards and feed links (#12).
 - `Component.Form`: accessible form field components (`textInput`, `textarea`, `checkbox`, `radioGroup`, `fileInput`, `fieldRow`) (#9).
+
+### Changed (breaking)
+
+- `Component.Footer.Family`: now only `view options footerSettings`; content comes from configuration (family defaults in `packages/site-config/family.toml`). `viewWith`, `links`, `linksExcept`, `siteLabel`, `copyright`, `disclaimer` and `logo` are removed.
+- Components no longer contain display text; callers pass it (from `UiStrings`): `MobileDrawer.view` takes `closeLabel`, `Toast.view` takes `closeLabel`, `Toast.viewToast` takes the close label as its first argument, `Dialog.view` takes `closeLabel`, `Pagination.view` takes `labels`, `Breadcrumb.view` takes the landmark label as its first argument, `LogoCard.view` takes the "recommended" badge text as its first argument.
 
 ### Fixed
 

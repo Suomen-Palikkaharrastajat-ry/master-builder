@@ -15,7 +15,7 @@ suite =
     describe "Component.Toast"
         [ test "viewToast renders role='status' for Success variant" <|
             \_ ->
-                Toast.viewToast
+                Toast.viewToast "Sulje"
                     { id = "toast-1"
                     , title = Just "Onnistui"
                     , body = "Tallennus onnistui."
@@ -26,7 +26,7 @@ suite =
                     |> Query.has [ Selector.attribute (Attr.attribute "role" "status") ]
         , test "viewToast renders role='alert' for Danger variant" <|
             \_ ->
-                Toast.viewToast
+                Toast.viewToast "Sulje"
                     { id = "toast-2"
                     , title = Just "Virhe"
                     , body = "Tapahtui virhe."
@@ -37,7 +37,7 @@ suite =
                     |> Query.has [ Selector.attribute (Attr.attribute "role" "alert") ]
         , test "viewToast renders title when present" <|
             \_ ->
-                Toast.viewToast
+                Toast.viewToast "Sulje"
                     { id = "toast-3"
                     , title = Just "Huomio"
                     , body = "Viesti"
@@ -48,7 +48,7 @@ suite =
                     |> Query.has [ Selector.containing [ Selector.text "Huomio" ] ]
         , test "viewToast renders close button with aria-label" <|
             \_ ->
-                Toast.viewToast
+                Toast.viewToast "Sulje"
                     { id = "toast-4"
                     , title = Nothing
                     , body = "Suljettava viesti"

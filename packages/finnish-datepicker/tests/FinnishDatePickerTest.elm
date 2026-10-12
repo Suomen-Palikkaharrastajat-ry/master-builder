@@ -10,6 +10,7 @@ import Html.Attributes as Attr
 import Test exposing (Test, describe, test)
 import Test.Html.Query as Query
 import Test.Html.Selector as Selector
+import TestLocale
 
 
 suite : Test
@@ -22,7 +23,7 @@ suite =
                         ( initPicker, _ ) =
                             DatePicker.init
                     in
-                    FinnishDatePicker.field
+                    FinnishDatePicker.field TestLocale.fi
                         (FinnishDatePicker.defaultField "birth-date" "Syntymäaika")
                         { picker = initPicker
                         , selectedIsoDate = "2026-02-01"
@@ -50,7 +51,8 @@ suite =
                             , disabled = False
                             }
                     in
-                    FinnishDatePicker.field fieldConfig
+                    FinnishDatePicker.field TestLocale.fi
+                        fieldConfig
                         { picker = initPicker
                         , selectedIsoDate = ""
                         , onMsg = \_ -> ()
@@ -79,7 +81,8 @@ suite =
                             , disabled = True
                             }
                     in
-                    FinnishDatePicker.field fieldConfig
+                    FinnishDatePicker.field TestLocale.fi
+                        fieldConfig
                         { picker = initPicker
                         , selectedIsoDate = ""
                         , onMsg = \_ -> ()
@@ -98,7 +101,7 @@ suite =
                             DatePicker.init
 
                         ( updatedPicker, maybeIso ) =
-                            FinnishDatePicker.update DatePicker.open initPicker
+                            FinnishDatePicker.update TestLocale.fi DatePicker.open initPicker
                     in
                     maybeIso
                         |> Expect.equal Nothing

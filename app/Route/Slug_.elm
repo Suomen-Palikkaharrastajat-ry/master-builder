@@ -214,12 +214,12 @@ view :
 view app _ =
     { title = app.data.frontmatter.title ++ " — " ++ app.sharedData.config.site.title
     , body =
-        [ Breadcrumb.view
-            [ { label = "Etusivu", href = Just "/" }
+        [ Breadcrumb.view (Shared.strings app.sharedData).breadcrumb
+            [ { label = (Shared.strings app.sharedData).home, href = Just "/" }
             , { label = app.data.frontmatter.title, href = Nothing }
             ]
         , MarkdownRenderer.renderMarkdown
-            { childPages = app.data.childPages, sectionSlug = Just app.routeParams.slug, pageDir = app.data.pageDir, isIndex = not (List.isEmpty app.data.childPages) }
+            { childPages = app.data.childPages, sectionSlug = Just app.routeParams.slug, pageDir = app.data.pageDir, isIndex = not (List.isEmpty app.data.childPages), strings = Shared.strings app.sharedData }
             app.data.body
         ]
     }

@@ -27,8 +27,10 @@ type alias LogoVariant =
     }
 
 
-view : LogoVariant -> Html msg
-view variant =
+{-| `recommendedLabel` is the badge text of a highlighted variant.
+-}
+view : String -> LogoVariant -> Html msg
+view recommendedLabel variant =
     Html.div
         [ classes
             (if variant.highlight then
@@ -39,7 +41,7 @@ view variant =
             )
         ]
         [ viewPreview variant
-        , viewInfo variant
+        , viewInfo recommendedLabel variant
         ]
 
 
@@ -94,8 +96,8 @@ viewPreview variant =
         ]
 
 
-viewInfo : LogoVariant -> Html msg
-viewInfo variant =
+viewInfo : String -> LogoVariant -> Html msg
+viewInfo recommendedLabel variant =
     Html.div
         [ classes [ Tw.p Th.s4, Tw.bg_color (Th.gray Th.s50), Tw.border_t, Tw.border_color (Th.gray Th.s100) ] ]
         [ Html.div [ classes [ Tw.mb Th.s3 ] ]
@@ -104,7 +106,7 @@ viewInfo variant =
             , if variant.highlight then
                 Html.span
                     [ classes [ Tw.ml Th.s2, Tw.inline_block, Tw.bg_simple TC.brandYellow, Tw.text_simple TC.brand, Tw.text_xs, Tw.font_bold, Tw.px Th.s1_dot_5, Tw.py Th.s0_dot_5, Tw.rounded ] ]
-                    [ Html.text "Suositeltu" ]
+                    [ Html.text recommendedLabel ]
 
               else
                 Html.text ""

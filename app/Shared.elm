@@ -1,4 +1,4 @@
-module Shared exposing (Data, Model, Msg(..), SharedMsg(..), template)
+module Shared exposing (Data, Model, Msg(..), SharedMsg(..), strings, template)
 
 {-| Shared layout shell: navbar, footer, and mobile drawer.
 -}
@@ -6,9 +6,7 @@ module Shared exposing (Data, Model, Msg(..), SharedMsg(..), template)
 import BackendTask exposing (BackendTask)
 import BackendTask.Glob as Glob
 import Browser.Events
-import Component.Footer.Family as Family
-import Component.MobileDrawer as MobileDrawer
-import Component.Navbar as Navbar
+import Component.Layout as Layout
 import Config exposing (Config)
 import ContentDir
 import ContentMarkdown
@@ -30,6 +28,7 @@ import Tailwind.Breakpoints as Bp
 import Tailwind.Theme exposing (s0, s1, s10, s14, s2, s3, s4, s6, s8, white)
 import TailwindExtra as TwEx
 import TailwindTokens as TC
+import UiStrings exposing (UiStrings)
 import UrlPath exposing (UrlPath)
 import View exposing (View)
 
@@ -237,83 +236,11 @@ view sharedData page model toMsg pageView =
         config =
             sharedData.config
 
+        uiStrings =
+            strings sharedData
+
         isCompact =
             config.navbar.variant == "compact"
-
-        logoHtml =
-            if isCompact then
-                Html.a
-                    [ Attr.href "/"
-                    , classes [ Tw.flex, Tw.items_center, Tw.gap s2, Bp.focus [ Tw.outline_none, Tw.ring_2, TwEx.ring_brand_yellow ], Tw.rounded ]
-                    , Html.Events.onClick (toMsg (SharedMsg CloseMenu))
-                    ]
-                    [ Html.img
-                        [ Attr.src config.branding.logoSquare
-                        , Attr.alt ""
-                        , Attr.attribute "aria-hidden" "true"
-                        , classes [ Tw.h s8, Tw.w s8 ]
-                        ]
-                        []
-                    , Html.span
-                        [ classes [ Tw.type_h4, Tw.text_simple white ] ]
-                        [ Html.text config.site.title ]
-                    ]
-
-            else
-                Html.a
-                    [ Attr.href "/"
-                    , classes [ Bp.focus [ Tw.outline_none, Tw.ring_2, TwEx.ring_brand_yellow ], Tw.rounded ]
-                    , Html.Events.onClick (toMsg (SharedMsg CloseMenu))
-                    ]
-                    [ Html.node "picture"
-                        []
-                        [ Html.node "source"
-                            [ Attr.attribute "media" "(min-width: 640px)"
-                            , Attr.attribute "srcset" config.branding.logoDark
-                            ]
-                            []
-                        , Html.img
-                            [ Attr.src config.branding.logoLightMobile
-                            , Attr.alt config.branding.logoAlt
-                            , classes [ Tw.h s10, Bp.sm [ Tw.h s14 ] ]
-                            ]
-                            []
-                        ]
-                    ]
-
-        hamburgerBreakpointHidden =
-            if isCompact then
-                Bp.md [ Tw.hidden ]
-
-            else
-                Bp.sm [ Tw.hidden ]
-
-        hamburgerHtml =
-            Html.button
-                [ classes [ hamburgerBreakpointHidden, Tw.text_simple white, Tw.p s2, Tw.ml s2, Tw.rounded, Bp.focus [ Tw.outline_none, Tw.ring_2, TwEx.ring_brand_yellow ], Tw.cursor_pointer ]
-                , Html.Events.onClick (toMsg (SharedMsg ToggleMenu))
-                , Attr.attribute "aria-label"
-                    (if model.menuOpen then
-                        "Sulje valikko"
-
-                     else
-                        "Avaa valikko"
-                    )
-                , Attr.attribute "aria-expanded"
-                    (if model.menuOpen then
-                        "true"
-
-                     else
-                        "false"
-                    )
-                , Attr.attribute "aria-controls" "mobile-nav"
-                ]
-                [ if model.menuOpen then
-                    FeatherIcons.x |> FeatherIcons.withSize 24 |> FeatherIcons.toHtml []
-
-                  else
-                    FeatherIcons.menu |> FeatherIcons.withSize 24 |> FeatherIcons.toHtml []
-                ]
 
         isActivePath : String -> Bool
         isActivePath path =
@@ -330,168 +257,73 @@ view sharedData page model toMsg pageView =
                 in
                 currentPathStr == relativePath || String.startsWith (relativePath ++ "/") currentPathStr
 
-        navLinks =
-            sharedData.navItems
-                |> List.map
-                    (\item ->
-                        { label = item.title
-                        , href = item.path
-                        , mobileOnly = item.mobileOnly
-                        , isActive = isActivePath item.path
-                        }
-                    )
-
-        searchAction =
-            if config.navbar.showDesktopSearch then
-                Just (viewNavbarSearchForm isCompact)
-
-            else
-                Nothing
+        closeMenu =
+            toMsg (SharedMsg CloseMenu)
     in
-    case page.route of
-        _ ->
-            { body =
-                [ Html.a
-                    [ Attr.href "#main-content"
-                    , classes
-                        [ Tw.sr_only
-                        , Bp.focus [ Tw.not_sr_only, Tw.fixed, TwEx.top_2, TwEx.left_2, Tw.z_50, Tw.px s4, Tw.py s2, Tw.bg_simple TC.brandYellow, Tw.text_simple TC.brand, Tw.type_body_small, Tw.rounded ]
-                        , Bp.focus_visible [ Tw.ring_2, TwEx.ring_brand ]
-                        ]
-                    ]
-                    [ Html.text "Siirry pääsisältöön" ]
-                , Html.div [ classes [ Tw.min_h_screen, Tw.flex, Tw.flex_col ] ]
-                    [ Navbar.view
-                        { logo = logoHtml
-                        , links = navLinks
-                        , mobileMenuToggle = Just hamburgerHtml
-                        , action = searchAction
-                        , sticky = config.navbar.sticky
-                        , variant =
-                            if isCompact then
-                                Navbar.Compact
-
-                            else
-                                Navbar.Dark
-                        }
-                    , Html.main_ [ Attr.id "main-content", classes [ Tw.flex_1, TwEx.max_w_5xl, Tw.mx_auto, Tw.px s6, Tw.py s10, Tw.w_full ] ] pageView.body
-                    , Family.viewWith
-                        { topMargin = True
-                        , extra = []
-                        , siteLabel = config.footer.siteLabel
-                        , links =
-                            if List.isEmpty config.footer.links then
-                                Family.linksExcept config.site.url
-
-                            else
-                                config.footer.links
-                        , copyright = config.footer.copyright
-                        , disclaimer =
-                            if List.isEmpty config.footer.disclaimer then
-                                Family.disclaimer
-
-                            else
-                                config.footer.disclaimer
-                        }
-                    , MobileDrawer.viewOverlay
-                        { isOpen = model.menuOpen
-                        , onClose = toMsg (SharedMsg CloseMenu)
-                        , breakpoint =
-                            if isCompact then
-                                MobileDrawer.Md
-
-                            else
-                                MobileDrawer.Sm
-                        }
-                    , viewMobileDrawer page.path
-                        model
-                        (toMsg << SharedMsg)
-                        sharedData.navItems
-                        (if isCompact then
-                            MobileDrawer.Md
-
-                         else
-                            MobileDrawer.Sm
-                        )
-                    , if model.scrollY > 200 then
-                        Html.button
-                            [ Html.Events.onClick (toMsg (SharedMsg ScrollToTop))
-                            , classes
-                                [ Tw.fixed
-                                , TwEx.bottom_4
-                                , TwEx.right_4
-                                , Tw.z_50
-                                , Tw.p s3
-                                , Tw.rounded_full
-                                , Tw.bg_simple TC.brand
-                                , Tw.text_simple TC.textOnDark
-                                , Tw.cursor_pointer
-                                , Bp.withVariant "motion-safe" [ Tw.transition_opacity ]
-                                , Bp.focus_visible [ Tw.outline_none, Tw.ring_2, TwEx.ring_brand_yellow ]
-                                ]
-                            , Attr.attribute "aria-label" "Takaisin ylös"
-                            ]
-                            [ FeatherIcons.arrowUp |> FeatherIcons.withSize 24 |> FeatherIcons.toHtml [] ]
-
-                      else
-                        Html.text ""
-                    ]
-                ]
-            , title = pageView.title
-            }
-
-
-viewMobileDrawer : UrlPath -> Model -> (SharedMsg -> msg) -> List NavItem -> MobileDrawer.Breakpoint -> Html msg
-viewMobileDrawer currentPath model toMsg navItems breakpoint =
-    let
-        isActive : String -> Bool
-        isActive path =
-            if path == "/" then
-                UrlPath.toRelative currentPath == ""
-
-            else
-                let
-                    currentPathStr =
-                        UrlPath.toRelative currentPath
-
-                    relativePath =
-                        String.dropLeft 1 path
-                in
-                currentPathStr == relativePath || String.startsWith (relativePath ++ "/") currentPathStr
-
-        close =
-            toMsg CloseMenu
-    in
-    MobileDrawer.view
-        { isOpen = model.menuOpen
-        , id = "mobile-nav"
-        , label = "Mobiilivalikko"
-        , onClose = close
-        , breakpoint = breakpoint
-        , content =
-            [ Html.nav [ classes [ Tw.p s4 ] ]
-                [ viewMobileSearchForm close
-                ]
-            , Html.nav [ classes [ Tw.p s4, Tw.pt s1 ] ]
-                [ Html.ul [ classes [ Tw.flex, Tw.flex_col, Tw.gap s1, Tw.list_none, Tw.m s0, Tw.p s0 ] ]
-                    (List.map
+    { body =
+        Layout.view
+            { site = config
+            , strings = uiStrings
+            , attributes = [ classes [ Tw.min_h_screen, Tw.flex, Tw.flex_col ] ]
+            , home = { href = "/", onClick = Nothing }
+            , links =
+                sharedData.navItems
+                    |> List.map
                         (\item ->
-                            MobileDrawer.viewNavLink
-                                { href = item.path
-                                , label = item.title
-                                , isActive = isActive item.path
-                                , onClose = close
-                                }
+                            { label = item.title
+                            , href = item.path
+                            , mobileOnly = item.mobileOnly
+                            , isActive = isActivePath item.path
+                            }
                         )
-                        navItems
-                    )
-                ]
-            ]
-        }
+            , headerActions =
+                if config.navbar.showDesktopSearch then
+                    [ viewNavbarSearchForm uiStrings isCompact ]
+
+                else
+                    []
+            , showHeader = True
+            , menu =
+                Just
+                    { isOpen = model.menuOpen
+                    , onToggle = toMsg (SharedMsg ToggleMenu)
+                    , onClose = closeMenu
+                    , content =
+                        \links ->
+                            [ Html.nav [ classes [ Tw.p s4 ] ] [ viewMobileSearchForm uiStrings closeMenu ]
+                            , Html.nav [ classes [ Tw.p s4, Tw.pt s1 ] ] [ links ]
+                            ]
+                    }
+            , main =
+                Html.main_
+                    [ Attr.id "main-content"
+                    , classes [ Tw.flex_1, TwEx.max_w_5xl, Tw.mx_auto, Tw.px s6, Tw.py s10, Tw.w_full ]
+                    ]
+                    pageView.body
+            , aboveFooter = []
+            , footer = Just { topMargin = True, extra = [] }
+            , scrollToTop =
+                Just
+                    { visible = model.scrollY > 200
+                    , onClick = toMsg (SharedMsg ScrollToTop)
+                    , clearRightColumn = False
+                    }
+            , toasts = Nothing
+            , overlays = []
+            }
+    , title = pageView.title
+    }
 
 
-viewNavbarSearchForm : Bool -> Html msg
-viewNavbarSearchForm isCompact =
+{-| The layout strings of the language the site is built in.
+-}
+strings : Data -> UiStrings
+strings sharedData =
+    UiStrings.forLang sharedData.config.lang
+
+
+viewNavbarSearchForm : UiStrings -> Bool -> Html msg
+viewNavbarSearchForm uiStrings isCompact =
     let
         visibility =
             if isCompact then
@@ -511,12 +343,12 @@ viewNavbarSearchForm isCompact =
             , Tw.ml s4
             ]
         ]
-        [ Html.label [ Attr.for "navbar-search-input", classes [ Tw.sr_only ] ] [ Html.text "Hae sivustolta" ]
+        [ Html.label [ Attr.for "navbar-search-input", classes [ Tw.sr_only ] ] [ Html.text uiStrings.search ]
         , Html.input
             [ Attr.id "navbar-search-input"
             , Attr.name "q"
             , Attr.type_ "search"
-            , Attr.placeholder "Hae sivustolta"
+            , Attr.placeholder uiStrings.search
             , classes
                 [ Tw.w_full
                 , Bp.md [ TwEx.max_w_2xl ]
@@ -552,8 +384,8 @@ viewNavbarSearchForm isCompact =
         ]
 
 
-viewMobileSearchForm : msg -> Html msg
-viewMobileSearchForm closeMsg =
+viewMobileSearchForm : UiStrings -> msg -> Html msg
+viewMobileSearchForm uiStrings closeMsg =
     Html.form
         [ Attr.action "/haku"
         , Attr.method "GET"
@@ -563,12 +395,12 @@ viewMobileSearchForm closeMsg =
             , Tw.gap s2
             ]
         ]
-        [ Html.label [ Attr.for "mobile-search-input", classes [ Tw.sr_only ] ] [ Html.text "Hae sivustolta" ]
+        [ Html.label [ Attr.for "mobile-search-input", classes [ Tw.sr_only ] ] [ Html.text uiStrings.search ]
         , Html.input
             [ Attr.id "mobile-search-input"
             , Attr.name "q"
             , Attr.type_ "search"
-            , Attr.placeholder "Hae sivustolta"
+            , Attr.placeholder uiStrings.search
             , classes
                 [ Tw.w_full
                 , Tw.rounded_md

@@ -1,9 +1,16 @@
-import { readFile } from "fs/promises";
 import { existsSync } from "fs";
 import { resolve } from "path";
-import { parse } from "smol-toml";
+import { pathToFileURL } from "url";
 
-export async function readToml(path, context) {
+/**
+ * Resolves a site's config.toml against the family defaults: one complete
+ * configuration per language (see packages/site-config/site-config.mjs).
+ *
+ * The loader is imported at run time on purpose. elm-pages bundles this file
+ * once and reuses the bundle until this file itself changes, so a static
+ * import would freeze the loader (and its schema) at whatever it was then.
+ */
+export async function readSiteConfig(path, context) {
   let filePath = resolve(context.cwd, path);
   if (!existsSync(filePath) && path.endsWith("config.toml")) {
     const fallback = path.startsWith("content/")
@@ -13,6 +20,7 @@ export async function readToml(path, context) {
       filePath = fallback;
     }
   }
-  const contents = await readFile(filePath, "utf8");
-  return parse(contents);
+  const loader = resolve(context.cwd, "packages/site-config/site-config.mjs");
+  const { load } = await import(pathToFileURL(loader).href);
+  return load(filePath);
 }

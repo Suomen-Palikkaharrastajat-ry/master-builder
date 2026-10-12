@@ -25,6 +25,7 @@
         "Component.Form",
         "Component.Gallery",
         "Component.Hero",
+        "Component.Layout",
         "Component.ListGroup",
         "Component.LoadState",
         "Component.LogoCard",
@@ -46,8 +47,11 @@
         "Component.Toc",
         "Component.Toggle",
         "Component.Tooltip",
+        "Lang",
+        "SiteSettings",
         "TailwindExtra",
-        "TailwindTokens"
+        "TailwindTokens",
+        "UiStrings"
     ],
     "elm-version": "0.19.0 <= v < 0.20.0",
     "dependencies": {

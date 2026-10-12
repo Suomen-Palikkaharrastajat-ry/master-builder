@@ -22,6 +22,7 @@ import Tailwind.Breakpoints as Bp
 import Tailwind.Theme exposing (s0, s1, s2, s3, s4, s6, s8)
 import TailwindExtra as TwEx
 import TailwindTokens as TC
+import UiStrings exposing (UiStrings)
 import UrlPath exposing (UrlPath)
 import View exposing (View)
 
@@ -120,11 +121,14 @@ head app =
         metadata =
             app.sharedData.config.metadata
 
+        uiStrings =
+            Shared.strings app.sharedData
+
         seoTitle =
-            "Haku — " ++ site.title
+            uiStrings.searchPage ++ " — " ++ site.title
 
         seoDescription =
-            "Hae sivuston sisällöistä."
+            uiStrings.searchDescription
 
         canonicalUrl =
             Metadata.pageCanonicalUrl site.url "haku"
@@ -170,15 +174,19 @@ view :
     -> Model
     -> View (PagesMsg Msg)
 view app _ model =
-    { title = "Haku — " ++ app.sharedData.config.site.title
+    let
+        uiStrings =
+            Shared.strings app.sharedData
+    in
+    { title = uiStrings.searchPage ++ " — " ++ app.sharedData.config.site.title
     , body =
         [ Html.section [ classes [ Tw.flex, Tw.flex_col, Tw.gap s8 ] ]
             [ Html.div [ classes [ Tw.flex, Tw.flex_col, Tw.gap s3 ] ]
-                [ Html.h1 [ classes [ Tw.type_h1, Tw.text_simple TC.textPrimary ] ] [ Html.text "Haku" ]
-                , Html.p [ classes [ Tw.type_body, Tw.text_simple TC.textMuted ] ] [ Html.text "Hae sivuston sivuja otsikon, kuvauksen ja sisällön perusteella." ]
+                [ Html.h1 [ classes [ Tw.type_h1, Tw.text_simple TC.textPrimary ] ] [ Html.text uiStrings.searchPage ]
+                , Html.p [ classes [ Tw.type_body, Tw.text_simple TC.textMuted ] ] [ Html.text uiStrings.searchIntro ]
                 ]
-            , viewSearchForm model.query
-            , viewResultBlock model
+            , viewSearchForm uiStrings model.query
+            , viewResultBlock uiStrings model
             ]
         ]
     }
@@ -192,8 +200,8 @@ queryFromApp app =
         |> Maybe.withDefault ""
 
 
-viewSearchForm : String -> Html msg
-viewSearchForm query =
+viewSearchForm : UiStrings -> String -> Html msg
+viewSearchForm uiStrings query =
     Html.form
         [ Attr.action "/haku"
         , Attr.method "GET"
@@ -204,12 +212,12 @@ viewSearchForm query =
             , TwEx.max_w_2xl
             ]
         ]
-        [ Html.label [ Attr.for "search-page-input", classes [ Tw.sr_only ] ] [ Html.text "Hae sivustolta" ]
+        [ Html.label [ Attr.for "search-page-input", classes [ Tw.sr_only ] ] [ Html.text uiStrings.search ]
         , Html.input
             [ Attr.id "search-page-input"
             , Attr.name "q"
             , Attr.type_ "search"
-            , Attr.placeholder "Hae sivustolta"
+            , Attr.placeholder uiStrings.search
             , Attr.value query
             , classes
                 [ Tw.w_full
@@ -245,17 +253,17 @@ viewSearchForm query =
         ]
 
 
-viewResultBlock : Model -> Html msg
-viewResultBlock model =
+viewResultBlock : UiStrings -> Model -> Html msg
+viewResultBlock uiStrings model =
     if String.isEmpty model.query then
         Html.p [ classes [ Tw.type_body, Tw.text_simple TC.textMuted ] ]
-            [ Html.text "Anna hakusana, niin naytamme siihen sopivat sivut." ]
+            [ Html.text uiStrings.searchEmptyQuery ]
 
     else
         case model.status of
             Searching ->
                 Html.p [ classes [ Tw.type_body, Tw.text_simple TC.textMuted ] ]
-                    [ Html.text ("Haetaan tuloksia hakusanalle \"" ++ model.query ++ "\"...") ]
+                    [ Html.text (uiStrings.searching model.query) ]
 
             Idle ->
                 Html.text ""
@@ -263,12 +271,12 @@ viewResultBlock model =
             Ready ->
                 if List.isEmpty model.results then
                     Html.p [ classes [ Tw.type_body, Tw.text_simple TC.textMuted ] ]
-                        [ Html.text ("Ei hakutuloksia hakusanalle \"" ++ model.query ++ "\".") ]
+                        [ Html.text (uiStrings.noResults model.query) ]
 
                 else
                     Html.div [ classes [ Tw.flex, Tw.flex_col, Tw.gap s3 ] ]
                         [ Html.p [ classes [ Tw.type_body_small, Tw.text_simple TC.textMuted ] ]
-                            [ Html.text (String.fromInt (List.length model.results) ++ " hakutulosta") ]
+                            [ Html.text (uiStrings.resultCount (List.length model.results)) ]
                         , Html.ul [ classes [ Tw.flex, Tw.flex_col, Tw.gap s3, Tw.list_none, Tw.m s0, Tw.p s0 ] ]
                             (List.map viewResultItem model.results)
                         ]

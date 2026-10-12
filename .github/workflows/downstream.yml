@@ -93,6 +93,10 @@ jobs:
         working-directory: app
         run: node vendor/master-builder/script/check-safelist.mjs
 
+      - name: Check display text stays in translation modules
+        working-directory: app
+        run: node vendor/master-builder/script/check-i18n.mjs elm-app/src elm-app/main.js
+
       - name: Build Elm app
         working-directory: app
         run: devenv shell --profile ci -- make elm-build

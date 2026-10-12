@@ -7,7 +7,9 @@ import Html exposing (Html)
 import Html.Attributes as Attr
 import Html.Events as Events
 import Json.Decode as Decode exposing (Decoder)
+import Lang
 import MarkdownRenderer
+import UiStrings
 
 
 main : Program Decode.Value Model Msg
@@ -841,6 +843,9 @@ viewEditorAndPreview model =
                         , sectionSlug = Nothing
                         , pageDir = ""
                         , isIndex = False
+
+                        -- The preview has no site configuration; content is Finnish.
+                        , strings = UiStrings.forLang Lang.Fi
                         }
                         (markdownBody model.editorContent)
                     ]

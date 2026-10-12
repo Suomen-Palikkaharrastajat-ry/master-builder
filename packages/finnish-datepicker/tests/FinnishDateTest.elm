@@ -7,6 +7,7 @@ import Date
 import Expect
 import FinnishDate
 import Test exposing (Test, describe, test)
+import TestLocale
 import Time exposing (Month(..), Weekday(..))
 
 
@@ -16,11 +17,11 @@ suite =
         [ describe "parse and format round-trips"
             [ test "parses 1.2.2026 into 2026-02-01 and formats back" <|
                 \_ ->
-                    case FinnishDate.parse "1.2.2026" of
+                    case FinnishDate.parse TestLocale.fi "1.2.2026" of
                         Ok date ->
                             Expect.all
                                 [ \d -> Expect.equal "2026-02-01" (Date.toIsoString d)
-                                , \d -> Expect.equal "01.02.2026" (FinnishDate.format d)
+                                , \d -> Expect.equal "01.02.2026" (FinnishDate.format TestLocale.fi d)
                                 ]
                                 date
 
@@ -28,11 +29,11 @@ suite =
                             Expect.fail ("Failed to parse: " ++ err)
             , test "parses 31.12.2026 into 2026-12-31 and formats back" <|
                 \_ ->
-                    case FinnishDate.parse "31.12.2026" of
+                    case FinnishDate.parse TestLocale.fi "31.12.2026" of
                         Ok date ->
                             Expect.all
                                 [ \d -> Expect.equal "2026-12-31" (Date.toIsoString d)
-                                , \d -> Expect.equal "31.12.2026" (FinnishDate.format d)
+                                , \d -> Expect.equal "31.12.2026" (FinnishDate.format TestLocale.fi d)
                                 ]
                                 date
 
@@ -40,7 +41,7 @@ suite =
                             Expect.fail ("Failed to parse: " ++ err)
             , test "fails on invalid date 32.1.2026" <|
                 \_ ->
-                    case FinnishDate.parse "32.1.2026" of
+                    case FinnishDate.parse TestLocale.fi "32.1.2026" of
                         Ok _ ->
                             Expect.fail "Should have failed on 32.1.2026"
 
@@ -48,7 +49,7 @@ suite =
                             Expect.pass
             , test "handles leap year 29.2.2024" <|
                 \_ ->
-                    case FinnishDate.parse "29.2.2024" of
+                    case FinnishDate.parse TestLocale.fi "29.2.2024" of
                         Ok date ->
                             Expect.equal "2024-02-29" (Date.toIsoString date)
 
@@ -56,7 +57,7 @@ suite =
                             Expect.fail ("Failed leap year date: " ++ err)
             , test "fails on 29.2.2025 non-leap year" <|
                 \_ ->
-                    case FinnishDate.parse "29.2.2025" of
+                    case FinnishDate.parse TestLocale.fi "29.2.2025" of
                         Ok _ ->
                             Expect.fail "Should have failed on non-leap year Feb 29"
 
@@ -64,11 +65,11 @@ suite =
                             Expect.pass
             , test "parses single digit day and month 5.6.2026" <|
                 \_ ->
-                    case FinnishDate.parse "5.6.2026" of
+                    case FinnishDate.parse TestLocale.fi "5.6.2026" of
                         Ok date ->
                             Expect.all
                                 [ \d -> Expect.equal "2026-06-05" (Date.toIsoString d)
-                                , \d -> Expect.equal "05.06.2026" (FinnishDate.format d)
+                                , \d -> Expect.equal "05.06.2026" (FinnishDate.format TestLocale.fi d)
                                 ]
                                 date
 
@@ -76,7 +77,7 @@ suite =
                             Expect.fail ("Failed single digit date: " ++ err)
             , test "fails on non-date strings" <|
                 \_ ->
-                    case FinnishDate.parse "invalid" of
+                    case FinnishDate.parse TestLocale.fi "invalid" of
                         Ok _ ->
                             Expect.fail "Should have failed on invalid string"
 
@@ -86,17 +87,17 @@ suite =
         , describe "monthName"
             [ test "1 is Tammikuu" <|
                 \_ ->
-                    Expect.equal "Tammikuu" (FinnishDate.monthName 1)
+                    Expect.equal "Tammikuu" (FinnishDate.monthName TestLocale.fi 1)
             , test "12 is Joulukuu" <|
                 \_ ->
-                    Expect.equal "Joulukuu" (FinnishDate.monthName 12)
+                    Expect.equal "Joulukuu" (FinnishDate.monthName TestLocale.fi 12)
             ]
         , describe "weekdayAbbr"
             [ test "Mon is ma" <|
                 \_ ->
-                    Expect.equal "ma" (FinnishDate.weekdayAbbr Mon)
+                    Expect.equal "ma" (FinnishDate.weekdayAbbr TestLocale.fi Mon)
             , test "Sun is su" <|
                 \_ ->
-                    Expect.equal "su" (FinnishDate.weekdayAbbr Sun)
+                    Expect.equal "su" (FinnishDate.weekdayAbbr TestLocale.fi Sun)
             ]
         ]

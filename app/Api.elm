@@ -10,9 +10,6 @@ import Config
 import FatalError exposing (FatalError)
 import Html exposing (Html)
 import Json.Encode as Encode
-import LanguageTag
-import LanguageTag.Language
-import LanguageTag.Region
 import MimeType
 import Pages.Manifest as Manifest
 import Pages.Url
@@ -62,9 +59,6 @@ manifestConfig =
         |> BackendTask.map
             (\config ->
                 let
-                    subtags =
-                        LanguageTag.emptySubtags
-
                     pwa =
                         config.pwa
                 in
@@ -94,11 +88,7 @@ manifestConfig =
                     |> Manifest.withDisplayMode (displayModeFromString pwa.display)
                     |> Manifest.withBackgroundColor (colorFromHex pwa.backgroundColor)
                     |> Manifest.withThemeColor (colorFromHex pwa.themeColor)
-                    |> Manifest.withLang
-                        (LanguageTag.Language.fi
-                            |> LanguageTag.build
-                                { subtags | region = Just LanguageTag.Region.fi }
-                        )
+                    |> Manifest.withLang (Config.languageTag config)
             )
 
 

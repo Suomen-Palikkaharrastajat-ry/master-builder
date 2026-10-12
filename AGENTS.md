@@ -33,6 +33,7 @@ by `deploy/fetch-content.sh`. Local development uses `template/` (bundled exampl
 | `app/` | elm-pages routes (`Route/Index.elm`, `Route/Slug_.elm`, `Route/Blog/Slug_.elm`) |
 | `src/` | Shared modules: `MarkdownRenderer`, `Frontmatter`, `ContentDir`, `SiteMeta`, `TailwindTokens`, `TailwindExtra` |
 | `packages/ui-components/` | 34 UI components exposed as a local Elm package (Component.* modules: Accordion, Alert, Badge, Button, Card, Dialog, Hero, etc.) |
+| `packages/site-config/` | Loader for every site's `config.toml`: family defaults (`family.toml`), per-language resolution and validation, Vite plugin for the apps. See `docs/site-config.md` |
 | `packages/app-toolkit/` | Shared Elm app plumbing consumed by the app repos (Geocoding, View.MapWidget, View.Icons) |
 | `packages-hs/statics-common/` | Shared Haskell modules for the app repos' static generators (DescriptionHtml, ImageFetcher) |
 | `vendor/design-guide/` | Git submodule — Haskell pipeline: TOML → W3C Design Tokens JSON + typed Elm package |

@@ -1,6 +1,9 @@
 module Admin.ComponentCatalog exposing (AttributeField, ComponentSpec, all, find, initialValues, snippet)
 
 {-| Component snippets available in the admin Markdown builder.
+
+i18n-exempt: the snippets are sample page content, not interface text.
+
 -}
 
 import Dict exposing (Dict)

@@ -7,6 +7,14 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning: [S
 
 ### Added
 
+- `Locale`: a language's date and time conventions, with `fi`, `en` and `forCode`.
+
+### Changed (breaking)
+
+- `FinnishTime`: `weekdayAbbr`, `monthName`, `formatShortDate`, `formatTime` and `formatFullDate` take a `Locale` as their first argument. `isoDateToFinnishDateInput`, `finnishDateInputToIsoDate`, `parseFinnishDate` and `formatFinnishDate` are now `isoDateToDateInput`, `dateInputToIsoDate`, `parseDate` and `formatDate` and take a `Locale`. `finnishWeekdayAbbr` and `finnishMonthName` are removed (use `weekdayAbbr`/`monthName`).
+
+### Added
+
 - `View.MapOverlay`: overlay panels for map controls, filter groups, and responsive detail sheets/drawers (`panel`, `filterGroup`, `detailPanel`, `detailPanelWithHeaderActions`) (#13).
 - `FinnishTime`: shared Helsinki timezone and Finnish date/time manipulation and formatting functions (`formatShortDate`, `formatTime`, `formatFullDate`, `parseFinnishDate`, `formatFinnishDate`, `formDateTimeToUtc`, `monthGrid`, …) (#14).
 - `PocketBaseAuth`: msg-polymorphic OAuth token fetch (`fetchOAuthToken`), auth state restoration (`restoreAuthFromFlags`), and user JSON decoding (`decodeAuthUser`) (#14).

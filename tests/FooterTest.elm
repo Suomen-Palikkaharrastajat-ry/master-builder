@@ -2,8 +2,9 @@ module FooterTest exposing (suite)
 
 {-| Test suite for Component.Footer and Component.Footer.Family.
 
-The family footer is shared by every site, so these tests pin its content, order,
-layout and typography. A failure here means every site's footer would change.
+The family footer is shared by every site, so these tests pin its layout and
+typography. Its content comes from configuration; the canonical link list is
+pinned in packages/site-config/site-config.test.mjs. A failure here means every site's footer would change.
 
 -}
 
@@ -12,19 +13,29 @@ import Component.Footer.Family as Family
 import Expect
 import Html exposing (Html)
 import Html.Attributes as Attr
+import SiteSettings
 import Test exposing (Test, describe, test)
 import Test.Html.Query as Query
 import Test.Html.Selector as Selector
 
 
+footer : SiteSettings.Footer
+footer =
+    { links =
+        [ { label = "Kotisivut", href = "https://palikkaharrastajat.fi" }
+        , { label = "Palikkakalenteri", href = "https://kalenteri.palikkaharrastajat.fi" }
+        , { label = "Tietosuoja", href = "https://palikkaharrastajat.fi/tietosuoja" }
+        ]
+    , copyright = "© 2026 Suomen Palikkaharrastajat ry"
+    , disclaimer = [ "LEGO® on LEGO Groupin rekisteröity tavaramerkki." ]
+    , footerLogo = "/logo/square/svg/square-smile-full-dark-bold.svg"
+    , siteLabel = "Palikkaharrastajat"
+    }
+
+
 canonicalFooter : Html msg
 canonicalFooter =
-    Family.view
-        { currentSite = "https://kartta.palikkaharrastajat.fi"
-        , year = 2026
-        , topMargin = False
-        , extra = []
-        }
+    Family.view { topMargin = False, extra = [] } footer
 
 
 {-| Asserts that the footer's links are exactly `expected`, in order.
@@ -56,72 +67,21 @@ expectLinks expected html =
 suite : Test
 suite =
     describe "Component.Footer"
-        [ describe "Family content"
-            [ test "copyright formats year correctly" <|
-                \_ ->
-                    Family.copyright 2026
-                        |> Expect.equal "© 2026 Suomen Palikkaharrastajat ry"
-            , test "links is the canonical list, in canonical order" <|
-                \_ ->
-                    Family.links
-                        |> Expect.equal
-                            [ { label = "Kotisivut", href = "https://palikkaharrastajat.fi" }
-                            , { label = "Palikkakalenteri", href = "https://kalenteri.palikkaharrastajat.fi" }
-                            , { label = "Palikkakartta", href = "https://kartta.palikkaharrastajat.fi" }
-                            , { label = "Palikkalinkit", href = "https://linkit.palikkaharrastajat.fi" }
-                            , { label = "Jäsenfoorumi", href = "https://forum.palikkaharrastajat.fi" }
-                            , { label = "Jäsenkortti", href = "https://kortti.palikkaharrastajat.fi" }
-                            , { label = "Jäsenmaksu", href = "https://maksut.palikkaharrastajat.fi" }
-                            , { label = "Tietosuoja", href = "https://palikkaharrastajat.fi/tietosuoja" }
-                            ]
-            , test "links has no duplicate targets or labels" <|
-                \_ ->
-                    let
-                        unique items =
-                            List.foldl
-                                (\item acc ->
-                                    if List.member item acc then
-                                        acc
-
-                                    else
-                                        item :: acc
-                                )
-                                []
-                                items
-                    in
-                    ( List.length (unique (List.map .href Family.links))
-                    , List.length (unique (List.map .label Family.links))
-                    )
-                        |> Expect.equal ( List.length Family.links, List.length Family.links )
-            , test "linksExcept drops only the current site" <|
-                \_ ->
-                    Family.linksExcept "https://palikkaharrastajat.fi"
-                        |> List.map .label
-                        |> Expect.equal
-                            [ "Palikkakalenteri"
-                            , "Palikkakartta"
-                            , "Palikkalinkit"
-                            , "Jäsenfoorumi"
-                            , "Jäsenkortti"
-                            , "Jäsenmaksu"
-                            , "Tietosuoja"
-                            ]
-            ]
-        , describe "Family.view"
-            [ test "renders the canonical links without the current site" <|
+        [ describe "Family.view"
+            [ test "renders the configured links, in order" <|
                 \_ ->
                     canonicalFooter
-                        |> expectLinks (Family.linksExcept "https://kartta.palikkaharrastajat.fi")
+                        |> expectLinks footer.links
             , test "renders label, copyright, disclaimer and logo" <|
                 \_ ->
                     canonicalFooter
                         |> Query.fromHtml
                         |> Query.has
                             [ Selector.tag "footer"
-                            , Selector.containing [ Selector.text Family.siteLabel ]
+                            , Selector.containing [ Selector.text footer.siteLabel ]
                             , Selector.containing [ Selector.text "© 2026 Suomen Palikkaharrastajat ry" ]
                             , Selector.containing [ Selector.text "LEGO® on LEGO Groupin rekisteröity tavaramerkki." ]
-                            , Selector.containing [ Selector.tag "img", Selector.class "h-35", Selector.class "w-35" ]
+                            , Selector.containing [ Selector.tag "img", Selector.class "h-35", Selector.class "w-35", Selector.attribute (Attr.src footer.footerLogo) ]
                             ]
             , test "label is 12px uppercase" <|
                 \_ ->
@@ -130,7 +90,7 @@ suite =
                         |> Query.find [ Selector.tag "p", Selector.class "uppercase" ]
                         |> Query.has
                             [ Selector.classes [ "text-xs", "font-semibold", "tracking-wider" ]
-                            , Selector.text Family.siteLabel
+                            , Selector.text footer.siteLabel
                             ]
             , test "links are 14px in two columns from sm up, one below" <|
                 \_ ->
@@ -164,35 +124,16 @@ suite =
                                 |> Query.fromHtml
                                 |> Query.has [ Selector.class "mt-auto" ]
                         , \_ ->
-                            Family.view { currentSite = "", year = 2026, topMargin = True, extra = [] }
+                            Family.view { topMargin = True, extra = [] } footer
                                 |> Query.fromHtml
                                 |> Query.has [ Selector.class "mt-16" ]
                         ]
                         ()
-            ]
-        , describe "Family.viewWith"
-            [ test "renders the supplied content with the family logo and layout" <|
+            , test "extra lines are shown under the disclaimer" <|
                 \_ ->
-                    Family.viewWith
-                        { topMargin = False
-                        , extra = [ Html.span [] [ Html.text "Versio 1.2.3" ] ]
-                        , siteLabel = "Testipalvelu"
-                        , links = [ { label = "Homepage", href = "https://palikkaharrastajat.fi" } ]
-                        , copyright = "Content is owned by its creators."
-                        , disclaimer = [ "Disclaimer line" ]
-                        }
-                        |> Expect.all
-                            [ expectLinks [ { label = "Homepage", href = "https://palikkaharrastajat.fi" } ]
-                            , Query.fromHtml
-                                >> Query.has
-                                    [ Selector.tag "footer"
-                                    , Selector.containing [ Selector.text "Versio 1.2.3" ]
-                                    , Selector.containing [ Selector.text "Testipalvelu" ]
-                                    , Selector.containing [ Selector.text "Content is owned by its creators." ]
-                                    , Selector.containing [ Selector.text "Disclaimer line" ]
-                                    , Selector.containing [ Selector.tag "img", Selector.class "h-35" ]
-                                    ]
-                            ]
+                    Family.view { topMargin = False, extra = [ Html.span [] [ Html.text "Versio 1.2.3" ] ] } footer
+                        |> Query.fromHtml
+                        |> Query.has [ Selector.containing [ Selector.text "Versio 1.2.3" ] ]
             ]
         , describe "Footer.viewWith"
             [ test "renders footer with extra content and copyright" <|
@@ -201,12 +142,12 @@ suite =
                         { topMargin = False
                         , extra = [ Html.span [] [ Html.text "Versio 1.2.3" ] ]
                         }
-                        { logo = Just Family.logo
+                        { logo = Just (Html.img [ Attr.src footer.footerLogo ] [])
                         , siteLabel = Just "Testipalvelu"
-                        , links = Family.links
+                        , links = footer.links
                         , groups = []
-                        , copyright = Family.copyright 2026
-                        , disclaimer = Just Family.disclaimer
+                        , copyright = footer.copyright
+                        , disclaimer = Just footer.disclaimer
                         }
                         |> Query.fromHtml
                         |> Query.has

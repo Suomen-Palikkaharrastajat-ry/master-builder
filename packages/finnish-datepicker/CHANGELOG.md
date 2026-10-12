@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed (breaking)
+
+- `FinnishDatePicker.view`, `field` and `update` and `FinnishDate.format`, `parse`, `monthName` and `weekdayAbbr` take a locale as their first argument (any record with the fields of `FinnishDate.DateLocale`, e.g. `Locale.fi` from the app toolkit). The package no longer contains Finnish text.
+
 ### Fixed
 
 - The date input uses `border-border-brand` instead of `border-border-default` so its boundary meets WCAG 1.4.11 and matches `Component.Form` inputs.

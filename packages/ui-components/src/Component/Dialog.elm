@@ -21,6 +21,7 @@ view :
     , footer : Maybe (Html msg)
     , isOpen : Bool
     , onClose : msg
+    , closeLabel : String
     }
     -> Html msg
 view config =
@@ -67,7 +68,7 @@ view config =
                             , Tw.cursor_pointer
                             , Bp.focus_visible [ Tw.outline_none, Tw.ring_2, TwEx.ring_brand, Tw.ring_offset_2 ]
                             ]
-                        , Attr.attribute "aria-label" "Sulje"
+                        , Attr.attribute "aria-label" config.closeLabel
                         , Attr.attribute "autofocus" ""
                         , Events.onClick config.onClose
                         ]

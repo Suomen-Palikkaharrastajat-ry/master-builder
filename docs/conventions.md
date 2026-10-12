@@ -236,22 +236,25 @@ the compiler. The contract is therefore:
   @source "./src";
   ```
 
-## Site footer
+## Site layout, configuration and language
 
-Every site renders its footer through `Component.Footer.Family` in
-`packages/ui-components`, never by assembling `Component.Footer` itself:
+Every site describes itself in `config.toml` and renders its chrome with
+`Component.Layout.view`; see [site-config.md](site-config.md). In short:
 
-- `Family.view { currentSite, year, topMargin, extra }` — canonical content
-  (`Family.links` minus the site's own URL, label, copyright, disclaimer).
-- `Family.viewWith { … }` — same logo, layout and typography with the site's
-  own label, links, copyright and disclaimer (translated sites; the hub site,
-  whose `config.toml` `[footer] links` override the canonical list when present).
+- Do not assemble header, drawer or footer in a site. Pass the site's resolved
+  `SiteSettings`, `UiStrings.forLang lang` and the parts that differ to the shell.
+- The footer is `Component.Footer.Family.view`, fed from configuration. Its
+  content (label, links, copyright, disclaimer) is the family default in
+  `packages/site-config/family.toml` unless the site's `[footer]` overrides it.
+- Views contain no display text. Layout labels live in `UiStrings`, site content
+  in `config.toml`, feature text in the site's `I18n.elm` (`t : Lang -> …`), and
+  dates go through a `Locale`. `script/check-i18n.mjs` enforces this.
 
-The reference look is kalenteri.palikkaharrastajat.fi: 12px uppercase label,
-14px links in two columns (one below `sm`), 12px legal text. `tests/FooterTest.elm` pins the
-canonical link list, order, layout and typography, and each app has a test
-that its layout footer equals `Family.view`/`viewWith`. Change the footer in
-the hub and bump the pins; do not restyle it in an app.
+The footer's reference look is kalenteri.palikkaharrastajat.fi: 12px uppercase
+label, 14px links in two columns (one below `sm`), 12px legal text.
+`tests/FooterTest.elm` pins layout and typography, `tests/LayoutTest.elm` the
+shell, and `packages/site-config/site-config.test.mjs` the canonical link list.
+Change them in the hub and bump the pins; do not restyle them in an app.
 
 ## Commit style
 

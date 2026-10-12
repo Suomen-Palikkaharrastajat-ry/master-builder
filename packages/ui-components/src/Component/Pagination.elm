@@ -1,4 +1,4 @@
-module Component.Pagination exposing (view)
+module Component.Pagination exposing (Labels, view)
 
 {-| Pagination controls component.
 -}
@@ -12,15 +12,27 @@ import Tailwind.Theme as Th
 import TailwindTokens as TC
 
 
-view :
+{-| Accessible names of the pagination landmark and its two arrow buttons.
+-}
+type alias Labels =
+    { nav : String
+    , previous : String
+    , next : String
+    }
+
+
+type alias Config msg =
     { currentPage : Int
     , totalPages : Int
     , onPageClick : Int -> msg
+    , labels : Labels
     }
-    -> Html msg
+
+
+view : Config msg -> Html msg
 view config =
     Html.nav
-        [ Attr.attribute "aria-label" "Sivutus" ]
+        [ Attr.attribute "aria-label" config.labels.nav ]
         [ Html.ul
             [ classes [ Tw.inline_flex, Tw.items_center, Tw.gap Th.s1, Tw.type_body_small ] ]
             (prevButton config
@@ -30,7 +42,7 @@ view config =
         ]
 
 
-prevButton : { currentPage : Int, totalPages : Int, onPageClick : Int -> msg } -> Html msg
+prevButton : Config msg -> Html msg
 prevButton config =
     Html.li []
         [ Html.button
@@ -38,13 +50,13 @@ prevButton config =
             , classes (navBtnTw (config.currentPage <= 1))
             , Attr.disabled (config.currentPage <= 1)
             , Events.onClick (config.onPageClick (config.currentPage - 1))
-            , Attr.attribute "aria-label" "Edellinen"
+            , Attr.attribute "aria-label" config.labels.previous
             ]
             [ Html.text "‹" ]
         ]
 
 
-nextButton : { currentPage : Int, totalPages : Int, onPageClick : Int -> msg } -> Html msg
+nextButton : Config msg -> Html msg
 nextButton config =
     Html.li []
         [ Html.button
@@ -52,13 +64,13 @@ nextButton config =
             , classes (navBtnTw (config.currentPage >= config.totalPages))
             , Attr.disabled (config.currentPage >= config.totalPages)
             , Events.onClick (config.onPageClick (config.currentPage + 1))
-            , Attr.attribute "aria-label" "Seuraava"
+            , Attr.attribute "aria-label" config.labels.next
             ]
             [ Html.text "›" ]
         ]
 
 
-pageButton : { currentPage : Int, totalPages : Int, onPageClick : Int -> msg } -> Int -> Html msg
+pageButton : Config msg -> Int -> Html msg
 pageButton config page =
     Html.li []
         [ Html.button

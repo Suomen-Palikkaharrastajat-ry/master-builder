@@ -143,7 +143,10 @@ check: ## Check Elm formatting, tests, and elm-review rules (no changes)
 	(cd packages/finnish-datepicker && elm-test)
 	cd admin-app && elm make src/Main.elm --output=/tmp/master-builder-admin-check.js
 	node --test admin-app/GitHubCommit.test.mjs
+	node --test packages/site-config/site-config.test.mjs
+	node packages/site-config/gen-fixture.mjs --check
 	node script/check-safelist.mjs
+	node script/check-i18n.mjs app src admin-app/src packages/ui-components/src packages/app-toolkit/src packages/finnish-datepicker/src packages/osm-opening-hours/src packages/site-config
 	elm-review --config review
 
 .PHONY: format

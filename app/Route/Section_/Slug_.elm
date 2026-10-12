@@ -194,7 +194,7 @@ view app _ =
             app.data.sectionFrontmatter
 
         breadcrumbItems =
-            [ { label = "Etusivu", href = Just "/" }
+            [ { label = (Shared.strings app.sharedData).home, href = Just "/" }
             , { label = Maybe.withDefault sectionFm.title sectionFm.navTitle
               , href = Just ("/" ++ app.routeParams.section)
               }
@@ -203,9 +203,9 @@ view app _ =
     in
     { title = app.data.frontmatter.title ++ " — " ++ app.sharedData.config.site.title
     , body =
-        [ Breadcrumb.view breadcrumbItems
+        [ Breadcrumb.view (Shared.strings app.sharedData).breadcrumb breadcrumbItems
         , MarkdownRenderer.renderMarkdown
-            { childPages = [], sectionSlug = Nothing, pageDir = app.data.pageDir, isIndex = False }
+            { childPages = [], sectionSlug = Nothing, pageDir = app.data.pageDir, isIndex = False, strings = Shared.strings app.sharedData }
             app.data.body
         ]
     }

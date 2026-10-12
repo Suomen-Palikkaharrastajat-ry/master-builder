@@ -12,9 +12,11 @@ import Tailwind.Theme as Th
 import TailwindTokens as TC
 
 
-view : List { label : String, href : Maybe String } -> Html msg
-view items =
-    Html.nav [ Attr.attribute "aria-label" "breadcrumb" ]
+{-| `label` is the accessible name of the breadcrumb landmark.
+-}
+view : String -> List { label : String, href : Maybe String } -> Html msg
+view label items =
+    Html.nav [ Attr.attribute "aria-label" label ]
         [ Html.ol
             [ classes
                 [ Tw.flex

@@ -70,7 +70,8 @@ viewOverlay config =
 {-| Slide-in drawer panel. Supply navigation markup (and any extra content such
 as auth controls) via `content`.
 
-`label` is the drawer's accessible name, announced when focus enters the dialog.
+`label` is the drawer's accessible name, announced when focus enters the dialog;
+`closeLabel` names its screen-reader close button.
 
 When closed the panel is only translated off-screen, so it stays in the layout
 and keeps its transition. `inert` is what actually takes it out of the tab order
@@ -82,6 +83,7 @@ view :
     { isOpen : Bool
     , id : String
     , label : String
+    , closeLabel : String
     , onClose : msg
     , breakpoint : Breakpoint
     , content : List (Html msg)
@@ -125,9 +127,9 @@ view config =
         (Html.button
             [ Html.Events.onClick config.onClose
             , classes [ Tw.sr_only ]
-            , Attr.attribute "aria-label" "Sulje valikko"
+            , Attr.attribute "aria-label" config.closeLabel
             ]
-            [ Html.text "Sulje valikko" ]
+            [ Html.text config.closeLabel ]
             :: config.content
         )
 

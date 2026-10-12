@@ -38,11 +38,11 @@ type alias Toast msg =
     }
 
 
-{-| Renders a single toast notification.
+{-| Renders a single toast notification. `closeLabel` names its close button.
 -}
-viewToast : Toast msg -> Html msg
-viewToast toast =
-    renderToast Nothing toast
+viewToast : String -> Toast msg -> Html msg
+viewToast closeLabel toast =
+    renderToast closeLabel toast
 
 
 {-| Backwards-compatible view taking a record with a required title string.
@@ -53,10 +53,11 @@ view :
     , body : String
     , variant : Variant
     , onClose : Maybe msg
+    , closeLabel : String
     }
     -> Html msg
 view config =
-    viewToast
+    viewToast config.closeLabel
         { id = ""
         , title =
             if String.isEmpty (String.trim config.title) then
@@ -94,16 +95,13 @@ region config toasts =
             , Attr.attribute "aria-relevant" "additions"
             , classes [ Tw.flex, Tw.flex_col, Tw.gap Th.s2, Tw.w_full ]
             ]
-            (List.map (\t -> ( t.id, renderToast (Just config.closeLabel) t )) toasts)
+            (List.map (\t -> ( t.id, renderToast config.closeLabel t )) toasts)
         ]
 
 
-renderToast : Maybe String -> Toast msg -> Html msg
-renderToast maybeCloseLabel config =
+renderToast : String -> Toast msg -> Html msg
+renderToast closeLabel config =
     let
-        closeLabel =
-            Maybe.withDefault "Sulje" maybeCloseLabel
-
         roleAttr =
             case config.variant of
                 Danger ->
