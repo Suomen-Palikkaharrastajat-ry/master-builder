@@ -32,12 +32,13 @@ const FINNISH_WORDS = [
   'tiistai', 'keskiviikko', 'torstai', 'perjantai', 'lauantai', 'sunnuntai', 'etusivu', 'yhteystiedot',
   'verkkosivu', 'verkkovirhe', 'palvelinvirhe', 'aukioloajat', 'suodattimet', 'ilmoitukset',
 ]
-// A word followed by a file extension ("kalenteri.rss") is a file name.
-const FINNISH_WORD = new RegExp(`(?<![\\p{L}])(${FINNISH_WORDS.join('|')})(?![\\p{L}])(?!\\.[a-z])`, 'iu')
-const READS_LIKE_TEXT = /\s|^.[A-ZÅÄÖ][a-zåäö]+.$/
+// A word followed by a file extension ("kalenteri.rss") is a file name, and one
+// joined with - or _ ("kartta-pane") is a class or an identifier.
+const FINNISH_WORD = new RegExp(`(?<![\\p{L}_-])(${FINNISH_WORDS.join('|')})(?![\\p{L}_-])(?!\\.[a-z])`, 'iu')
+const READS_LIKE_TEXT = /\s|^["'`]+[A-ZÅÄÖ][a-zåäö]+["'`]+$/
 
 const looksFinnish = (literal) =>
-  FINNISH.test(literal) || (READS_LIKE_TEXT.test(literal) && FINNISH_WORD.test(literal.slice(1, -1)))
+  FINNISH.test(literal) || (READS_LIKE_TEXT.test(literal) && FINNISH_WORD.test(literal))
 
 function files(path) {
   if (SKIPPED.test(path)) return []
@@ -45,41 +46,86 @@ function files(path) {
   return EXTENSIONS.test(path) && !TRANSLATION_MODULE.test(path) ? [path] : []
 }
 
-// Blanks out comments, keeping line numbers intact.
-function withoutComments(source, path) {
-  const blank = (match) => match.replace(/[^\n]/g, ' ')
-  if (/\.(elm|hs)$/.test(path)) {
-    return source.replace(/\{-[\s\S]*?-\}/g, blank).replace(/(^|\s)--.*$/gm, blank)
+// Yields every string literal of a source file as { text, line }, where text
+// includes the quotes. A small tokenizer rather than regular expressions, so
+// that comment markers inside strings, strings inside comments, multi-line
+// strings (Elm """…""", JS template literals) and Haskell primes are all read
+// for what they are.
+export function literals(source, path) {
+  const haskellLike = /\.(elm|hs)$/.test(path)
+  const out = []
+  let line = 1
+  let i = 0
+  const at = (text) => source.startsWith(text, i)
+  const advance = (count) => {
+    for (let k = 0; k < count && i < source.length; k++, i++) if (source[i] === '\n') line++
   }
-  return source.replace(/\/\*[\s\S]*?\*\//g, blank).replace(/(^|\s)\/\/.*$/gm, blank)
+  const skipUntil = (end) => {
+    const stop = source.indexOf(end, i)
+    advance((stop === -1 ? source.length : stop + end.length) - i)
+  }
+  const readString = (quote) => {
+    const start = i
+    const startLine = line
+    advance(quote.length)
+    while (i < source.length && !at(quote)) advance(source[i] === '\\' ? 2 : 1)
+    advance(quote.length)
+    out.push({ text: source.slice(start, i), line: startLine })
+  }
+  while (i < source.length) {
+    if (haskellLike) {
+      if (at('{-')) {
+        let depth = 0
+        do {
+          if (at('{-')) {
+            depth++
+            advance(2)
+          } else if (at('-}')) {
+            depth--
+            advance(2)
+          } else advance(1)
+        } while (depth > 0 && i < source.length)
+      } else if (at('--')) skipUntil('\n')
+      else if (at('"""')) readString('"""')
+      else if (at('"')) readString('"')
+      else if (at("'")) {
+        // A character literal ('a', '\n'), or a prime in a Haskell name (x').
+        const match = /^'(\\.[^']*|[^'\\])'/.exec(source.slice(i, i + 12))
+        advance(match ? match[0].length : 1)
+      } else advance(1)
+    } else if (at('//')) skipUntil('\n')
+    else if (at('/*')) skipUntil('*/')
+    else if (at('"') || at("'") || at('`')) readString(source[i])
+    else advance(1)
+  }
+  return out
 }
 
-const targets = process.argv.slice(2)
-if (targets.length === 0) {
-  console.error('usage: check-i18n.mjs <file-or-directory>...')
-  process.exit(2)
-}
-
-const findings = []
-for (const path of targets.flatMap(files)) {
-  const source = readFileSync(path, 'utf8')
+/** The findings of one source file: "path:line: literal". */
+export function findingsIn(source, path, displayPath = path) {
   // A file may opt out with a comment saying why: `i18n-exempt: <reason>`.
-  if (/i18n-exempt: \S/.test(source)) continue
-  // In Elm and Haskell single quotes are character literals, not text.
-  const literals = /\.(elm|hs)$/.test(path)
-    ? /"(?:[^"\\]|\\.)*"/g
-    : /"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|`(?:[^`\\]|\\.)*`/g
-  const lines = withoutComments(source, path).split('\n')
-  lines.forEach((line, index) => {
-    for (const literal of line.match(literals) ?? []) {
-      if (looksFinnish(literal)) findings.push(`${relative(process.cwd(), path)}:${index + 1}: ${literal}`)
-    }
-  })
+  if (/i18n-exempt: \S/.test(source)) return []
+  return literals(source, path)
+    .filter((literal) => looksFinnish(literal.text))
+    .map((literal) => `${displayPath}:${literal.line}: ${literal.text.replace(/\s+/g, ' ').slice(0, 120)}`)
 }
 
-if (findings.length > 0) {
-  console.error('i18n: display text outside a translation module or config.toml:')
-  for (const finding of findings) console.error('  ' + finding)
-  process.exit(1)
+const isMain = process.argv[1] && import.meta.url === new URL(`file://${process.argv[1]}`).href
+if (isMain) main()
+
+function main() {
+  const targets = process.argv.slice(2)
+  if (targets.length === 0) {
+    console.error('usage: check-i18n.mjs <file-or-directory>...')
+    process.exit(2)
+  }
+  const findings = targets
+    .flatMap(files)
+    .flatMap((path) => findingsIn(readFileSync(path, 'utf8'), path, relative(process.cwd(), path)))
+  if (findings.length > 0) {
+    console.error('i18n: display text outside a translation module or config.toml:')
+    for (const finding of findings) console.error('  ' + finding)
+    process.exit(1)
+  }
+  console.log('i18n: no display text outside translation modules')
 }
-console.log('i18n: no display text outside translation modules')

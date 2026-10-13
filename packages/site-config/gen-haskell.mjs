@@ -49,7 +49,8 @@ const isText = (value) => typeof value === 'string' || (Array.isArray(value) && 
 
 const definitions = []
 const problems = []
-const KEY = /^[a-z][a-z0-9_]*$/
+// snake_case with single underscores, so two keys cannot map to one name.
+const KEY = /^[a-z][a-z0-9]*(_[a-z0-9]+)*$/
 // Lists the generators index by position must have a fixed length.
 const shape = (value) => (Array.isArray(value) ? 'list' : 'string')
 const constant = (name, doc, value) =>
@@ -72,6 +73,10 @@ const perLang = (name, doc, get) => {
   definitions.push({ name, text: `-- | ${doc}\n${name} :: Lang -> ${type}\n${clauses.join('\n')}` })
 }
 
+definitions.push({
+  name: 'langCode',
+  text: `-- | The two-letter code of a language.\nlangCode :: Lang -> String\n${langs.map((lang) => `langCode ${con(lang)} = ${hs(lang)}`).join('\n')}`,
+})
 constant('siteUrl', '@[site] url@, without a trailing slash.', resolved.configs[resolved.default].site.url.replace(/\/+$/, ''))
 perLang('siteTitle', '@[site] title@.', (c) => c.site.title)
 perLang('siteDescription', '@[site] description@.', (c) => c.site.description)

@@ -73,7 +73,7 @@ silent fallback there either. Decode it in Elm with
 
 | Where | How |
 |---|---|
-| Hub (elm-pages) | `Config.task` (a `BackendTask`) |
+| Hub (elm-pages) | `Config.task` (a `BackendTask`). A content site is built in its default language only; other declared languages are ignored |
 | App build (Vite) | `packages/site-config/vite.mjs`: generates the document head and `site.webmanifest`, and provides `virtual:site-config` |
 | App (Elm) | pass `virtual:site-config` as a flag; decode with `SiteSettings.localizedDecoder`, pick a language with `SiteSettings.forLang` |
 | App (JavaScript) | `packages/site-config/browser.mjs`: `requestedLang`, `pickLang`, `appSettings`, `showLanguage` (sets the `lang` attribute and rewrites the head's description and social tags, which the static page carries in the default language) |
@@ -113,7 +113,9 @@ Downstream workflow.
 
 ## Adding a language
 
-1. Add it to `Lang`, `UiStrings.forLang`, `Locale.forCode` and to
+1. Add it to `Lang`, `UiStrings.forLang`, `Locale.forCode`,
+   `OpeningHours.I18n.forCode`, `packages/site-config/locales.json` (then run
+   `node packages/site-config/gen-locale-fixture.mjs`) and to
    `SUPPORTED_LANGUAGES` in `site-config.mjs`.
 2. Translate the family defaults: add `[<section>.<lang>]` tables to `family.toml`.
 3. In the site: list it in `[i18n] languages` and translate what the site sets itself.

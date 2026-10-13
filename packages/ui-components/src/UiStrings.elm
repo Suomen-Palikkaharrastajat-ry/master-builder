@@ -79,14 +79,20 @@ forLang lang =
             , searchDescription = "Hae sivuston sisällöistä."
             , searching = \query -> "Haetaan tuloksia hakusanalle \"" ++ query ++ "\"..."
             , noResults = \query -> "Ei hakutuloksia hakusanalle \"" ++ query ++ "\"."
-            , resultCount = \count -> String.fromInt count ++ " hakutulosta"
+            , resultCount =
+                \count ->
+                    if count == 1 then
+                        "1 hakutulos"
+
+                    else
+                        String.fromInt count ++ " hakutulosta"
             , searchPage = "Haku"
             , searchIntro = "Hae sivuston sivuja otsikon, kuvauksen ja sisällön perusteella."
             , searchHint = "Kirjoita hakusana ja tulokset päivittyvät automaattisesti."
             , searchEmptyQuery = "Anna hakusana, niin näytämme siihen sopivat sivut."
             , tableOfContents = "Sisällys"
-            , preview = "Preview"
-            , example = "Example"
+            , preview = "Esikatselu"
+            , example = "Esimerkki"
             , recommended = "Suositeltu"
             , pageNotFoundTitle = "Sivua ei löytynyt"
             , pageNotFound = "Sivua ei löytynyt. Tarkista osoite."
@@ -114,7 +120,13 @@ forLang lang =
             , searchDescription = "Search the site's content."
             , searching = \query -> "Searching for \"" ++ query ++ "\"..."
             , noResults = \query -> "No results for \"" ++ query ++ "\"."
-            , resultCount = \count -> String.fromInt count ++ " results"
+            , resultCount =
+                \count ->
+                    if count == 1 then
+                        "1 result"
+
+                    else
+                        String.fromInt count ++ " results"
             , searchPage = "Search"
             , searchIntro = "Search the site's pages by title, description and content."
             , searchHint = "Type a search term; results update automatically."

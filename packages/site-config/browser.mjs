@@ -51,10 +51,16 @@ export function showLanguage(siteConfig, lang) {
   setDocumentLang(lang)
   const config = siteConfig.configs[lang]
   if (!config) return
-  for (const tag of headTags(config)) {
+  const others = siteConfig.languages.filter((code) => code !== lang).map((code) => siteConfig.configs[code])
+  // A tag that repeats (og:locale:alternate) is matched by position.
+  const seen = new Map()
+  for (const tag of headTags(config, others)) {
     if (tag.tag !== 'meta') continue
     const [attribute, value] = tag.attrs.name ? ['name', tag.attrs.name] : ['property', tag.attrs.property]
-    const element = document.head.querySelector(`meta[${attribute}="${value}"]`)
+    const selector = `meta[${attribute}="${value}"]`
+    const index = seen.get(selector) ?? 0
+    seen.set(selector, index + 1)
+    const element = document.head.querySelectorAll(selector)[index]
     if (element) element.setAttribute('content', tag.attrs.content)
   }
 }

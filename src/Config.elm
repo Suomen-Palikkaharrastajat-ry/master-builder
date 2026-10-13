@@ -36,7 +36,9 @@ task =
                             (\localized ->
                                 case SiteSettings.forLang localized.default localized of
                                     Just config ->
-                                        Decode.succeed config
+                                        -- The site is built in one language, so it has no
+                                        -- other language to link to.
+                                        Decode.succeed { config | languages = [ config.lang ] }
 
                                     Nothing ->
                                         Decode.fail "config.toml has no configuration for its default language"
