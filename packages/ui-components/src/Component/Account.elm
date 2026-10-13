@@ -43,7 +43,7 @@ viewHeader config =
                 [ button config.onSignIn config.strings.signIn ]
 
             Just user ->
-                [ Html.span [ classes [ Tw.type_caption, TwEx.text_white_80 ] ] [ Html.text user.name ]
+                [ Html.span [ classes [ Tw.type_caption, TwEx.text_white_80 ] ] [ Html.text (displayName user) ]
                 , signOut config user
                 ]
         )
@@ -59,9 +59,21 @@ viewDrawer config =
 
         Just user ->
             Html.div [ classes [ Tw.flex, Tw.flex_col, Tw.items_start, Tw.gap Th.s3 ] ]
-                [ Html.span [ classes [ Tw.type_caption, Tw.text_simple TC.textMuted ] ] [ Html.text user.name ]
+                [ Html.span [ classes [ Tw.type_caption, Tw.text_simple TC.textMuted ] ] [ Html.text (displayName user) ]
                 , signOut config user
                 ]
+
+
+{-| The name shown for the signed-in user: the display name, or the email
+address when the account has none.
+-}
+displayName : User a -> String
+displayName user =
+    if String.isEmpty (String.trim user.name) then
+        String.trim user.email
+
+    else
+        String.trim user.name
 
 
 signOut : Config a msg -> User a -> Html msg
