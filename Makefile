@@ -143,7 +143,7 @@ check: ## Check Elm formatting, tests, and elm-review rules (no changes)
 	(cd packages/finnish-datepicker && elm-test)
 	cd admin-app && elm make src/Main.elm --output=/tmp/master-builder-admin-check.js
 	node --test admin-app/GitHubCommit.test.mjs
-	node --test packages/site-config/site-config.test.mjs packages/site-config/browser.test.mjs packages/site-config/gen-haskell.test.mjs script/check-i18n.test.mjs
+	node --test packages/site-config/site-config.test.mjs packages/site-config/browser.test.mjs packages/site-config/gen-haskell.test.mjs packages/site-config/vite.test.mjs script/check-i18n.test.mjs
 	node packages/site-config/gen-fixture.mjs --check
 	node packages/site-config/gen-locale-fixture.mjs --check
 	node script/check-safelist.mjs

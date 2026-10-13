@@ -12,6 +12,8 @@ on:
       - "review/**"
       - "pkgs/**"
       - "script/**"
+      - "mk/**"
+      - "public/**"
       - ".github/actions/**"
       - ".github/workflows/downstream.yml"
   push:
@@ -22,6 +24,8 @@ on:
       - "review/**"
       - "pkgs/**"
       - "script/**"
+      - "mk/**"
+      - "public/**"
       - ".github/actions/**"
       - ".github/workflows/downstream.yml"
   workflow_dispatch:

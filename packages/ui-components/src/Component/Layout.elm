@@ -269,13 +269,25 @@ viewDrawerLanguageLinks site =
 
 
 {-| On a page without a footer (a full-screen map) the header carries the
-language links on wide screens; the drawer has them on narrow ones.
+language links on wide screens; the drawer has them on narrow ones. The drawer
+is shown below `sm` in the standard header and below `md` in the others.
 -}
 headerLanguageLinks : Config msg -> List (Html msg)
 headerLanguageLinks config =
     case ( config.footer, otherLanguages config.site ) of
         ( Nothing, (_ :: _) as others ) ->
-            [ Html.div [ classes [ Tw.hidden, Bp.md [ Tw.flex ], Tw.items_center, Tw.gap Th.s3 ] ]
+            [ Html.div
+                [ classes
+                    [ Tw.hidden
+                    , if isStandard config then
+                        Bp.sm [ Tw.flex ]
+
+                      else
+                        Bp.md [ Tw.flex ]
+                    , Tw.items_center
+                    , Tw.gap Th.s3
+                    ]
+                ]
                 (List.map
                     (languageLink
                         [ Tw.type_caption
@@ -386,7 +398,7 @@ viewHeader config =
                 , links = config.links
                 , mobileMenuToggle = Maybe.map (viewSiteMenuToggle config) config.menu
                 , action =
-                    case config.headerActions of
+                    case headerLanguageLinks config ++ config.headerActions of
                         [] ->
                             Nothing
 

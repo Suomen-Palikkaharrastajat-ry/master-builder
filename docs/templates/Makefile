@@ -34,6 +34,16 @@ vendor: ## Init and update all git submodules to their pinned commits
 shell: ## Enter devenv shell
 	devenv shell
 
+# ── Site configuration ────────────────────────────────────────────────────────
+
+# config.toml is the single source of the site's URL, title, text and settings
+# (vendor/master-builder/docs/site-config.md). The shared targets `site-config`
+# and `site-config-check` come from the hub. `-include`: the file only exists
+# once `make vendor` has fetched the submodule.
+SITE_CONFIG_HASKELL := statics/src/SiteConfig.hs
+SITE_CONFIG_I18N := elm-app/src elm-app/main.js statics/src statics/app
+-include vendor/master-builder/mk/site-config.mk
+
 # ── Elm frontend ──────────────────────────────────────────────────────────────
 
 .PHONY: elm-dev
@@ -64,7 +74,7 @@ elm-test: elm-tailwind-gen ## Run Elm unit tests
 	cd elm-app && elm-test
 
 .PHONY: elm-check
-elm-check: ## Check Elm formatting + elm-review (no changes)
+elm-check: site-config-check ## Check Elm formatting + elm-review (no changes)
 	cd elm-app && elm-format --validate src/
 	$(MAKE) elm-review
 

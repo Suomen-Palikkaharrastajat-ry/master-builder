@@ -174,6 +174,10 @@ suite =
                             |> Query.hasNot [ Selector.attribute (Attr.href "?lang=en") ]
                     ]
                     ()
+        , test "the standard header carries the language link too when there is no footer" <|
+            \_ ->
+                shell (\c -> { c | footer = Nothing, site = withVariant "standard" c.site }) Fi
+                    |> has [ Selector.containing [ Selector.tag "nav", Selector.containing [ Selector.tag "a", Selector.attribute (Attr.href "?lang=en") ] ] ]
         , test "toast region is labelled in the current language" <|
             \_ ->
                 shell identity En

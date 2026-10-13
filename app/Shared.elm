@@ -5,7 +5,6 @@ module Shared exposing (Data, Model, Msg(..), SharedMsg(..), strings, template)
 
 import BackendTask exposing (BackendTask)
 import BackendTask.Glob as Glob
-import Browser.Events
 import Component.Layout as Layout
 import Config exposing (Config)
 import ContentDir
@@ -17,7 +16,6 @@ import Frontmatter exposing (NavVisibility(..))
 import Html exposing (Html)
 import Html.Attributes as Attr
 import Html.Events
-import Json.Decode
 import Pages.Flags
 import Pages.PageUrl exposing (PageUrl)
 import Ports

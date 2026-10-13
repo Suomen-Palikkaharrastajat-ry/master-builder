@@ -156,7 +156,8 @@ view config =
 {-| A `<li>` containing a navigation anchor.
 
   - Active link: yellow indicator dot on the left + `id="mobile-nav-active"`
-    (the `focusMobileNav` port scrolls this into view when the drawer opens)
+    (`Component.Layout.onMenuOpened` moves focus there when the drawer opens;
+    the id assumes the drawer's id is `mobile-nav`, as in the shared shell)
   - Keyboard focus: `focus-visible:ring` only — no ring on mouse/touch
 
 -}

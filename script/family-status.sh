@@ -9,10 +9,20 @@
 #              docs/family.md
 #
 # Reads other repositories through the GitHub API (the `gh` CLI, which honours
-# GH_TOKEN). A repository the token cannot read (competitions is private) is
-# reported as "no access" instead of failing the run. Run it from a hub
-# checkout whose origin/main is up to date; the script fetches it.
+# GH_TOKEN; `--update` also needs python3). A repository the token cannot read
+# (competitions is private) is reported as "no access" instead of failing the
+# run, but the script stops if it cannot reach GitHub at all, and `--update`
+# refuses to write a table that has "no access" rows. Run it from a hub
+# checkout with an `origin` remote; the script fetches origin/main.
 set -euo pipefail
+
+update=false
+for arg in "$@"; do
+  case "$arg" in
+    --update) update=true ;;
+    *) echo "usage: script/family-status.sh [--update]" >&2; exit 2 ;;
+  esac
+done
 
 ORG="${FAMILY_ORG:-Suomen-Palikkaharrastajat-ry}"
 # Repositories that pin the hub as the submodule vendor/master-builder.
@@ -22,16 +32,28 @@ WORKFLOW_CONSUMERS="${FAMILY_WORKFLOW_CONSUMERS:-website guides logo}"
 
 cd "$(dirname "$0")/.."
 command -v gh >/dev/null || { echo "family-status: the gh CLI is required" >&2; exit 2; }
+# A public repository must be readable; otherwise the token or the network is
+# the problem, and every row would wrongly read "no access".
+gh api "repos/$ORG/master-builder" --jq .name >/dev/null 2>&1 || {
+  echo "family-status: cannot read $ORG/master-builder through the GitHub API; check GH_TOKEN and the network" >&2
+  exit 1
+}
 git fetch --quiet origin main 2>/dev/null || echo "family-status: could not fetch origin/main; counts use the local copy" >&2
+have_main=true
+git rev-parse --verify --quiet origin/main >/dev/null || have_main=false
 today="$(date -u +%Y-%m-%d)"
 
 rows=()
 for repo in $SUBMODULE_CONSUMERS; do
   if pin="$(gh api "repos/$ORG/$repo/contents/vendor/master-builder" --jq .sha 2>/dev/null)" && [ -n "$pin" ]; then
-    if git cat-file -e "$pin^{commit}" 2>/dev/null; then
-      behind="$(git rev-list --count "$pin..origin/main")"
-    else
+    if ! $have_main; then
+      behind="unknown (no origin/main here)"
+    elif ! git cat-file -e "$pin^{commit}" 2>/dev/null; then
       behind="unknown (pin not in this clone)"
+    elif ! git merge-base --is-ancestor "$pin" origin/main; then
+      behind="unknown (pin is not on main)"
+    else
+      behind="$(git rev-list --count "$pin..origin/main")"
     fi
     rows+=("| $repo | submodule \`vendor/master-builder\` | \`${pin:0:7}\` | $behind | $today |")
   else
@@ -46,7 +68,11 @@ for repo in $WORKFLOW_CONSUMERS; do
       [ -n "$found" ] && ref="${found#deploy-content.yml@}" && break
     done
     if [ -n "$ref" ]; then
-      rows+=("| $repo | workflow \`deploy-content.yml@$ref\` | \`$ref\` (unpinned) | 0 (follows \`$ref\`) | $today |")
+      if [ "$ref" = "main" ]; then
+        rows+=("| $repo | workflow \`deploy-content.yml@$ref\` | \`$ref\` (unpinned) | 0 (follows \`$ref\`) | $today |")
+      else
+        rows+=("| $repo | workflow \`deploy-content.yml@$ref\` | \`$ref\` | see the ref | $today |")
+      fi
     else
       rows+=("| $repo | workflow \`deploy-content.yml\` | not found | unknown | $today |")
     fi
@@ -62,7 +88,12 @@ table="$(
 )"
 echo "$table"
 
-if [ "${1:-}" = "--update" ]; then
+if $update; then
+  if printf '%s\n' "${rows[@]}" | grep -q "no access"; then
+    echo "family-status: not updating docs/family.md: some repositories could not be read" >&2
+    exit 1
+  fi
+  command -v python3 >/dev/null || { echo "family-status: --update needs python3" >&2; exit 2; }
   doc="docs/family.md"
   start='<!-- family-status:start -->'
   end='<!-- family-status:end -->'
