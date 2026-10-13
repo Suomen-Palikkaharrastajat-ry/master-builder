@@ -81,8 +81,9 @@ title = "Brick Calendar"
 description = "Event calendar"
 [app]
 pocketbase_url = "https://data.palikkaharrastajat.fi"
+[app.strings]
 motto = "Rakennetaan"
-[app.en]
+[app.en.strings]
 motto = "Let's build"`),
     family,
     { year: 2026 },
@@ -97,8 +98,8 @@ motto = "Let's build"`),
     fi.footer.links.map((l) => l.href),
   )
   assert.equal(en.footer.links[0].label, 'Homepage')
-  assert.equal(fi.app.motto, 'Rakennetaan')
-  assert.equal(en.app.motto, "Let's build")
+  assert.equal(fi.app.strings.motto, 'Rakennetaan')
+  assert.equal(en.app.strings.motto, "Let's build")
   assert.equal(en.app.pocketbase_url, 'https://data.palikkaharrastajat.fi')
 })
 
@@ -280,4 +281,61 @@ test('every field the Elm decoder needs is required of the family defaults', () 
   assert.ok(found.includes('[navbar] show_desktop_search is missing for language "fi"'))
   assert.ok(found.includes('[pwa.icons] icon_192 is missing'))
   assert.equal(found.some((p) => p.includes('twitter_site') || p.includes('[pwa] scope')), false)
+})
+
+// ── Malformed files ──────────────────────────────────────────────────────────
+
+const minimal = '[site]\nurl="u"\ntitle="t"\ndescription="d"\n'
+
+test('a broken [i18n] is reported, not crashed on', () => {
+  assert.deepEqual(problems('[i18n]\ndefault = "en"\nlanguages = ["fi"]\n' + minimal), [
+    'config.toml: [i18n] default "en" is not listed in languages',
+  ])
+  assert.match(problems('[i18n]\nlanguages = []\n' + minimal)[0], /non-empty list/)
+  assert.match(problems('[i18n]\ndefault = 3\n' + minimal)[0], /languages must be a non-empty list|default 3 is not listed/)
+})
+
+test('a section that is not a table is rejected', () => {
+  assert.deepEqual(problems('footer = 3\napp = "x"\ni18n = true\n' + minimal), [
+    'config.toml: [footer] must be a table',
+    'config.toml: [app] must be a table',
+    'config.toml: [i18n] must be a table',
+  ])
+})
+
+test('[app] text lives in its text tables, complete for every language', () => {
+  const translated = '[site.en]\ntitle = "T"\ndescription = "D"\n'
+  assert.deepEqual(problems(bilingual + translated + '[app.strings]\nrefresh = "Päivitä"\n'), [
+    'config.toml: [app.en.strings] is missing (text is set in [app.strings] for "fi")',
+  ])
+  assert.deepEqual(problems(bilingual + translated + '[app]\nlabel = "Päivitä"\n[app.en]\nlabel = "Refresh"\n'), [
+    'config.toml: [app.en] label: only [app.en.strings] and [app.en.statics] can be set per language; text belongs in [app.strings]',
+  ])
+  assert.deepEqual(
+    problems(bilingual + translated + '[app.strings]\na = "A"\nlist = ["x"]\n[app.en.strings]\na = "B"\nlist = "x"\nextra = "E"\n'),
+    [
+      'config.toml: [app.en.strings] list must be a list like in [app.strings]',
+      'config.toml: [app.en.strings] extra is not in [app.strings]',
+    ],
+  )
+})
+
+test('links must be set for every language or for none', () => {
+  const found = problems(
+    bilingual +
+      '[site.en]\ntitle = "T"\ndescription = "D"\n[footer.en]\nlinks = [{ label = "Homepage", href = "https://palikkaharrastajat.fi" }]\n',
+  )
+  assert.deepEqual(found, ['config.toml: links are set in [footer.en] but not in [footer]; set them for every language or for none'])
+})
+
+test('links need a label and a target and nothing else', () => {
+  assert.match(problems(minimal + '[footer]\nlinks = [{ label = "", href = "https://a.example" }]\n')[0], /\[footer\] links must be of type links/)
+  assert.match(problems(minimal + '[footer]\nlinks = [{ label = "A", href = "https://a.example", extra = 1 }]\n')[0], /must be of type links/)
+})
+
+test('[pwa.icons] is checked like the other tables', () => {
+  assert.deepEqual(problems(minimal + '[pwa.icons]\nicon_192 = 5\nicon_1024 = "/x.png"\n'), [
+    '[pwa.icons] icon_192 must be of type string',
+    'unknown key [pwa.icons] icon_1024',
+  ])
 })

@@ -14,7 +14,18 @@
 // `--check` fails when the file is out of date instead of writing it.
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { basename, relative, resolve } from 'node:path'
-import { load } from './site-config.mjs'
+import { load, SiteConfigError } from './site-config.mjs'
+
+// A configuration problem is the user's to fix: print it, not a stack trace.
+function loadOrExit(path, options) {
+  try {
+    return load(path, options)
+  } catch (error) {
+    if (!(error instanceof SiteConfigError)) throw error
+    console.error(`${path}: ${error.message}`)
+    process.exit(1)
+  }
+}
 
 const locales = JSON.parse(readFileSync(new URL('./locales.json', import.meta.url), 'utf8'))
 
@@ -29,7 +40,7 @@ if (!configPath || !target) {
   process.exit(2)
 }
 
-const resolved = load(configPath)
+const resolved = loadOrExit(configPath)
 const langs = resolved.languages
 const con = (lang) => lang[0].toUpperCase() + lang.slice(1)
 const camel = (prefix, key) =>

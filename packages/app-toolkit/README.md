@@ -4,7 +4,8 @@ Shared Elm app plumbing for Suomen Palikkaharrastajat ry applications (`event-ca
 
 ## Modules
 
-- **`FinnishTime`**: Helsinki timezone conversion (EET/EEST, daylight saving transitions), Finnish numerical and textual date formatting (`formatShortDate`, `formatTime`, `formatFullDate`, `parseFinnishDate`, `formatFinnishDate`), form input converters, and 6×7 calendar month grid generation (`monthGrid`).
+- **`FinnishTime`**: Helsinki timezone conversion (EET/EEST, daylight saving transitions), date and time formatting and parsing in a given `Locale` (`formatShortDate`, `formatTime`, `formatFullDate`, `parseDate`, `formatDate`), form input converters, and 6×7 calendar month grid generation (`monthGrid`).
+- **`Locale`**: a language's date and time conventions (month and weekday names, separators, date input placeholder); `fi`, `en` and `forCode`. Tested against `packages/site-config/locales.json`.
 - **`PocketBaseAuth`**: Msg-polymorphic OAuth2 token exchange (`fetchOAuthToken`), auth state restoration from flags (`restoreAuthFromFlags`), and PocketBase user decoding (`decodeAuthUser`).
 - **`View.MapOverlay`**: Responsive, accessible overlays for interactive maps without inline styles (`panel`, `filterGroup`, `detailPanel`, `detailPanelWithHeaderActions`).
 - **`View.MapWidget`**: Container element for Leaflet and MapLibre map initialization.

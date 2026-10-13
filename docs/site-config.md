@@ -63,11 +63,19 @@ overrides single values without repeating the rest.
 
 ## App settings
 
-`[app]` is free-form and belongs to the app: language-neutral settings directly
-in it, per-language overrides in `[app.<lang>]`. A table a language overrides
-(`[app.en.strings]`) must contain every key of the default one; there is no
-silent fallback there either. Decode it in Elm with
-`SiteSettings.appDecoder`.
+`[app]` belongs to the app.
+
+- **Settings** (URLs, numbers, flags, tables of them) sit directly in `[app]`
+  and are language-neutral.
+- **Text** sits in two tables: `[app.strings]` for what the app's JavaScript
+  renders and `[app.statics]` for its static generators. Other languages go in
+  `[app.<lang>.strings]` and `[app.<lang>.statics]`.
+- As everywhere else there is no silent fallback: each declared language gives
+  every key of a text table, with the same shape, and nothing else can be set
+  per language.
+- A two-letter table name directly under `[app]` is always read as a language.
+
+Decode the settings in Elm with `SiteSettings.appDecoder`.
 
 ## Using the configuration
 
@@ -75,7 +83,7 @@ silent fallback there either. Decode it in Elm with
 |---|---|
 | Hub (elm-pages) | `Config.task` (a `BackendTask`). A content site is built in its default language only; other declared languages are ignored |
 | App build (Vite) | `packages/site-config/vite.mjs`: generates the document head and `site.webmanifest`, and provides `virtual:site-config` |
-| App (Elm) | pass `virtual:site-config` as a flag; decode with `SiteSettings.localizedDecoder`, pick a language with `SiteSettings.forLang` |
+| App (Elm) | pass `virtual:site-config` as a flag; `SiteSettings.fromFlags` gives the language to show, its settings, the site's default language and, if the flag cannot be read, the error to report. Mark content written in the default language with `Lang.attributeFor` when the interface is in another |
 | App (JavaScript) | `packages/site-config/browser.mjs`: `requestedLang`, `pickLang`, `appSettings`, `showLanguage` (sets the `lang` attribute and rewrites the head's description and social tags, which the static page carries in the default language) |
 | Static generators (Haskell) | `packages/site-config/gen-haskell.mjs` writes a `SiteConfig` module: site URL, title, description, organisation, month and weekday names (from `locales.json`, the table the Elm `Locale` is tested against) and every string in `[app]` and `[app.statics]`, per language |
 | Elm tests | `packages/site-config/gen-fixture.mjs` writes the resolved config as an Elm string, so tests render the app's real configuration |
@@ -89,8 +97,9 @@ silent fallback there either. Decode it in Elm with
   They are committed.
 - `make site-config-check` (part of `make elm-check`) fails when they are out
   of date or when display text sits outside translations.
-- Text the JavaScript or the Haskell generators render goes in `[app]`,
-  `[app.strings]` or `[app.statics]`, with per-language overrides in `[app.<lang>]`.
+- Text the JavaScript or the Haskell generators render goes in `[app.strings]`
+  or `[app.statics]`, translated in `[app.<lang>.strings]` and
+  `[app.<lang>.statics]`.
 - A visitor switches language with `?lang=<code>`; the choice is remembered. A
   language the site does not declare is ignored.
 

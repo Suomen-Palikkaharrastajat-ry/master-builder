@@ -10,6 +10,7 @@ for the apps, at startup.
 
 import Expect
 import Json.Decode as Decode
+import Json.Encode as Encode
 import Lang exposing (Lang(..))
 import SiteSettings
 import SiteSettingsFixture
@@ -71,6 +72,30 @@ suite =
                 [ Just "lang=en", Just "a=1&lang=en", Just "lang=fi", Just "lang=sv", Just "language=en", Just "", Nothing ]
                     |> List.map (Lang.isSwitch Fi)
                     |> Expect.equal [ True, True, False, False, False, False, False ]
+        , test "fromFlags gives language, default and settings, or says why not" <|
+            \_ ->
+                let
+                    flag =
+                        Decode.decodeString Decode.value SiteSettingsFixture.json
+                            |> Result.withDefault (Encode.object [])
+
+                    good =
+                        SiteSettings.fromFlags (Just "en") flag
+
+                    bad =
+                        SiteSettings.fromFlags Nothing (Encode.object [])
+                in
+                ( ( good.lang, good.default, good.site.site.title )
+                , good.error
+                , ( bad.site.site.title, Maybe.map (String.startsWith "The site configuration could not be read") bad.error )
+                )
+                    |> Expect.equal ( ( En, Fi, "Brick Calendar" ), Nothing, ( "", Just True ) )
+        , test "Lang.attributeFor marks content in another language only" <|
+            \_ ->
+                ( List.length (Lang.attributeFor { interface = En, content = Fi })
+                , List.length (Lang.attributeFor { interface = Fi, content = Fi })
+                )
+                    |> Expect.equal ( 1, 0 )
         , test "an app decodes its own [app] settings" <|
             \_ ->
                 Decode.decodeString

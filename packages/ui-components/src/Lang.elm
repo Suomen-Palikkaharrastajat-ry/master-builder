@@ -1,6 +1,6 @@
 module Lang exposing
     ( Lang(..), all, fromString, toString
-    , switchQuery, isSwitch
+    , switchQuery, isSwitch, attributeFor
     )
 
 {-| The languages a family site can be shown in.
@@ -9,9 +9,12 @@ Every site is language-aware even when it ships a single language: views take
 a `Lang` (or strings resolved for one) instead of containing display text.
 
 @docs Lang, all, fromString, toString
-@docs switchQuery, isSwitch
+@docs switchQuery, isSwitch, attributeFor
 
 -}
+
+import Html
+import Html.Attributes
 
 
 {-| A supported language.
@@ -82,3 +85,17 @@ isSwitch current query =
                     Nothing
             )
         |> List.any (\requested -> requested /= current)
+
+
+{-| The `lang` attribute for content written in another language than the
+interface around it — events entered in Finnish inside an English page — so
+that screen readers pronounce it correctly (WCAG 3.1.2). Empty when the two are
+the same.
+-}
+attributeFor : { interface : Lang, content : Lang } -> List (Html.Attribute msg)
+attributeFor { interface, content } =
+    if interface == content then
+        []
+
+    else
+        [ Html.Attributes.lang (toString content) ]

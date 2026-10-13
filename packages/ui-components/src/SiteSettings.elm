@@ -1,7 +1,7 @@
 module SiteSettings exposing
     ( SiteSettings, Localized
     , Site, Metadata, Icons, Pwa, PwaIcons, Branding, Navbar, Admin, Footer, Link
-    , decoder, localizedDecoder, forLang, pickLang, appDecoder, placeholder
+    , fromFlags, decoder, localizedDecoder, forLang, pickLang, appDecoder, placeholder
     )
 
 {-| A site's configuration, as resolved from its `config.toml` and the family
@@ -15,7 +15,7 @@ has a fallback: a missing value is a build error there, not a default here.
 
 @docs SiteSettings, Localized
 @docs Site, Metadata, Icons, Pwa, PwaIcons, Branding, Navbar, Admin, Footer, Link
-@docs decoder, localizedDecoder, forLang, pickLang, appDecoder, placeholder
+@docs fromFlags, decoder, localizedDecoder, forLang, pickLang, appDecoder, placeholder
 
 -}
 
@@ -189,6 +189,45 @@ forLang lang localized =
 
         Nothing ->
             find localized.default
+
+
+{-| What an app needs at startup from the configuration it was handed as a
+flag: the language to show, the settings in that language, and the site's
+default language (the language its content is written in).
+
+`error` says why the flag could not be used. The app then runs on an empty
+`placeholder`, so it should report the error (to the console, through a port)
+rather than leave a blank header unexplained.
+
+-}
+fromFlags :
+    Maybe String
+    -> Decode.Value
+    -> { lang : Lang, default : Lang, site : SiteSettings, error : Maybe String }
+fromFlags requested flag =
+    case Decode.decodeValue localizedDecoder flag of
+        Ok localized ->
+            let
+                lang =
+                    pickLang requested localized
+            in
+            case forLang lang localized of
+                Just site ->
+                    { lang = lang, default = localized.default, site = site, error = Nothing }
+
+                Nothing ->
+                    { lang = lang
+                    , default = localized.default
+                    , site = placeholder lang
+                    , error = Just ("The site configuration has no settings for \"" ++ Lang.toString lang ++ "\".")
+                    }
+
+        Err problem ->
+            { lang = Lang.Fi
+            , default = Lang.Fi
+            , site = placeholder Lang.Fi
+            , error = Just ("The site configuration could not be read: " ++ Decode.errorToString problem)
+            }
 
 
 {-| The language to show: the requested one when the site declares it,

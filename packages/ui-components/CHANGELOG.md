@@ -9,6 +9,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning: [S
 
 - `Component.Layout`: the page shell shared by every site (skip link, header, mobile drawer, main, footer, scroll-to-top, toast region), driven by the site's resolved configuration and layout strings.
 - `SiteSettings`: types and decoders for a site's `config.toml` as resolved per language by `packages/site-config`.
+- `SiteSettings.fromFlags`: language, settings, default language and decode error for an app's startup; `Lang.attributeFor`: the `lang` attribute for content in another language than the interface.
 - `Lang`: the supported languages; `UiStrings`: the layout and component labels per language (Finnish and English).
 - `Component.Navbar`: `viewBrand`, `viewMenuToggle`, and `viewAppHeader` for Compact application headers (#5).
 - `Component.Footer`: `viewWith` supporting `topMargin` toggle (`mt-auto` vs `mt-16`) and `extra` column content slot (#6).

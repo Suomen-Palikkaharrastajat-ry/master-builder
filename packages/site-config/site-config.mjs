@@ -156,23 +156,42 @@ const TYPE_CHECKS = {
   int: (v) => Number.isInteger(v),
   strings: (v) => Array.isArray(v) && v.every((x) => typeof x === 'string'),
   links: (v) =>
-    Array.isArray(v) && v.every((x) => isTable(x) && typeof x.label === 'string' && typeof x.href === 'string'),
+    Array.isArray(v) &&
+    v.every(
+      (x) =>
+        isTable(x) &&
+        Object.keys(x).every((key) => key === 'label' || key === 'href') &&
+        typeof x.label === 'string' &&
+        x.label.trim() !== '' &&
+        typeof x.href === 'string' &&
+        x.href.trim() !== '',
+    ),
   table: isTable,
 }
 
+// Reads [i18n]. On any problem it reports it and carries on as a Finnish-only
+// site, so the rest of the file is still checked and no later step trips over
+// a language that does not exist.
 function readI18n(raw, name, problems) {
+  const fallback = { default: 'fi', languages: ['fi'] }
   const i18n = raw.i18n ?? {}
+  if (!isTable(i18n)) return fallback // reported with the other sections
+  const before = problems.length
   const def = i18n.default ?? 'fi'
   const languages = i18n.languages ?? [def]
   for (const key of Object.keys(i18n)) {
     if (key !== 'default' && key !== 'languages') problems.push(`${name}: unknown key [i18n] ${key}`)
   }
-  if (!Array.isArray(languages) || languages.some((l) => typeof l !== 'string' || !LANG_RE.test(l))) {
-    problems.push(`${name}: [i18n] languages must be a list of two-letter language codes`)
-    return { default: 'fi', languages: ['fi'] }
+  if (
+    !Array.isArray(languages) ||
+    languages.length === 0 ||
+    languages.some((l) => typeof l !== 'string' || !LANG_RE.test(l))
+  ) {
+    problems.push(`${name}: [i18n] languages must be a non-empty list of two-letter language codes`)
+    return fallback
   }
   if (typeof def !== 'string' || !languages.includes(def)) {
-    problems.push(`${name}: [i18n] default "${def}" is not listed in languages`)
+    problems.push(`${name}: [i18n] default ${JSON.stringify(def)} is not listed in languages`)
   }
   if (new Set(languages).size !== languages.length) problems.push(`${name}: [i18n] languages has duplicates`)
   for (const lang of languages) {
@@ -180,7 +199,7 @@ function readI18n(raw, name, problems) {
       problems.push(`${name}: [i18n] language "${lang}" is not supported (supported: ${SUPPORTED_LANGUAGES.join(', ')})`)
     }
   }
-  return { default: def, languages }
+  return problems.length > before ? fallback : { default: def, languages }
 }
 
 // Splits one raw section into { neutral, byLang: { <lang>: translatable } },
@@ -236,34 +255,60 @@ function deepMerge(...tables) {
   return out
 }
 
-// [app] is free-form: language-neutral keys directly in it, per-language
-// overrides in [app.<lang>]. Language tables follow the same rules as in the
-// other sections; a table a language overrides must be overridden completely.
+// The tables of [app] that hold text. Everything else in [app] is
+// language-neutral (URLs, numbers, flags, other tables).
+export const APP_TEXT_TABLES = ['strings', 'statics']
+
+const shapeOf = (value) => (Array.isArray(value) ? 'list' : isTable(value) ? 'table' : typeof value)
+
+// [app] belongs to the app. Language-neutral settings sit directly in it; text
+// sits in [app.strings] (for the app) and [app.statics] (for its generators),
+// with the other languages in [app.<lang>.strings] and [app.<lang>.statics].
+// As elsewhere there is no silent fallback: each language gives every key.
 function splitApp(raw, i18n, problems) {
   const out = { neutral: {}, byLang: Object.fromEntries(i18n.languages.map((l) => [l, {}])) }
   for (const [key, value] of Object.entries(raw ?? {})) {
     if (!(LANG_RE.test(key) && isTable(value))) {
       out.neutral[key] = value
     } else if (key === i18n.default) {
-      problems.push(`config.toml: [app.${key}] is the default language; put its values directly in [app]`)
+      problems.push(`config.toml: [app.${key}] is the default language; put its text directly in [app.strings]`)
     } else if (!i18n.languages.includes(key)) {
-      problems.push(`config.toml: [app.${key}] but "${key}" is not listed in [i18n] languages`)
+      problems.push(`config.toml: [app.${key}] but "${key}" is not listed in [i18n] languages (two-letter table names in [app] are language tables)`)
     } else {
-      out.byLang[key] = value
-    }
-  }
-  const missing = (base, override, path, lang) => {
-    for (const [key, value] of Object.entries(base)) {
-      if (!(key in override)) {
-        problems.push(`config.toml: [app.${lang}.${path}] ${key} is missing (set in [app.${path}] for "${i18n.default}")`)
-      } else if (isTable(value) && isTable(override[key])) {
-        missing(value, override[key], `${path}.${key}`, lang)
+      for (const [name, table] of Object.entries(value)) {
+        if (APP_TEXT_TABLES.includes(name) && isTable(table)) out.byLang[key][name] = table
+        else {
+          problems.push(
+            `config.toml: [app.${key}] ${name}: only ${APP_TEXT_TABLES.map((t) => `[app.${key}.${t}]`).join(' and ')} can be set per language; text belongs in [app.strings]`,
+          )
+        }
       }
     }
   }
-  for (const [lang, table] of Object.entries(out.byLang)) {
-    for (const [key, value] of Object.entries(table)) {
-      if (isTable(value) && isTable(out.neutral[key])) missing(out.neutral[key], value, key, lang)
+  for (const name of APP_TEXT_TABLES) {
+    const base = out.neutral[name]
+    if (base !== undefined && !isTable(base)) problems.push(`config.toml: [app] ${name} must be a table`)
+    for (const lang of i18n.languages) {
+      if (lang === i18n.default) continue
+      const translated = out.byLang[lang][name]
+      if (!isTable(base)) {
+        if (translated) problems.push(`config.toml: [app.${lang}.${name}] has no [app.${name}] to translate`)
+        continue
+      }
+      if (!translated) {
+        problems.push(`config.toml: [app.${lang}.${name}] is missing (text is set in [app.${name}] for "${i18n.default}")`)
+        continue
+      }
+      for (const [key, value] of Object.entries(base)) {
+        if (!(key in translated)) {
+          problems.push(`config.toml: [app.${lang}.${name}] ${key} is missing (set in [app.${name}] for "${i18n.default}")`)
+        } else if (shapeOf(translated[key]) !== shapeOf(value)) {
+          problems.push(`config.toml: [app.${lang}.${name}] ${key} must be a ${shapeOf(value)} like in [app.${name}]`)
+        }
+      }
+      for (const key of Object.keys(translated)) {
+        if (!(key in base)) problems.push(`config.toml: [app.${lang}.${name}] ${key} is not in [app.${name}]`)
+      }
     }
   }
   return out
@@ -279,17 +324,22 @@ const sameUrl = (a, b) => a.replace(/\/+$/, '') === b.replace(/\/+$/, '')
 export function resolve(siteRaw, familyRaw = {}, options = {}) {
   const year = options.year ?? new Date().getFullYear()
   const problems = []
+
+  // Every top-level key is a section, and every section is a table. A value of
+  // another kind is reported and then treated as absent.
+  const tablesOf = (raw, name) => {
+    const tables = {}
+    for (const [key, value] of Object.entries(raw)) {
+      if (!(key in SCHEMA) && key !== 'i18n' && key !== 'app') problems.push(`${name}: unknown section [${key}]`)
+      else if (!isTable(value)) problems.push(`${name}: [${key}] must be a table`)
+      else tables[key] = value
+    }
+    return tables
+  }
+  siteRaw = tablesOf(siteRaw, 'config.toml')
+  familyRaw = tablesOf(familyRaw, 'family.toml')
   const i18n = readI18n(siteRaw, 'config.toml', problems)
   const familyI18n = readI18n(familyRaw, 'family.toml', problems)
-
-  for (const [raw, name] of [
-    [siteRaw, 'config.toml'],
-    [familyRaw, 'family.toml'],
-  ]) {
-    for (const key of Object.keys(raw)) {
-      if (!(key in SCHEMA) && key !== 'i18n' && key !== 'app') problems.push(`${name}: unknown section [${key}]`)
-    }
-  }
 
   const sections = {}
   for (const section of Object.keys(SCHEMA)) {
@@ -349,7 +399,12 @@ export function resolve(siteRaw, familyRaw = {}, options = {}) {
       }
     }
     for (const key of REQUIRED_PWA_ICONS) {
-      if (typeof config.pwa.icons?.[key] !== 'string') problems.push(`[pwa.icons] ${key} is missing`)
+      const icon = config.pwa.icons?.[key]
+      if (icon === undefined) problems.push(`[pwa.icons] ${key} is missing`)
+      else if (typeof icon !== 'string') problems.push(`[pwa.icons] ${key} must be of type string`)
+    }
+    for (const key of Object.keys(config.pwa.icons ?? {})) {
+      if (!REQUIRED_PWA_ICONS.includes(key)) problems.push(`unknown key [pwa.icons] ${key}`)
     }
     if (config.navbar.variant !== undefined && !NAVBAR_VARIANTS.includes(config.navbar.variant)) {
       problems.push(`[navbar] variant must be one of ${NAVBAR_VARIANTS.join(', ')}`)
@@ -362,7 +417,14 @@ export function resolve(siteRaw, familyRaw = {}, options = {}) {
   const base = configs[i18n.default] ?? Object.values(configs)[0]
   for (const lang of i18n.languages) {
     for (const section of ['footer', 'navbar']) {
-      if (base && lang !== i18n.default && hrefs(configs[lang][section].links) !== hrefs(base[section].links)) {
+      if (!base || lang === i18n.default) continue
+      const setHere = 'links' in sections[section].site.byLang[lang]
+      const setForDefault = 'links' in sections[section].site.byLang[i18n.default]
+      if (setHere !== setForDefault) {
+        problems.push(
+          `config.toml: links are set in ${setHere ? `[${section}.${lang}]` : `[${section}]`} but not in ${setHere ? `[${section}]` : `[${section}.${lang}]`}; set them for every language or for none`,
+        )
+      } else if (hrefs(configs[lang][section].links) !== hrefs(base[section].links)) {
         problems.push(`[${section}.${lang}] links must have the same targets, in the same order, as [${section}] links`)
       }
     }

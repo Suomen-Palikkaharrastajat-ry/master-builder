@@ -63,5 +63,5 @@ test('rejects keys that cannot become distinct Haskell names', () => {
 test('rejects a value that is a list in one language and a string in another', () => {
   const mixed = run('mixed', base + '[app.statics]\nnames = ["a", "b"]\n[app.en.statics]\nnames = "a"\n')
   assert.equal(mixed.status, 1)
-  assert.match(mixed.stderr, /staticsNames: the value for "en" is not a list/)
+  assert.match(mixed.stderr, /\[app\.en\.statics\] names must be a list like in \[app\.statics\]/)
 })
