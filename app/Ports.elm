@@ -1,14 +1,9 @@
-port module Ports exposing (SearchResult, focusMobileNav, onScroll, performSearch, scrollToTop, searchResults)
-
-{-| Focus the first nav item in the mobile menu.
--}
-
-
-port focusMobileNav : () -> Cmd msg
-
+port module Ports exposing (SearchResult, onScroll, performSearch, scrollToTop, searchResults)
 
 {-| Send a search query to JavaScript (lunr index).
 -}
+
+
 port performSearch : String -> Cmd msg
 
 

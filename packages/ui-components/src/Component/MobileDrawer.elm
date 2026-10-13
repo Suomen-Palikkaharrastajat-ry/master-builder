@@ -126,7 +126,26 @@ view config =
         )
         (Html.button
             [ Html.Events.onClick config.onClose
-            , classes [ Tw.sr_only ]
+            , Attr.id (config.id ++ "-close")
+            , Attr.type_ "button"
+
+            -- Hidden until it has keyboard focus, like the skip link.
+            , classes
+                [ Tw.sr_only
+                , Tw.type_body_small
+                , Bp.focus
+                    [ Tw.not_sr_only
+                    , Tw.fixed
+                    , TwEx.top_4
+                    , TwEx.left_4
+                    , Tw.z_50
+                    , Tw.px Th.s4
+                    , Tw.py Th.s2
+                    , Tw.bg_simple TC.brand
+                    , Tw.text_simple TC.textOnDark
+                    , Tw.rounded_lg
+                    ]
+                ]
             , Attr.attribute "aria-label" config.closeLabel
             ]
             [ Html.text config.closeLabel ]

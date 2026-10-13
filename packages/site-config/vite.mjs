@@ -8,8 +8,13 @@
 // - site.webmanifest is generated (the path is [pwa] manifest_path).
 // - `import siteConfig from 'virtual:site-config'` gives the resolved
 //   configuration of every language, to pass to Elm as a flag.
+// - The family's icons, social image and logos are served from the hub's
+//   public/ directory, so apps do not keep copies. A file the app has in its
+//   own public/ directory wins.
 
-import { resolve as resolvePath } from 'node:path'
+import { cpSync, createReadStream, existsSync, readdirSync, statSync } from 'node:fs'
+import { dirname, extname, join, resolve as resolvePath } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { load } from './site-config.mjs'
 
 const VIRTUAL_ID = 'virtual:site-config'
@@ -19,13 +24,34 @@ import { headTags, webManifest } from './head.mjs'
 
 export { documentTitle, headTags, webManifest } from './head.mjs'
 
+// The hub's public/ directory, and which of its entries every site shares:
+// favicons and app icons, the social image, and the logo set.
+const SHARED_DIR = resolvePath(dirname(fileURLToPath(import.meta.url)), '../../public')
+const SHARED = /^(favicon[^/]*|icon-[^/]*|apple-touch-icon[^/]*|og-image\.[a-z]+|logo)$/
+const MIME = {
+  '.png': 'image/png',
+  '.svg': 'image/svg+xml',
+  '.webp': 'image/webp',
+  '.ico': 'image/x-icon',
+  '.gif': 'image/gif',
+  '.jpg': 'image/jpeg',
+}
+
+/** The shared entries (files and directories) of the hub's public/ directory. */
+export function sharedEntries(dir = SHARED_DIR) {
+  return existsSync(dir) ? readdirSync(dir).filter((name) => SHARED.test(name)) : []
+}
+
 /**
- * @param {{ config?: string }} options `config` is the path of config.toml,
- *   relative to the Vite root (default: one level above it).
+ * @param {{ config?: string, sharedAssets?: boolean }} options `config` is the
+ *   path of config.toml, relative to the Vite root (default: one level above
+ *   it). `sharedAssets: false` turns the family's shared icons and logos off.
  */
 export default function siteConfig(options = {}) {
   let configPath
   let resolved
+  let outDir
+  const shared = options.sharedAssets === false ? [] : sharedEntries()
   const read = () => {
     resolved = load(configPath)
     return resolved
@@ -38,6 +64,7 @@ export default function siteConfig(options = {}) {
 
     configResolved(viteConfig) {
       configPath = resolvePath(viteConfig.root, options.config ?? '../config.toml')
+      outDir = resolvePath(viteConfig.root, viteConfig.build.outDir)
       read()
     },
 
@@ -77,9 +104,19 @@ export default function siteConfig(options = {}) {
         server.ws.send({ type: 'full-reload' })
       })
       server.middlewares.use((request, response, next) => {
-        if (request.url?.split('?')[0] !== defaultConfig().pwa.manifest_path) return next()
-        response.setHeader('Content-Type', 'application/manifest+json')
-        response.end(manifestJson())
+        const path = decodeURIComponent(request.url?.split('?')[0] ?? '')
+        if (path === defaultConfig().pwa.manifest_path) {
+          response.setHeader('Content-Type', 'application/manifest+json')
+          response.end(manifestJson())
+          return
+        }
+        // Shared assets, unless the app has the file itself (Vite serves that).
+        const [first, ...rest] = path.split('/').filter(Boolean)
+        const file = first && shared.includes(first) && !rest.includes('..') ? join(SHARED_DIR, first, ...rest) : null
+        const own = file && join(server.config.publicDir || '', first, ...rest)
+        if (!file || existsSync(own) || !existsSync(file) || !statSync(file).isFile()) return next()
+        response.setHeader('Content-Type', MIME[extname(file)] ?? 'application/octet-stream')
+        createReadStream(file).pipe(response)
       })
     },
 
@@ -89,6 +126,15 @@ export default function siteConfig(options = {}) {
         fileName: defaultConfig().pwa.manifest_path.replace(/^\/+/, ''),
         source: manifestJson(),
       })
+    },
+
+    // After Vite has copied the app's own public/ files: add the shared ones
+    // it does not have.
+    closeBundle() {
+      if (!outDir || !existsSync(outDir)) return
+      for (const entry of shared) {
+        cpSync(join(SHARED_DIR, entry), join(outDir, entry), { recursive: true, force: false, errorOnExist: false })
+      }
     },
   }
 }

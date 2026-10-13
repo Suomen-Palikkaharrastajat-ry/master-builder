@@ -100,13 +100,17 @@ update msg model =
     case msg of
         SharedMsg ToggleMenu ->
             if model.menuOpen then
-                ( { model | menuOpen = False }, Effect.none )
+                ( { model | menuOpen = False }, Effect.fromCmd (Layout.onMenuClosed (SharedMsg NoOp)) )
 
             else
-                ( { model | menuOpen = True }, Effect.fromCmd (Ports.focusMobileNav ()) )
+                ( { model | menuOpen = True }, Effect.fromCmd (Layout.onMenuOpened (SharedMsg NoOp)) )
 
         SharedMsg CloseMenu ->
-            ( { model | menuOpen = False }, Effect.none )
+            if model.menuOpen then
+                ( { model | menuOpen = False }, Effect.fromCmd (Layout.onMenuClosed (SharedMsg NoOp)) )
+
+            else
+                ( model, Effect.none )
 
         SharedMsg (ScrollY y) ->
             ( { model | scrollY = y }, Effect.none )
@@ -121,21 +125,7 @@ update msg model =
 subscriptions : UrlPath -> Model -> Sub Msg
 subscriptions _ model =
     Sub.batch
-        [ if model.menuOpen then
-            Browser.Events.onKeyDown
-                (Json.Decode.field "key" Json.Decode.string
-                    |> Json.Decode.andThen
-                        (\key ->
-                            if key == "Escape" then
-                                Json.Decode.succeed (SharedMsg CloseMenu)
-
-                            else
-                                Json.Decode.fail "not escape"
-                        )
-                )
-
-          else
-            Sub.none
+        [ Layout.subscriptions { isOpen = model.menuOpen, onClose = SharedMsg CloseMenu }
         , Ports.onScroll (SharedMsg << ScrollY)
         ]
 

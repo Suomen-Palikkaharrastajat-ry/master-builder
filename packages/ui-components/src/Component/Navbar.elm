@@ -272,7 +272,8 @@ viewBrand config =
         ]
 
 
-{-| Accessible hamburger button, visible below md.
+{-| Accessible hamburger button, visible below md. Its id is `controls` followed
+by `-toggle`, so focus can be returned to it when the menu closes.
 -}
 viewMenuToggle :
     { isOpen : Bool
@@ -301,6 +302,7 @@ viewMenuToggle config =
              else
                 config.openLabel
             )
+        , Attr.id (config.controls ++ "-toggle")
         , Attr.attribute "aria-controls" config.controls
         , Attr.attribute "aria-expanded"
             (if config.isOpen then

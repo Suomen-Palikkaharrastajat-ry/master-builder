@@ -125,7 +125,7 @@ suite =
         , test "the menu button can be found to return focus to it" <|
             \_ ->
                 shell identity Fi
-                    |> has [ Selector.containing [ Selector.id Layout.menuButtonId, Selector.containing [ Selector.tag "button" ] ] ]
+                    |> has [ Selector.containing [ Selector.tag "button", Selector.id Layout.menuButtonId ] ]
         , test "an embedded view has no header and no drawer" <|
             \_ ->
                 shell (\c -> { c | showHeader = False, menu = Nothing }) Fi
@@ -147,6 +147,30 @@ suite =
                     , \_ ->
                         shell (\c -> { c | site = singleLanguage c.site }) Fi
                             |> Query.fromHtml
+                            |> Query.hasNot [ Selector.attribute (Attr.href "?lang=en") ]
+                    ]
+                    ()
+        , test "the drawer has a focusable close button and the language links" <|
+            \_ ->
+                shell identity Fi
+                    |> Query.fromHtml
+                    |> Query.find [ Selector.id "mobile-nav" ]
+                    |> Query.has
+                        [ Selector.containing [ Selector.tag "button", Selector.id "mobile-nav-close" ]
+                        , Selector.containing [ Selector.tag "a", Selector.attribute (Attr.href "?lang=en") ]
+                        ]
+        , test "a page without a footer carries the language link in the header" <|
+            \_ ->
+                Expect.all
+                    [ \_ ->
+                        shell (\c -> { c | footer = Nothing }) Fi
+                            |> Query.fromHtml
+                            |> Query.find [ Selector.tag "header" ]
+                            |> Query.has [ Selector.containing [ Selector.tag "a", Selector.attribute (Attr.href "?lang=en") ] ]
+                    , \_ ->
+                        shell identity Fi
+                            |> Query.fromHtml
+                            |> Query.find [ Selector.tag "header" ]
                             |> Query.hasNot [ Selector.attribute (Attr.href "?lang=en") ]
                     ]
                     ()

@@ -1,4 +1,7 @@
-module Component.Layout exposing (Config, Menu, menuButtonId, view)
+module Component.Layout exposing
+    ( Config, Menu, view
+    , subscriptions, onMenuOpened, onMenuClosed, menuButtonId
+    )
 
 {-| The page shell shared by every site in the family: skip link, header,
 mobile drawer, main area, footer, scroll-to-top button and toast region.
@@ -7,10 +10,21 @@ A site supplies its resolved configuration, the layout strings of the current
 language and the parts that differ (navigation links, header actions, page
 content); the shell decides how they are put together.
 
-@docs Config, Menu, menuButtonId, view
+@docs Config, Menu, view
+
+
+## Menu behaviour
+
+The shell renders the menu; the site owns its open state. These three make the
+keyboard behaviour the same everywhere: Escape closes the menu, opening moves
+focus into it, and closing returns focus to the button that opened it.
+
+@docs subscriptions, onMenuOpened, onMenuClosed, menuButtonId
 
 -}
 
+import Browser.Dom
+import Browser.Events
 import Component.Footer.Family as Family
 import Component.MobileDrawer as MobileDrawer
 import Component.Navbar as Navbar
@@ -21,12 +35,15 @@ import FeatherIcons
 import Html exposing (Html)
 import Html.Attributes as Attr
 import Html.Events as Events
+import Json.Decode as Decode
 import Lang
 import SiteSettings exposing (SiteSettings)
 import Tailwind as Tw exposing (classes)
 import Tailwind.Breakpoints as Bp
 import Tailwind.Theme as Th
 import TailwindExtra as TwEx
+import TailwindTokens as TC
+import Task
 import UiStrings exposing (UiStrings)
 
 
@@ -86,12 +103,52 @@ drawerId =
     "mobile-nav"
 
 
-{-| Id of the element holding the menu button, so a site can return focus to
-it when the drawer closes.
+{-| Id of the menu button.
 -}
 menuButtonId : String
 menuButtonId =
-    "mobile-menu-button"
+    drawerId ++ "-toggle"
+
+
+{-| Closes an open menu on Escape.
+-}
+subscriptions : { isOpen : Bool, onClose : msg } -> Sub msg
+subscriptions menu =
+    if menu.isOpen then
+        Browser.Events.onKeyDown
+            (Decode.field "key" Decode.string
+                |> Decode.andThen
+                    (\key ->
+                        if key == "Escape" then
+                            Decode.succeed menu.onClose
+
+                        else
+                            Decode.fail "not Escape"
+                    )
+            )
+
+    else
+        Sub.none
+
+
+{-| Run when the menu opens: moves focus to the current page's link in the
+drawer, or to the drawer's close button when it has no such link. `done` is a
+message the site ignores.
+-}
+onMenuOpened : msg -> Cmd msg
+onMenuOpened done =
+    Browser.Dom.focus (drawerId ++ "-active")
+        |> Task.onError (\_ -> Browser.Dom.focus (drawerId ++ "-close"))
+        |> Task.attempt (\_ -> done)
+
+
+{-| Run when the menu closes: returns focus to the menu button. Without it the
+closed drawer is `inert` and focus drops to the top of the page.
+-}
+onMenuClosed : msg -> Cmd msg
+onMenuClosed done =
+    Browser.Dom.focus menuButtonId
+        |> Task.attempt (\_ -> done)
 
 
 {-| The page shell, as the list of body nodes.
@@ -131,7 +188,7 @@ view config =
                         , closeLabel = config.strings.closeMenu
                         , onClose = menu.onClose
                         , breakpoint = drawerBreakpoint config
-                        , content = menu.content (viewDrawerLinks config menu)
+                        , content = menu.content (viewDrawerLinks config menu) ++ viewDrawerLanguageLinks config.site
                         }
                     ]
 
@@ -167,32 +224,94 @@ view config =
         ++ config.overlays
 
 
+{-| The other languages of the site, each with the text of its link.
+-}
+otherLanguages : SiteSettings -> List ( Lang.Lang, String )
+otherLanguages site =
+    site.languages
+        |> List.filter (\lang -> lang /= site.lang)
+        |> List.map (\lang -> ( lang, (UiStrings.forLang lang).thisLanguage ))
+
+
+languageLink : List Tw.Tailwind -> ( Lang.Lang, String ) -> Html msg
+languageLink styles ( lang, label ) =
+    Html.a
+        [ Attr.href (Lang.switchQuery lang)
+        , Attr.attribute "hreflang" (Lang.toString lang)
+        , Attr.lang (Lang.toString lang)
+        , classes styles
+        ]
+        [ Html.text label ]
+
+
+{-| Language links at the end of the mobile drawer.
+-}
+viewDrawerLanguageLinks : SiteSettings -> List (Html msg)
+viewDrawerLanguageLinks site =
+    case otherLanguages site of
+        [] ->
+            []
+
+        others ->
+            [ Html.div [ classes [ Tw.p Th.s4, Tw.border_t, Tw.border_simple TC.borderDefault, Tw.flex, Tw.gap Th.s3 ] ]
+                (List.map
+                    (languageLink
+                        [ Tw.type_caption
+                        , Tw.text_simple TC.textMuted
+                        , Tw.underline
+                        , Bp.hover [ Tw.text_simple TC.brand ]
+                        , Bp.focus_visible [ Tw.outline_none, Tw.ring_2, TwEx.ring_brand ]
+                        ]
+                    )
+                    others
+                )
+            ]
+
+
+{-| On a page without a footer (a full-screen map) the header carries the
+language links on wide screens; the drawer has them on narrow ones.
+-}
+headerLanguageLinks : Config msg -> List (Html msg)
+headerLanguageLinks config =
+    case ( config.footer, otherLanguages config.site ) of
+        ( Nothing, (_ :: _) as others ) ->
+            [ Html.div [ classes [ Tw.hidden, Bp.md [ Tw.flex ], Tw.items_center, Tw.gap Th.s3 ] ]
+                (List.map
+                    (languageLink
+                        [ Tw.type_caption
+                        , TwEx.text_white_80
+                        , Tw.rounded
+                        , Bp.hover [ Tw.text_simple Th.white, Tw.underline ]
+                        , Bp.focus_visible [ Tw.outline_none, Tw.ring_2, TwEx.ring_brand_yellow ]
+                        ]
+                    )
+                    others
+                )
+            ]
+
+        _ ->
+            []
+
+
 {-| A footer line linking to the site's other languages, each named in its
 own language. Empty for a site with a single language.
 -}
 viewLanguageLinks : SiteSettings -> List (Html msg)
 viewLanguageLinks site =
-    case List.filter (\lang -> lang /= site.lang) site.languages of
+    case otherLanguages site of
         [] ->
             []
 
         others ->
             [ Html.p [ classes [ Tw.flex, Tw.gap Th.s3, Bp.sm [ Tw.justify_end ] ] ]
                 (List.map
-                    (\lang ->
-                        Html.a
-                            [ Attr.href (Lang.switchQuery lang)
-                            , Attr.attribute "hreflang" (Lang.toString lang)
-                            , Attr.lang (Lang.toString lang)
-                            , classes
-                                [ TwEx.text_white_80
-                                , Bp.hover [ Tw.text_simple Th.white ]
-                                , Tw.underline
-                                , Bp.withVariant "motion-safe" [ Tw.transition_colors ]
-                                , Bp.focus_visible [ Tw.outline_none, Tw.ring_2, TwEx.ring_brand_yellow ]
-                                ]
-                            ]
-                            [ Html.text (UiStrings.forLang lang).thisLanguage ]
+                    (languageLink
+                        [ TwEx.text_white_80
+                        , Bp.hover [ Tw.text_simple Th.white ]
+                        , Tw.underline
+                        , Bp.withVariant "motion-safe" [ Tw.transition_colors ]
+                        , Bp.focus_visible [ Tw.outline_none, Tw.ring_2, TwEx.ring_brand_yellow ]
+                        ]
                     )
                     others
                 )
@@ -245,20 +364,18 @@ viewHeader config =
                         }
                 , navLabel = config.strings.mainNav
                 , links = config.links
-                , trailing = config.headerActions
+                , trailing = headerLanguageLinks config ++ config.headerActions
                 , menuToggle =
                     config.menu
                         |> Maybe.map
                             (\menu ->
-                                Html.span [ Attr.id menuButtonId ]
-                                    [ Navbar.viewMenuToggle
-                                        { isOpen = menu.isOpen
-                                        , onToggle = menu.onToggle
-                                        , controls = drawerId
-                                        , openLabel = config.strings.openMenu
-                                        , closeLabel = config.strings.closeMenu
-                                        }
-                                    ]
+                                Navbar.viewMenuToggle
+                                    { isOpen = menu.isOpen
+                                    , onToggle = menu.onToggle
+                                    , controls = drawerId
+                                    , openLabel = config.strings.openMenu
+                                    , closeLabel = config.strings.closeMenu
+                                    }
                             )
                 , sticky = config.site.navbar.sticky
                 }

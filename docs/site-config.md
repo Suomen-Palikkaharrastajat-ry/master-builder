@@ -91,6 +91,11 @@ Decode the settings in Elm with `SiteSettings.appDecoder`.
 
 ## In an app repository
 
+- The app's Makefile includes `vendor/master-builder/mk/site-config.mk` for the
+  `site-config` and `site-config-check` targets.
+- The Vite plugin serves the family's icons, social image and logos from the
+  hub's `public/`, so the app keeps only what is its own in `elm-app/public`.
+
 - `config.toml` sits at the repository root.
 - `make site-config` regenerates the files derived from it (the Elm test
   fixture and, where there is a Haskell generator, `statics/src/SiteConfig.hs`).
@@ -105,7 +110,9 @@ Decode the settings in Elm with `SiteSettings.appDecoder`.
 
 ## Layout and language
 
-Every site renders its chrome with `Component.Layout.view`, giving it the
+Every site renders its chrome with `Component.Layout.view` (and wires
+`Layout.subscriptions`, `onMenuOpened` and `onMenuClosed` for the menu's
+keyboard behaviour), giving it the
 resolved `SiteSettings` and `UiStrings.forLang lang`. Views contain no display
 text of their own:
 

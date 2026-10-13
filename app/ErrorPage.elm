@@ -6,6 +6,9 @@ module ErrorPage exposing (ErrorPage(..), Model, Msg, head, init, internalError,
 import Effect exposing (Effect)
 import Head
 import Html exposing (Html)
+import Html.Attributes as Attr
+import Lang
+import UiStrings
 import View exposing (View)
 
 
@@ -52,28 +55,38 @@ internalError =
     InternalError
 
 
+{-| elm-pages gives the error page no access to the site configuration, so it
+cannot know the site's language. It says its piece in every supported one, each
+marked with its language.
+-}
 view : ErrorPage -> Model -> View Msg
-view error model =
-    { body =
-        [ Html.div []
-            [ Html.p []
+view error _ =
+    let
+        inLanguage lang =
+            let
+                strings =
+                    UiStrings.forLang lang
+            in
+            Html.p [ Attr.lang (Lang.toString lang) ]
                 [ Html.text <|
                     case error of
                         NotFound ->
-                            "Page not found. Maybe try another URL?"
+                            strings.pageNotFound
 
-                        InternalError string ->
-                            "Something went wrong.\n" ++ string
+                        InternalError detail ->
+                            strings.unexpectedError ++ "\n" ++ detail
                 ]
-            ]
-        ]
-    , title =
-        case error of
-            NotFound ->
-                "Page Not Found"
 
-            InternalError string ->
-                "Unexpected Error"
+        title lang =
+            case error of
+                NotFound ->
+                    (UiStrings.forLang lang).pageNotFoundTitle
+
+                InternalError _ ->
+                    (UiStrings.forLang lang).unexpectedErrorTitle
+    in
+    { body = [ Html.div [] (List.map inLanguage Lang.all) ]
+    , title = String.join " / " (List.map title Lang.all)
     }
 
 

@@ -37,22 +37,10 @@ jobs:
   downstream:
     name: ${{ matrix.app }}
     runs-on: ubuntu-latest
-    # TEMPORARY: event-calendar and planet are pinned before e150ad8
-    # (MobileDrawer.view gained a required `label`), so they stay red until
-    # Suomen-Palikkaharrastajat-ry/event-calendar#3 and
-    # Suomen-Palikkaharrastajat-ry/planet#3 land. Remove `allow-failure`
-    # from the matrix below afterwards.
-    continue-on-error: ${{ matrix.allow-failure }}
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - app: event-calendar
-            allow-failure: true
-          - app: planet
-            allow-failure: true
-          - app: service-map
-            allow-failure: false
+        app: [event-calendar, planet, service-map]
 
     steps:
       - name: Checkout ${{ matrix.app }}

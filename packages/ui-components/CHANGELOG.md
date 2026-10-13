@@ -9,6 +9,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning: [S
 
 - `Component.Layout`: the page shell shared by every site (skip link, header, mobile drawer, main, footer, scroll-to-top, toast region), driven by the site's resolved configuration and layout strings.
 - `SiteSettings`: types and decoders for a site's `config.toml` as resolved per language by `packages/site-config`.
+- `Component.Layout`: `subscriptions`, `onMenuOpened` and `onMenuClosed` give every site the same menu keyboard behaviour (Escape closes, focus moves in and returns to the button); language links also appear in the drawer and, on a page without a footer, in the header.
+- `Component.Account`: sign-in / signed-in controls for the header and the drawer; `UiStrings` gains `signIn`, `signOut`, `signedInAs`.
 - `SiteSettings.fromFlags`: language, settings, default language and decode error for an app's startup; `Lang.attributeFor`: the `lang` attribute for content in another language than the interface.
 - `Lang`: the supported languages; `UiStrings`: the layout and component labels per language (Finnish and English).
 - `Component.Navbar`: `viewBrand`, `viewMenuToggle`, and `viewAppHeader` for Compact application headers (#5).
@@ -24,6 +26,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning: [S
 ### Changed (breaking)
 
 - `Component.Footer.Family`: now only `view options footerSettings`; content comes from configuration (family defaults in `packages/site-config/family.toml`). `viewWith`, `links`, `linksExcept`, `siteLabel`, `copyright`, `disclaimer` and `logo` are removed.
+- `Component.Layout.menuButtonId` is now the id of the button itself (`mobile-nav-toggle`), set by `Navbar.viewMenuToggle` from its `controls`; the drawer's close button has the id `mobile-nav-close` and becomes visible when focused. Requires `elm/browser`.
 - `Component.Alert.view`: `onDismiss` is `Maybe { msg, label }`; `Component.Tag.view`: `onRemove` is `Maybe { msg, label }`. The label is the button's accessible name, which the components used to hard-code in Finnish.
 - `Component.Layout`: `Config` gains `showHeader`; the footer links to a site's other languages. `SiteSettings` gains `languages`.
 - Components no longer contain display text; callers pass it (from `UiStrings`): `MobileDrawer.view` takes `closeLabel`, `Toast.view` takes `closeLabel`, `Toast.viewToast` takes the close label as its first argument, `Dialog.view` takes `closeLabel`, `Pagination.view` takes `labels`, `Breadcrumb.view` takes the landmark label as its first argument, `LogoCard.view` takes the "recommended" badge text as its first argument.

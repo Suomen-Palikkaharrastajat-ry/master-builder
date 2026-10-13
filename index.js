@@ -631,13 +631,6 @@ const config = {
     load: async function (elmLoaded) {
         const app = await elmLoaded;
 
-        app.ports.focusMobileNav.subscribe(function () {
-            requestAnimationFrame(function () {
-                const el = document.querySelector('#mobile-nav-active') || document.querySelector('#mobile-nav a');
-                if (el) el.focus();
-            });
-        });
-
         if (app.ports.performSearch && app.ports.searchResults) {
             app.ports.performSearch.subscribe(function (query) {
                 ensureSearchRuntime()

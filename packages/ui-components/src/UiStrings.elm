@@ -26,6 +26,9 @@ type alias UiStrings =
     , openMenu : String
     , closeMenu : String
     , backToTop : String
+    , signIn : String
+    , signOut : String
+    , signedInAs : String
     , close : String
     , notifications : String
     , newTabHint : String
@@ -67,6 +70,9 @@ forLang lang =
             , openMenu = "Avaa valikko"
             , closeMenu = "Sulje valikko"
             , backToTop = "Takaisin ylös"
+            , signIn = "Kirjaudu sisään"
+            , signOut = "Kirjaudu ulos"
+            , signedInAs = "Kirjautunut: "
             , close = "Sulje"
             , notifications = "Ilmoitukset"
             , newTabHint = "(avautuu uuteen välilehteen)"
@@ -108,6 +114,9 @@ forLang lang =
             , openMenu = "Open menu"
             , closeMenu = "Close menu"
             , backToTop = "Back to top"
+            , signIn = "Sign in"
+            , signOut = "Sign out"
+            , signedInAs = "Signed in: "
             , close = "Close"
             , notifications = "Notifications"
             , newTabHint = "(opens in a new tab)"
