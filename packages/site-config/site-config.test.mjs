@@ -271,3 +271,13 @@ test('manifest scope and orientation are optional', () => {
   assert.equal(webManifest(fi).scope, '/')
   assert.equal(webManifest(fi).orientation, 'portrait')
 })
+
+test('every field the Elm decoder needs is required of the family defaults', () => {
+  const bare = { metadata: { locale: 'fi_FI' }, footer: { logo: '/l.svg', site_label: 'L', copyright: 'C', links: [] } }
+  const found = problems('[site]\nurl="u"\ntitle="t"\ndescription="d"\n', bare)
+  assert.ok(found.includes('[icons] favicon_ico is missing for language "fi"'), found.join('\n'))
+  assert.ok(found.includes('[admin] enabled is missing for language "fi"'))
+  assert.ok(found.includes('[navbar] show_desktop_search is missing for language "fi"'))
+  assert.ok(found.includes('[pwa.icons] icon_192 is missing'))
+  assert.equal(found.some((p) => p.includes('twitter_site') || p.includes('[pwa] scope')), false)
+})

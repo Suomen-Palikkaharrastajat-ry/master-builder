@@ -9,10 +9,14 @@
 // values as plain strings, its translatable values as `Lang -> String`, and
 // every string (or list of strings) in `[app]` and `[app.statics]` under a
 // camelCase name (`[app.statics] add_to_calendar` → `staticsAddToCalendar`).
+// Month and weekday names come from the hub's locales.json, the same table
+// the Elm `Locale` is tested against.
 // `--check` fails when the file is out of date instead of writing it.
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { basename, relative, resolve } from 'node:path'
 import { load } from './site-config.mjs'
+
+const locales = JSON.parse(readFileSync(new URL('./locales.json', import.meta.url), 'utf8'))
 
 const option = (name) => {
   const index = process.argv.indexOf(name)
@@ -47,7 +51,6 @@ const definitions = []
 const problems = []
 const KEY = /^[a-z][a-z0-9_]*$/
 // Lists the generators index by position must have a fixed length.
-const LENGTHS = { months: 12, weekdays: 7 }
 const shape = (value) => (Array.isArray(value) ? 'list' : 'string')
 const constant = (name, doc, value) =>
   definitions.push({ name, text: `-- | ${doc}\n${name} :: String\n${name} = ${hs(value)}` })
@@ -74,6 +77,14 @@ perLang('siteTitle', '@[site] title@.', (c) => c.site.title)
 perLang('siteDescription', '@[site] description@.', (c) => c.site.description)
 perLang('author', '@[metadata] author@: the organisation behind the site.', (c) => c.metadata.author ?? '')
 
+for (const lang of langs) {
+  if (!locales[lang]) problems.push(`locales.json has no names for "${lang}"`)
+}
+if (problems.length === 0) {
+  perLang('monthNames', 'Month names, January first.', (c) => locales[c.lang].months)
+  perLang('weekdayAbbrs', 'Weekday abbreviations, Monday first.', (c) => locales[c.lang].weekdays)
+}
+
 const app = resolved.configs[resolved.default].app
 const addTable = (table, prefix, where, get) => {
   for (const [key, value] of Object.entries(table)) {
@@ -81,12 +92,6 @@ const addTable = (table, prefix, where, get) => {
     if (!KEY.test(key)) {
       problems.push(`${where} ${key}: keys used by the generators must match ${KEY}`)
       continue
-    }
-    for (const lang of langs) {
-      const translated = get(resolved.configs[lang])?.[key]
-      if (LENGTHS[key] && Array.isArray(translated) && translated.length !== LENGTHS[key]) {
-        problems.push(`${where} ${key} must have ${LENGTHS[key]} entries for "${lang}"`)
-      }
     }
     perLang(camel(prefix, key), `@${where} ${key}@.`, (c) => get(c)?.[key])
   }

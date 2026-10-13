@@ -115,13 +115,30 @@ export const SCHEMA = {
   },
 }
 
-// Keys every language must end up with once the family defaults are applied.
-const REQUIRED = {
+// Keys a configuration may lack. Every other key of the schema must be there
+// for each language once the family defaults are applied, because the Elm
+// decoder (SiteSettings.elm) has no fallbacks.
+const OPTIONAL = {
+  metadata: ['author', 'twitter_site', 'default_social_image_width', 'default_social_image_height', 'default_social_image_alt'],
+  pwa: ['scope', 'orientation', 'application_name', 'short_name', 'description', 'apple_mobile_web_app_title'],
+  branding: ['logo_light_mobile', 'logo_dark_mobile'],
+  navbar: ['links'],
+  footer: ['disclaimer'],
+}
+const REQUIRED = Object.fromEntries(
+  Object.entries(SCHEMA).map(([section, { neutral, translatable }]) => [
+    section,
+    [...Object.keys(neutral), ...Object.keys(translatable)].filter((key) => !(OPTIONAL[section] ?? []).includes(key)),
+  ]),
+)
+const REQUIRED_PWA_ICONS = ['icon_192', 'icon_512', 'maskable_icon']
+// Required values that must also say something; an empty admin path is fine,
+// an empty site title is not.
+const NON_EMPTY = {
   site: ['url', 'title', 'description'],
   metadata: ['locale'],
   branding: ['logo_light', 'logo_dark', 'logo_square', 'logo_alt'],
-  navbar: ['sticky', 'variant'],
-  footer: ['logo', 'site_label', 'copyright', 'links'],
+  footer: ['logo', 'site_label', 'copyright'],
 }
 
 const NAVBAR_VARIANTS = ['standard', 'compact', 'app']
@@ -326,10 +343,13 @@ export function resolve(siteRaw, familyRaw = {}, options = {}) {
         const value = config[section][key]
         if (value === undefined && !untranslated.has(`${section}.${key}`)) {
           problems.push(`[${section}] ${key} is missing for language "${lang}"`)
-        } else if (typeof value === 'string' && value.trim() === '') {
+        } else if (typeof value === 'string' && value.trim() === '' && (NON_EMPTY[section] ?? []).includes(key)) {
           problems.push(`[${section}] ${key} is empty for language "${lang}"`)
         }
       }
+    }
+    for (const key of REQUIRED_PWA_ICONS) {
+      if (typeof config.pwa.icons?.[key] !== 'string') problems.push(`[pwa.icons] ${key} is missing`)
     }
     if (config.navbar.variant !== undefined && !NAVBAR_VARIANTS.includes(config.navbar.variant)) {
       problems.push(`[navbar] variant must be one of ${NAVBAR_VARIANTS.join(', ')}`)

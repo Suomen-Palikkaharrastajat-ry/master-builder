@@ -23,6 +23,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning: [S
 ### Changed (breaking)
 
 - `Component.Footer.Family`: now only `view options footerSettings`; content comes from configuration (family defaults in `packages/site-config/family.toml`). `viewWith`, `links`, `linksExcept`, `siteLabel`, `copyright`, `disclaimer` and `logo` are removed.
+- `Component.Alert.view`: `onDismiss` is `Maybe { msg, label }`; `Component.Tag.view`: `onRemove` is `Maybe { msg, label }`. The label is the button's accessible name, which the components used to hard-code in Finnish.
+- `Component.Layout`: `Config` gains `showHeader`; the footer links to a site's other languages. `SiteSettings` gains `languages`.
 - Components no longer contain display text; callers pass it (from `UiStrings`): `MobileDrawer.view` takes `closeLabel`, `Toast.view` takes `closeLabel`, `Toast.viewToast` takes the close label as its first argument, `Dialog.view` takes `closeLabel`, `Pagination.view` takes `labels`, `Breadcrumb.view` takes the landmark label as its first argument, `LogoCard.view` takes the "recommended" badge text as its first argument.
 
 ### Fixed

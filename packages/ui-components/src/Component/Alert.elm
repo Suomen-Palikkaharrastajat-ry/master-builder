@@ -19,7 +19,7 @@ type AlertType
     | Error
 
 
-view : { alertType : AlertType, title : Maybe String, body : List (Html msg), onDismiss : Maybe msg, customIcon : Maybe (Html msg) } -> Html msg
+view : { alertType : AlertType, title : Maybe String, body : List (Html msg), onDismiss : Maybe { msg : msg, label : String }, customIcon : Maybe (Html msg) } -> Html msg
 view config =
     Html.div
         (List.filterMap identity
@@ -51,16 +51,16 @@ view config =
                     ]
                 )
             , Maybe.map
-                (\msg ->
+                (\dismiss ->
                     Html.div [ classes [ Tw.absolute, TwEx.top_2, TwEx.right_2 ] ]
-                        [ CloseButton.view { onClick = msg, label = "Sulje ilmoitus" } ]
+                        [ CloseButton.view { onClick = dismiss.msg, label = dismiss.label } ]
                 )
                 config.onDismiss
             ]
         )
 
 
-dismissTw : Maybe msg -> List Tw.Tailwind
+dismissTw : Maybe a -> List Tw.Tailwind
 dismissTw onDismiss =
     case onDismiss of
         Just _ ->

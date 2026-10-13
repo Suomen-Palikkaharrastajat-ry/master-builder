@@ -14,7 +14,9 @@ import TailwindExtra as TwEx
 import TailwindTokens as TC
 
 
-view : { label : String, onRemove : Maybe msg } -> Html msg
+{-| `onRemove.label` is the accessible name of the remove button ("Poista X").
+-}
+view : { label : String, onRemove : Maybe { msg : msg, label : String } } -> Html msg
 view config =
     Html.span
         [ classes
@@ -35,10 +37,10 @@ view config =
                     Nothing ->
                         []
 
-                    Just msg ->
+                    Just remove ->
                         [ Html.button
                             [ Attr.type_ "button"
-                            , Attr.attribute "aria-label" ("Poista " ++ config.label)
+                            , Attr.attribute "aria-label" remove.label
                             , classes
                                 [ Tw.ml Th.s0_dot_5
                                 , Tw.inline_flex
@@ -51,7 +53,7 @@ view config =
                                 , Tw.transition_colors
                                 , Tw.cursor_pointer
                                 ]
-                            , Events.onClick msg
+                            , Events.onClick remove.msg
                             ]
                             [ FeatherIcons.x |> FeatherIcons.withSize 10 |> FeatherIcons.toHtml [ Attr.attribute "aria-hidden" "true" ] ]
                         ]

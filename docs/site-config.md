@@ -76,8 +76,8 @@ silent fallback there either. Decode it in Elm with
 | Hub (elm-pages) | `Config.task` (a `BackendTask`) |
 | App build (Vite) | `packages/site-config/vite.mjs`: generates the document head and `site.webmanifest`, and provides `virtual:site-config` |
 | App (Elm) | pass `virtual:site-config` as a flag; decode with `SiteSettings.localizedDecoder`, pick a language with `SiteSettings.forLang` |
-| App (JavaScript) | `packages/site-config/browser.mjs`: `requestedLang`, `pickLang`, `appSettings`, `setDocumentLang` |
-| Static generators (Haskell) | `packages/site-config/gen-haskell.mjs` writes a `SiteConfig` module: site URL, title, organisation and every string in `[app]` and `[app.statics]`, per language |
+| App (JavaScript) | `packages/site-config/browser.mjs`: `requestedLang`, `pickLang`, `appSettings`, `showLanguage` (sets the `lang` attribute and rewrites the head's description and social tags, which the static page carries in the default language) |
+| Static generators (Haskell) | `packages/site-config/gen-haskell.mjs` writes a `SiteConfig` module: site URL, title, description, organisation, month and weekday names (from `locales.json`, the table the Elm `Locale` is tested against) and every string in `[app]` and `[app.statics]`, per language |
 | Elm tests | `packages/site-config/gen-fixture.mjs` writes the resolved config as an Elm string, so tests render the app's real configuration |
 | Anything else | `node packages/site-config/cli.mjs config.toml` prints the resolved JSON |
 
@@ -107,8 +107,8 @@ text of their own:
 | App feature text | the app's `I18n.elm`, `t : Lang -> MsgKey -> String` |
 | Dates and times | a `Locale` (`packages/app-toolkit`), passed to `FinnishTime` and the date picker |
 
-`script/check-i18n.mjs` fails when a string literal with Finnish letters
-appears outside a translation module; it runs in `make check` and in the
+`script/check-i18n.mjs` fails when a string literal with Finnish letters or
+common Finnish interface words appears outside a translation module; it runs in `make check` and in the
 Downstream workflow.
 
 ## Adding a language

@@ -1,5 +1,7 @@
 // Browser-side helpers for apps that use the shared site configuration.
 
+import { headTags } from './head.mjs'
+
 const STORAGE_KEY = 'lang'
 
 // Read once: the request is removed from the address after the first read.
@@ -38,6 +40,23 @@ export function requestedLang(siteConfig) {
 /** Sets the document language, for assistive technology and hyphenation. */
 export function setDocumentLang(lang) {
   document.documentElement.lang = lang
+}
+
+/**
+ * Shows a language in the document itself: the `lang` attribute and the
+ * head's description, social and app-name tags, which the static page carries
+ * in the site's default language. The title is left to the app.
+ */
+export function showLanguage(siteConfig, lang) {
+  setDocumentLang(lang)
+  const config = siteConfig.configs[lang]
+  if (!config) return
+  for (const tag of headTags(config)) {
+    if (tag.tag !== 'meta') continue
+    const [attribute, value] = tag.attrs.name ? ['name', tag.attrs.name] : ['property', tag.attrs.property]
+    const element = document.head.querySelector(`meta[${attribute}="${value}"]`)
+    if (element) element.setAttribute('content', tag.attrs.content)
+  }
 }
 
 /**
