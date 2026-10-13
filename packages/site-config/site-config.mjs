@@ -154,7 +154,9 @@ const TYPE_CHECKS = {
   string: (v) => typeof v === 'string',
   bool: (v) => typeof v === 'boolean',
   int: (v) => Number.isInteger(v),
-  strings: (v) => Array.isArray(v) && v.every((x) => typeof x === 'string'),
+  // A single string is accepted for a list of strings (one disclaimer line);
+  // splitSection turns it into a list.
+  strings: (v) => typeof v === 'string' || (Array.isArray(v) && v.every((x) => typeof x === 'string')),
   links: (v) =>
     Array.isArray(v) &&
     v.every(
@@ -210,13 +212,14 @@ function splitSection(raw, section, i18n, name, problems) {
   const check = (key, value, where, kind) => {
     if (!TYPE_CHECKS[kind](value)) problems.push(`${name}: ${where} ${key} must be of type ${kind}`)
   }
+  const normal = (value, kind) => (kind === 'strings' && typeof value === 'string' ? [value] : value)
   for (const [key, value] of Object.entries(raw ?? {})) {
     if (key in schema.neutral) {
       check(key, value, `[${section}]`, schema.neutral[key])
       out.neutral[key] = value
     } else if (key in schema.translatable) {
       check(key, value, `[${section}]`, schema.translatable[key])
-      out.byLang[i18n.default][key] = value
+      out.byLang[i18n.default][key] = normal(value, schema.translatable[key])
     } else if (LANG_RE.test(key) && isTable(value)) {
       if (key === i18n.default) {
         problems.push(
@@ -228,7 +231,7 @@ function splitSection(raw, section, i18n, name, problems) {
         for (const [k, v] of Object.entries(value)) {
           if (k in schema.translatable) {
             check(k, v, `[${section}.${key}]`, schema.translatable[k])
-            out.byLang[key][k] = v
+            out.byLang[key][k] = normal(v, schema.translatable[k])
           } else if (k in schema.neutral) {
             problems.push(`${name}: [${section}.${key}] ${k} is language-neutral; put it in [${section}]`)
           } else {

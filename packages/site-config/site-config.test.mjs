@@ -340,3 +340,8 @@ test('[pwa.icons] is checked like the other tables', () => {
     'unknown key [pwa.icons] icon_1024',
   ])
 })
+
+test('a single string is accepted where a list of strings is expected', () => {
+  const { fi } = resolve(site('[footer]\ndisclaimer = "Yksi rivi"\n'), family, { year: 2026 }).configs
+  assert.deepEqual(fi.footer.disclaimer, ['Yksi rivi'])
+})
