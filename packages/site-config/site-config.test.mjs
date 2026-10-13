@@ -45,7 +45,7 @@ test('family footer links are canonical and never link to the site itself', () =
   const { fi } = resolve(site(), family, { year: 2026 }).configs
   assert.deepEqual(
     fi.footer.links.map((l) => l.label),
-    ['Kotisivut', 'Palikkakartta', 'Palikkalinkit', 'Jäsenfoorumi', 'Jäsenkortti', 'Jäsenmaksu', 'Tietosuoja'],
+    ['Kotisivut', 'Palikkakartta', 'Palikkalinkit', 'Palikkaoppaat', 'Jäsenfoorumi', 'Jäsenkortti', 'Jäsenmaksu', 'Tietosuoja'],
   )
 })
 
@@ -55,6 +55,7 @@ test('the canonical family link list is pinned', () => {
     { label: 'Palikkakalenteri', href: 'https://kalenteri.palikkaharrastajat.fi' },
     { label: 'Palikkakartta', href: 'https://kartta.palikkaharrastajat.fi' },
     { label: 'Palikkalinkit', href: 'https://linkit.palikkaharrastajat.fi' },
+    { label: 'Palikkaoppaat', href: 'https://oppaat.palikkaharrastajat.fi' },
     { label: 'Jäsenfoorumi', href: 'https://forum.palikkaharrastajat.fi' },
     { label: 'Jäsenkortti', href: 'https://kortti.palikkaharrastajat.fi' },
     { label: 'Jäsenmaksu', href: 'https://maksut.palikkaharrastajat.fi' },

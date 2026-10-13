@@ -57,6 +57,7 @@ suite =
                             [ "Kotisivut"
                             , "Palikkakartta"
                             , "Palikkalinkit"
+                            , "Palikkaoppaat"
                             , "Jäsenfoorumi"
                             , "Jäsenkortti"
                             , "Jäsenmaksu"
