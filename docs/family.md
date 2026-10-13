@@ -1,0 +1,213 @@
+# The repository family
+
+> Last verified: 2026-10-13. Run `make family-status` to refresh the
+> [hub version status](#hub-version-status) table.
+
+Suomen Palikkaharrastajat ry's sites and tools live in separate repositories
+that share code, conventions and services through this repository,
+**master-builder** (the hub). This page says what each repository is, how it
+depends on the hub and on the others, and what it needs at runtime.
+`docs/conventions.md` says how the repositories are expected to be built;
+this page records how they actually are, including where they deviate.
+
+## Dependency graph
+
+Solid arrows are build-time dependencies, dotted arrows runtime ones.
+
+```mermaid
+flowchart LR
+  bricklayer -->|generated logo assets| logo
+  designguide[design-guide] -->|submodule + make design-tokens| hub[master-builder]
+  hub -->|elm-review rules, cloned by make check| designguide
+
+  hub -->|deploy-content.yml@main| website
+  hub -->|deploy-content.yml@main| guides
+  hub -->|deploy-content.yml@main| logo
+
+  hub -->|submodule pin| eventcalendar[event-calendar]
+  hub -->|submodule pin| servicemap[service-map]
+  hub -->|submodule pin| planet
+  hub -->|submodule pin| competitions
+  hub -->|submodule pin| brickframe[brick-frame]
+  hub -->|submodule pin| membershipcard[membership-card]
+
+  pocketbase[(PocketBase data.palikkaharrastajat.fi)] -.->|runtime API| eventcalendar
+  pocketbase -.->|runtime API| servicemap
+  pocketbase -.->|events| brickbot
+  keycloak[(Keycloak)] -.->|sign-in| eventcalendar
+  keycloak -.->|sign-in| servicemap
+  keycloak -.->|sign-in| membershipcard
+  keycloak -.->|sign-in| competitions
+  tiles[service-map-tiles] -.->|style.json and tiles| servicemap
+  eventcalendar -.->|event edit pages, events GeoJSON| servicemap
+  planet -.->|OPML and feeds| brickbot
+  brickframe -.->|bricks-viewer script| hub
+  emmet -.->|member accounts| keycloak
+```
+
+## Hub version status
+
+Regenerate with `make family-status` (prints the table) or
+`script/family-status.sh --update` (also rewrites it here). The script reads
+each repository's `main` on GitHub, so it shows what is published, not local
+work in progress.
+
+<!-- family-status:start -->
+| Repo | Depends on hub via | Pinned commit | Commits behind main | Checked on |
+|---|---|---|---|---|
+| event-calendar | submodule `vendor/master-builder` | `ff12d3d` | 26 | 2026-10-13 |
+| service-map | submodule `vendor/master-builder` | `3010555` | 23 | 2026-10-13 |
+| planet | submodule `vendor/master-builder` | `2d1d5a3` | 17 | 2026-10-13 |
+| competitions | submodule `vendor/master-builder` | `821ffef` | 93 | 2026-10-13 |
+| brick-frame | submodule `vendor/master-builder` | `821ffef` | 93 | 2026-10-13 |
+| membership-card | submodule `vendor/master-builder` | `821ffef` | 93 | 2026-10-13 |
+| website | workflow `deploy-content.yml@main` | `main` (unpinned) | 0 (follows `main`) | 2026-10-13 |
+| guides | workflow `deploy-content.yml@main` | `main` (unpinned) | 0 (follows `main`) | 2026-10-13 |
+| logo | workflow `deploy-content.yml@main` | `main` (unpinned) | 0 (follows `main`) | 2026-10-13 |
+<!-- family-status:end -->
+
+Three ways of depending on the hub exist:
+
+- **Submodule pin** (`vendor/master-builder`): the apps. A hub change reaches an
+  app only when the app bumps its pin; `.github/workflows/downstream.yml`
+  builds each app's `main` against every hub commit so breakage is seen first.
+- **Reusable workflow** (`deploy-content.yml@main`): the content sites. They
+  are **unpinned**: every hub merge changes those sites at their next deploy,
+  so a breaking hub change reaches production through them first. Two ways to
+  close that gap, neither implemented: (a) add the content builds to the
+  Downstream matrix (build without deploying), which catches breakage before
+  merge but still ships every hub change; or (b) tag hub releases and pin
+  `deploy-content.yml@vX`, which makes updates deliberate at the cost of a
+  bump per site per release.
+- **Clone at check time**: design-guide clones the hub for its lint rules.
+
+## Repositories
+
+### master-builder (public)
+
+- **Role:** the hub: elm-pages site builder for the content sites, the shared Elm and Haskell packages, the shared site configuration loader, and the CI tooling.
+- **Published at:** nothing of its own; it builds palikkaharrastajat.fi, oppaat.palikkaharrastajat.fi and logo.palikkaharrastajat.fi from their content repositories.
+- **Stack:** Elm 0.19.1, elm-pages 3, Tailwind CSS 4, Vite 7, Node 22, Nix (devenv).
+- **Provides:** `packages/ui-components` (components, `Component.Layout`, `SiteSettings`, `Lang`, `UiStrings`), `packages/design-tokens` (generated), `packages/app-toolkit` (`Locale`, `FinnishTime`, `Geocoding`, map views, `PocketBaseAuth`), `packages/finnish-datepicker`, `packages/osm-opening-hours`, `packages/site-config` (`config.toml` loader, family defaults, Vite plugin, generators), `packages-hs/statics-common`, `review/` (elm-review rules), `script/` (checks), `mk/site-config.mk`, `.github/actions/*`, `.github/workflows/deploy-content.yml`, `public/` (the family's icons, social image and logos).
+- **Other upstreams:** design-guide (submodule `vendor/design-guide`, SSH URL in `.gitmodules`); brick-frame's viewer script, loaded at runtime from kehys.palikkaharrastajat.fi.
+- **Runtime services:** none.
+- **CI / deploy:** `downstream.yml` (builds the three apps against every hub commit); `deploy-content.yml` (reusable; called by the content repositories).
+
+### design-guide (public)
+
+- **Role:** design-token pipeline: `content/*.toml` → W3C tokens JSON, an Elm package and CSS.
+- **Published at:** nothing directly; its output is committed into the hub.
+- **Stack:** Haskell (cabal), Nix (devenv).
+- **Depends on the hub via:** `make check` clones the hub into `review/vendor/master-builder` for the elm-review rules. The hub in turn vendors design-guide as a submodule and copies its output into `packages/design-tokens/` with `make design-tokens`. **This is a cycle**: neither can be checked without the other being reachable.
+- **Runtime services:** none.
+
+### website (public)
+
+- **Role:** content (Markdown, `config.toml`, images) of the association's main site.
+- **Published at:** https://palikkaharrastajat.fi
+- **Depends on the hub via:** reusable workflow `deploy-content.yml@main` with a `builder_ref` input (default `main`).
+- **Uses from the hub:** the whole site builder; `config.toml` is layered on the family defaults, including the footer links. Enables the `[admin]` editor (`content_repo = "website"`).
+- **CI / deploy:** GitHub Pages, on push.
+- **Known deviations:** unpinned hub (see above).
+
+### guides (public)
+
+- **Role:** content of the guides site "Palikkaoppaat".
+- **Published at:** https://oppaat.palikkaharrastajat.fi
+- **Depends on the hub via:** reusable workflow `deploy-content.yml@main`.
+- **Uses from the hub:** the whole site builder; `[navbar] variant = "compact"`; nested content directories (`jasenpalvelut/`); the family footer links.
+- **CI / deploy:** GitHub Pages, on push.
+- **Known deviations:** unpinned hub.
+
+### logo (public)
+
+- **Role:** content of the logo, colour and typography reference site.
+- **Published at:** https://logo.palikkaharrastajat.fi (cited by the hub's `AGENTS.md` as the design reference: `brand.css`, `design-guide/index.jsonld`).
+- **Depends on the hub via:** reusable workflow `deploy-content.yml@main`.
+- **Other upstreams:** bricklayer generates its logo assets.
+- **Relation to design-guide:** design-guide is the source of the tokens (it generates what the hub ships in `packages/design-tokens`); logo is the published, human-readable presentation of the same design. When the two disagree, design-guide is canonical for token values.
+- **Known deviations:** unpinned hub. Its `config.toml` still carries its own footer link list.
+
+### event-calendar (public)
+
+- **Role:** the event calendar "Palikkakalenteri".
+- **Published at:** https://kalenteri.palikkaharrastajat.fi
+- **Stack:** Elm SPA (Vite, Tailwind 4), Haskell static generator (feeds, iCalendar, HTML/PDF export), Leaflet.
+- **Depends on the hub via:** submodule pin `vendor/master-builder`.
+- **Uses from the hub:** `ui-components` (`Component.Layout`, `Account`, forms, alerts, …), `design-tokens`, `app-toolkit`, `finnish-datepicker`, `site-config` (Vite plugin, generators, `mk/site-config.mk`), `statics-common`, `review/` rules, shared icons and logos.
+- **Runtime services:** PocketBase (`data.palikkaharrastajat.fi`), Keycloak (OIDC through PocketBase), OpenStreetMap tiles, Nominatim (geocoding).
+- **CI / deploy:** `deploy.yml` (GitHub Pages) and `scheduled.yml` (regenerates the static files four times a day).
+
+### service-map (public)
+
+- **Role:** the service map "Palikkakartta" of shops, exhibitions and other places.
+- **Published at:** https://kartta.palikkaharrastajat.fi (also `embed.html` for embedding)
+- **Stack:** Elm SPA (Vite, Tailwind 4), Haskell static generator (feeds), MapLibre GL.
+- **Depends on the hub via:** submodule pin `vendor/master-builder`.
+- **Uses from the hub:** as event-calendar, plus `osm-opening-hours`.
+- **Other upstreams:** service-map-tiles (basemap style and tiles); event-calendar (links to its event edit pages through `[app] calendar_url`, and shows its events).
+- **Runtime services:** PocketBase, Keycloak, tiles.palikkaharrastajat.fi, Nominatim.
+- **CI / deploy:** `deploy.yml` (GitHub Pages) and `scheduled.yml` (four times a day).
+
+### planet (public)
+
+- **Role:** the feed aggregator "Palikkalinkit".
+- **Published at:** https://linkit.palikkaharrastajat.fi
+- **Stack:** Haskell feed aggregator that generates the Elm data module, OPML and a search index; Elm SPA (Vite, Tailwind 4).
+- **Depends on the hub via:** submodule pin `vendor/master-builder`.
+- **Uses from the hub:** `ui-components` (`Component.Layout`, `Button`, `Form`, `SiteSettings`, `Lang`, `UiStrings`), `design-tokens`, `site-config`, `review/` rules, shared icons and logos.
+- **Runtime services:** none (the feeds are fetched at build time).
+- **CI / deploy:** `deploy.yml` (GitHub Pages) and `scheduled.yml` (four times a day).
+
+### competitions (private)
+
+- **Role:** "Palikkakilpailu", the building competition service.
+- **Stack:** custom PocketBase 0.37.5 Go backend (`go.mod`, `pb_hooks/`, `pb_migrations/`), Elm SPA, Haskell gallery pipeline, Keycloak realm `competitions`; Caddy and Mailpit locally.
+- **Depends on the hub via:** submodule pin `vendor/master-builder`.
+- **Uses from the hub:** lists `design-tokens` and `ui-components` as source directories but imports no shared component.
+- **CI / deploy:** `quality.yml`; `deploy.yml` and `scheduled.yml` are disabled.
+- **Known deviations from conventions** (tracked in [Suomen-Palikkaharrastajat-ry/competitions#1](https://github.com/Suomen-Palikkaharrastajat-ry/competitions/issues/1)):
+  - Its pin is the oldest in the family (see the status table).
+  - `elm-app/packages` is created by `make vendor` and git-ignored, the opposite of the conventions ("committed symlink").
+  - No module imports a shared component; its design-guide CSS is hand-copied into `elm-app/src/main.css`.
+  - Uses `feathericons/elm-feather 1.5.0`; the family standard is `1602/elm-feather`.
+  - `quality.yml` installs devenv v2.0.6 directly instead of using the shared `setup-nix` action.
+  - Builds its Haskell with stack (`stack.yaml`, `lts-22.6`) alongside `competition.cabal`, unlike the other Haskell repositories.
+  - Has no `config.toml` and does not use `Component.Layout`.
+
+### brick-frame (public)
+
+- **Role:** 3D viewer and tooling for brick models; its viewer script is used on the hub-built sites.
+- **Published at:** https://kehys.palikkaharrastajat.fi (docs at `/docs/`)
+- **Stack:** Elm, Haskell, JavaScript.
+- **Depends on the hub via:** submodule pin `vendor/master-builder`; its `elm.json` lists `design-tokens` and `ui-components`.
+- **Known deviations:** an old pin (see the status table); not part of the Downstream matrix, so hub changes are never built against it. Has no `config.toml` and does not use `Component.Layout`.
+
+### membership-card (public)
+
+- **Role:** the electronic membership card.
+- **Published at:** https://kortti.palikkaharrastajat.fi
+- **Stack:** Elm SPA (Vite, Tailwind 4), `joakin/elm-canvas`.
+- **Depends on the hub via:** submodule pin `vendor/master-builder`; its `elm.json` lists `design-tokens` and `ui-components`.
+- **Runtime services:** Keycloak (OIDC, authorization code with PKCE).
+- **Known deviations:** an old pin (see the status table); not part of the Downstream matrix. Has no `config.toml` and does not use `Component.Layout`.
+
+## Not part of the family
+
+These repositories belong to the organisation but share no code with the hub.
+
+| Repo | What it is | Why it is outside |
+|---|---|---|
+| **bricklayer** | Haskell pipeline that generates the brick-style logo assets | An upstream of logo only; no shared code or conventions with the hub. |
+| **service-map-tiles** | Builds the basemap style and tiles served at tiles.palikkaharrastajat.fi | A runtime service for service-map; own toolchain. |
+| **brickbot** | Rust Discord bot that follows feeds and OPML and syncs events from PocketBase | Consumes the family's published data (planet's OPML, PocketBase) at runtime; no shared code. |
+| **emmet** | Python CLI that synchronises member data from Excel to Keycloak | The association secretary's tool; affects the family only through Keycloak accounts. |
+| **bylaws** | The association's bylaws (TeX) | Documents, not software. |
+
+## Keeping this page current
+
+- The pull request template asks whether this page needs an update when a
+  repository's dependency on the hub, or its runtime services, change.
+- The status table is generated; do not edit it by hand.
+- When a repository starts or stops pinning the hub, update the lists at the
+  top of `script/family-status.sh` and its section here.

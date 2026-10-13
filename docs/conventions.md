@@ -4,13 +4,9 @@ Shared conventions for the Suomen Palikkaharrastajat ry repositories. This is th
 canonical reference; individual repos link here instead of re-documenting these
 rules. Starter files live in [`templates/`](templates/).
 
-The family:
-
-- **bricklayer** (Haskell) — LEGO-style logo asset generator.
-- **design-guide** (Haskell) — design-token pipeline (TOML → W3C tokens JSON + Elm package).
-- **master-builder** (elm-pages) — site-builder pipeline, shared Elm packages, shared CI tooling. **This repo is the hub** — it is vendored as a submodule by every app and checked out by every content build, so shared code and docs travel with it.
-- **logo / website / guides** — content-only repos built by master-builder at CI.
-- **planet / event-calendar / service-map** — standalone apps: Haskell static generator + Elm SPA using master-builder's Elm packages.
+The family — which repositories belong to it, how each depends on this hub,
+which hub commit it is on and what it needs at runtime — is described in
+[`family.md`](family.md).
 
 ## Canonical sources (what lives where)
 

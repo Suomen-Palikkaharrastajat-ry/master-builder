@@ -6,6 +6,8 @@ Built with [elm-pages](https://elm-pages.com), Elm 0.19.1, and Tailwind CSS v4.
 This repo is also the **hub** for the sibling repositories: shared Elm/Haskell
 packages, CI tooling, and the family-wide conventions in
 [`docs/conventions.md`](docs/conventions.md) (with starter files in `docs/templates/`).
+[`docs/family.md`](docs/family.md) lists the repositories, how each depends on
+this one, and the services they need at runtime.
 
 ## Architecture
 

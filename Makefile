@@ -150,6 +150,10 @@ check: ## Check Elm formatting, tests, and elm-review rules (no changes)
 	node script/check-i18n.mjs app src admin-app/src packages/ui-components/src packages/app-toolkit/src packages/finnish-datepicker/src packages/osm-opening-hours/src packages/site-config
 	elm-review --config review
 
+.PHONY: family-status
+family-status: ## Print the hub version status of every family repo (docs/family.md)
+	bash script/family-status.sh
+
 .PHONY: format
 format: ## Auto-format Elm source files
 	treefmt

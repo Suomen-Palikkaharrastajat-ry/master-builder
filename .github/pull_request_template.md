@@ -6,3 +6,4 @@
 - [ ] Ran `devenv shell -- make check` locally
 - [ ] Ran `node script/check-consumer-deps.mjs elm.json` and verified dependencies
 - [ ] Downstream CI workflow status verified
+- [ ] `docs/family.md` updated if a repo's dependency on the hub or its runtime services changed
