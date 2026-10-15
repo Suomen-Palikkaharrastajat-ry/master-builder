@@ -22,7 +22,14 @@ fetch-content: ## Sync content/ from external repo (set CONTENT_OWNER, CONTENT_R
 .PHONY: sync-assets
 sync-assets: ## Copy non-markdown assets from $(CONTENT_DIR) to public/
 	@if [ -d "$(CONTENT_DIR)" ]; then \
-		find "$(CONTENT_DIR)" -type f -not -name "*.md" -not -name "config.toml" -not -path "*/.git/*" -not -path "*/.github/*" -not -path "*/reference/*" | while IFS= read -r f; do \
+		mkdir -p public; \
+		if [ -d "$(CONTENT_DIR)/images" ]; then \
+			rm -rf public/images; \
+			ln -sfn "../$(CONTENT_DIR)/images" public/images; \
+		elif [ -L public/images ] && [ ! -e public/images ]; then \
+			rm -rf public/images; \
+		fi; \
+		find "$(CONTENT_DIR)" -type f -not -name "*.md" -not -name "config.toml" -not -path "*/.git/*" -not -path "*/.github/*" -not -path "*/reference/*" -not -path "$(CONTENT_DIR)/images/*" | while IFS= read -r f; do \
 			rel="$${f#$(CONTENT_DIR)/}"; \
 			dest="public/$$rel"; \
 			mkdir -p "$$(dirname "$$dest")"; \
@@ -37,7 +44,7 @@ sync-assets: ## Copy non-markdown assets from $(CONTENT_DIR) to public/
 
 .PHONY: clean
 clean: ## Remove build artifacts (dist/, elm-stuff/, .elm-pages/, gen/, .elm-tailwind/)
-	rm -rf dist elm-stuff .elm-pages gen .elm-tailwind
+	rm -rf dist elm-stuff .elm-pages gen .elm-tailwind public/images
 
 # ── Vendor / submodules ──────────────────────────────────────────────────────
 

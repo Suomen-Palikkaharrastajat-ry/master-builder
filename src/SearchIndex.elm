@@ -70,7 +70,7 @@ flatDocumentTask contentRoot =
         |> BackendTask.andThen
             (\slugs ->
                 slugs
-                    |> List.filter (\slug -> slug /= "index" && not (ContentMarkdown.isPartialSlug slug))
+                    |> List.filter (\slug -> slug /= "index" && not (ContentMarkdown.isPartialSlug slug) && not (ContentMarkdown.isExcludedRootSlug slug))
                     |> List.map
                         (\slug ->
                             documentTask

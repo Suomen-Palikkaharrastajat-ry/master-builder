@@ -143,7 +143,7 @@ navItemsTask =
                             |> BackendTask.andThen
                                 (\slugs ->
                                     slugs
-                                        |> List.filter (\slug -> not (ContentMarkdown.isPartialSlug slug))
+                                        |> List.filter (\slug -> not (ContentMarkdown.isPartialSlug slug) && not (ContentMarkdown.isExcludedRootSlug slug))
                                         |> List.map
                                             (\slug ->
                                                 ContentMarkdown.loadFrontmatter (dir ++ "/" ++ slug ++ ".md")

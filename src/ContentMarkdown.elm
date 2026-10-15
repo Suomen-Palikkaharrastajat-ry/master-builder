@@ -1,4 +1,4 @@
-module ContentMarkdown exposing (PageData, TocNode, isPartialSlug, loadFrontmatter, loadPage, loadPageOrSectionIndex, loadSectionChildren, loadTocTree)
+module ContentMarkdown exposing (PageData, TocNode, isExcludedRootSlug, isPartialSlug, loadFrontmatter, loadPage, loadPageOrSectionIndex, loadSectionChildren, loadTocTree)
 
 {-| Utilities for loading markdown content with frontmatter and include expansion.
 -}
@@ -116,7 +116,7 @@ loadRootChildren dir =
                 |> BackendTask.andThen
                     (\slugs ->
                         slugs
-                            |> List.filter (\s -> s /= "index" && not (isPartialSlug s))
+                            |> List.filter (\s -> s /= "index" && not (isPartialSlug s) && not (isExcludedRootSlug s))
                             |> List.map (\s -> loadFrontmatter (dir ++ "/" ++ s ++ ".md") |> BackendTask.map (\fm -> { slug = s, frontmatter = fm }))
                             |> BackendTask.combine
                     )
@@ -199,6 +199,18 @@ isPartialSlug slug =
         |> List.head
         |> Maybe.map (String.startsWith "_")
         |> Maybe.withDefault False
+
+
+{-| Check if a root-level slug should be excluded from page generation and navigation.
+README.md, AGENTS.md, LICENSE.md, etc. at CONTENT\_DIR root are repository documentation, not content pages.
+-}
+isExcludedRootSlug : String -> Bool
+isExcludedRootSlug slug =
+    let
+        lower =
+            String.toLower slug
+    in
+    List.member lower [ "readme", "agents", "license", "contributing", "changelog", "claude" ]
 
 
 type alias ExpandContext =

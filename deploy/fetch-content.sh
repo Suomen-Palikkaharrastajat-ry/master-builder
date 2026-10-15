@@ -55,7 +55,14 @@ echo "fetch-content: done. $(find "$DEST" -type f | wc -l | tr -d ' ') files syn
 PUBLIC_DIR="$(dirname "$0")/../public"
 PUBLIC_DIR="$(realpath "$PUBLIC_DIR")"
 echo "fetch-content: copying non-markdown assets to ${PUBLIC_DIR}/ ..."
-find "$DEST" -type f -not -name "*.md" | while IFS= read -r f; do
+mkdir -p "$PUBLIC_DIR"
+if [ -d "$DEST/images" ]; then
+  rm -rf "$PUBLIC_DIR/images"
+  ln -sfn "../template/images" "$PUBLIC_DIR/images"
+elif [ -L "$PUBLIC_DIR/images" ] && [ ! -e "$PUBLIC_DIR/images" ]; then
+  rm -rf "$PUBLIC_DIR/images"
+fi
+find "$DEST" -type f -not -name "*.md" -not -path "$DEST/images/*" | while IFS= read -r f; do
   rel="${f#$DEST/}"
   destfile="$PUBLIC_DIR/$rel"
   mkdir -p "$(dirname "$destfile")"

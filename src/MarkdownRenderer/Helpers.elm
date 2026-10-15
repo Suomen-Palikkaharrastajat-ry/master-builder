@@ -49,6 +49,15 @@ normalizeSrc pageDir src =
     then
         src
 
+    else if String.startsWith "images/" src then
+        "/" ++ src
+
+    else if String.startsWith "./images/" src then
+        "/" ++ String.dropLeft 2 src
+
+    else if String.startsWith "../images/" src then
+        "/" ++ String.dropLeft 3 src
+
     else if String.startsWith "./" src then
         "/" ++ pageDir ++ String.dropLeft 2 src
 

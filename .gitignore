@@ -34,6 +34,7 @@ functions/server-render/*
 public/robots.txt
 public/site.webmanifest
 public/site-config.json
+public/images
 public/images/
 
 # --- Editor & OS ---
@@ -46,6 +47,7 @@ Thumbs.db
 *.xpi
 
 # --- Content repo (separate repo, mounted here) ---
+content
 content/
 
 # --- Misc / local ---
