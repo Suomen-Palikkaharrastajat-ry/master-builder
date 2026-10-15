@@ -15,7 +15,7 @@
 import { cpSync, createReadStream, existsSync, readdirSync, statSync } from 'node:fs'
 import { dirname, extname, join, resolve as resolvePath } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { load } from './site-config.mjs'
+import { load, showHidden } from './site-config.mjs'
 
 const VIRTUAL_ID = 'virtual:site-config'
 const RESOLVED_ID = '\0' + VIRTUAL_ID
@@ -51,9 +51,12 @@ export default function siteConfig(options = {}) {
   let configPath
   let resolved
   let outDir
+  let serving = false
   const shared = options.sharedAssets === false ? [] : sharedEntries()
   const read = () => {
-    resolved = load(configPath)
+    // The dev server shows hidden languages, so they can be previewed; a build
+    // leaves them out.
+    resolved = serving ? showHidden(load(configPath)) : load(configPath)
     return resolved
   }
   const defaultConfig = () => resolved.configs[resolved.default]
@@ -65,6 +68,7 @@ export default function siteConfig(options = {}) {
     configResolved(viteConfig) {
       configPath = resolvePath(viteConfig.root, options.config ?? '../config.toml')
       outDir = resolvePath(viteConfig.root, viteConfig.build.outDir)
+      serving = viteConfig.command === 'serve'
       read()
     },
 

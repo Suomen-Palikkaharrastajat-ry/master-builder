@@ -94,3 +94,22 @@ test('shared assets can be turned off', () => {
   plugin.closeBundle()
   assert.equal(existsSync(join(dir, 'dist', 'icon-192.png')), false)
 })
+
+test('the dev server shows hidden languages and the build leaves them out', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'site-config-vite-'))
+  mkdirSync(join(dir, 'elm-app'))
+  writeFileSync(
+    join(dir, 'config.toml'),
+    '[i18n]\ndefault = "fi"\nlanguages = ["fi", "en"]\nhidden = ["en"]\n' +
+      '[site]\nurl = "https://x.example"\ntitle = "X"\ndescription = "D"\n[site.en]\ntitle = "X"\ndescription = "D"\n',
+  )
+  const languages = (command) => {
+    const plugin = siteConfig({ sharedAssets: false })
+    plugin.configResolved({ root: join(dir, 'elm-app'), build: { outDir: '../dist' }, command })
+    const module = plugin.load.call({ addWatchFile() {} }, '\0virtual:site-config').replace(/^export default /, '')
+    const alternates = plugin.transformIndexHtml('<html>').tags.filter((t) => t.attrs?.property === 'og:locale:alternate')
+    return { languages: JSON.parse(module).languages, alternates: alternates.length }
+  }
+  assert.deepEqual(languages('build'), { languages: ['fi'], alternates: 0 })
+  assert.deepEqual(languages('serve'), { languages: ['fi', 'en'], alternates: 1 })
+})

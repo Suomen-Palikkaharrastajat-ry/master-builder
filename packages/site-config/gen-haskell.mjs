@@ -14,7 +14,7 @@
 // `--check` fails when the file is out of date instead of writing it.
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { basename, relative, resolve } from 'node:path'
-import { load, SiteConfigError } from './site-config.mjs'
+import { allLanguages, load, SiteConfigError } from './site-config.mjs'
 
 // A configuration problem is the user's to fix: print it, not a stack trace.
 function loadOrExit(path, options) {
@@ -41,7 +41,7 @@ if (!configPath || !target) {
 }
 
 const resolved = loadOrExit(configPath)
-const langs = resolved.languages
+const langs = allLanguages(resolved)
 const con = (lang) => lang[0].toUpperCase() + lang.slice(1)
 const camel = (prefix, key) =>
   prefix + key.replace(/(^|_)([a-z0-9])/g, (_, __, c) => c.toUpperCase())
@@ -134,7 +134,7 @@ module SiteConfig (
 ${definitions.map((d) => `    ${d.name},`).join('\n')}
 ) where
 
--- | The languages the site declares in @[i18n] languages@.
+-- | The languages the site declares in @[i18n] languages@, hidden ones included.
 data Lang = ${langs.map(con).join(' | ')}
     deriving (Eq, Show)
 

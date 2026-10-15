@@ -65,3 +65,11 @@ test('rejects a value that is a list in one language and a string in another', (
   assert.equal(mixed.status, 1)
   assert.match(mixed.stderr, /\[app\.en\.statics\] names must be a list like in \[app\.statics\]/)
 })
+
+test('hidden languages are written out too', () => {
+  const result = run('hidden', base.replace('languages = ["fi", "en"]', 'languages = ["fi", "en"]\nhidden = ["en"]'))
+  assert.equal(result.status, 0, result.stderr)
+  const source = result.read()
+  assert.match(source, /data Lang = Fi \| En/)
+  assert.match(source, /siteTitle En = "Cart"/)
+})

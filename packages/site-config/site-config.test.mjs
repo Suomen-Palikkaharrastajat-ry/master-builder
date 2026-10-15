@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
-import { FAMILY_PATH, load, resolve, SiteConfigError } from './site-config.mjs'
+import { allLanguages, FAMILY_PATH, load, resolve, showHidden, SiteConfigError } from './site-config.mjs'
 import { parse } from './vendor/smol-toml/index.js'
 
 const family = parse(readFileSync(FAMILY_PATH, 'utf8'))
@@ -123,6 +123,40 @@ test('no silent fallback: text set for the default language must be translated',
 test('the default language has no sub-table of its own', () => {
   assert.match(problems('[site]\nurl="u"\ntitle="t"\ndescription="d"\n[site.fi]\ntitle = "x"\n')[0], /is the default language/)
 })
+
+const hiddenEn = bilingual.replace('languages = ["fi", "en"]', 'languages = ["fi", "en"]\nhidden = ["en"]')
+
+test('a hidden language is resolved and checked but not shown', () => {
+  const resolved = resolve(parse(hiddenEn + '[site.en]\ntitle = "Title"\ndescription = "Description"\n'), family, { year: 2026 })
+  assert.deepEqual(resolved.languages, ['fi'])
+  assert.deepEqual(resolved.hidden, ['en'])
+  assert.deepEqual(Object.keys(resolved.configs), ['fi', 'en'])
+  assert.deepEqual(resolved.configs.fi.languages, ['fi'])
+  assert.equal(resolved.configs.en.site.title, 'Title')
+  assert.deepEqual(allLanguages(resolved), ['fi', 'en'])
+  assert.deepEqual(problems(hiddenEn + '[site.en]\ntitle = "Title"\n'), [
+    'config.toml: [site.en] description is missing (set in [site] for "fi")',
+  ])
+})
+
+test('showing hidden languages lists them everywhere', () => {
+  const resolved = resolve(parse(hiddenEn + '[site.en]\ntitle = "T"\ndescription = "D"\n'), family, { year: 2026 })
+  const shown = showHidden(resolved)
+  assert.deepEqual(shown.languages, ['fi', 'en'])
+  assert.deepEqual(shown.hidden, [])
+  assert.deepEqual(shown.configs.en.languages, ['fi', 'en'])
+  assert.deepEqual(resolved.configs.en.languages, ['fi'], 'the original is left alone')
+})
+
+test('only declared languages other than the default can be hidden', () => {
+  const i18n = (hidden) => `[i18n]\ndefault = "fi"\nlanguages = ["fi", "en"]\nhidden = ${hidden}\n` + minimalBilingual
+  assert.deepEqual(problems(i18n('["fi"]')), ['config.toml: [i18n] default "fi" cannot be hidden'])
+  assert.deepEqual(problems(i18n('["sv"]')), ['config.toml: [i18n] hidden must be a list of languages listed in languages'])
+  assert.deepEqual(problems(i18n('"en"')), ['config.toml: [i18n] hidden must be a list of languages listed in languages'])
+  assert.deepEqual(problems(i18n('["en", "en"]')), ['config.toml: [i18n] hidden has duplicates'])
+})
+
+const minimalBilingual = '[site]\nurl="u"\ntitle="t"\ndescription="d"\n[site.en]\ntitle="t"\ndescription="d"\n'
 
 test('a language table must be declared in [i18n] languages', () => {
   assert.match(problems('[site]\nurl="u"\ntitle="t"\ndescription="d"\n[site.en]\ntitle = "x"\n')[0], /"en" is not listed/)

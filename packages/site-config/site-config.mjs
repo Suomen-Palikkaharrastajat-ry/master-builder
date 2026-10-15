@@ -175,14 +175,15 @@ const TYPE_CHECKS = {
 // site, so the rest of the file is still checked and no later step trips over
 // a language that does not exist.
 function readI18n(raw, name, problems) {
-  const fallback = { default: 'fi', languages: ['fi'] }
+  const fallback = { default: 'fi', languages: ['fi'], hidden: [] }
   const i18n = raw.i18n ?? {}
   if (!isTable(i18n)) return fallback // reported with the other sections
   const before = problems.length
   const def = i18n.default ?? 'fi'
   const languages = i18n.languages ?? [def]
+  const hidden = i18n.hidden ?? []
   for (const key of Object.keys(i18n)) {
-    if (key !== 'default' && key !== 'languages') problems.push(`${name}: unknown key [i18n] ${key}`)
+    if (!['default', 'languages', 'hidden'].includes(key)) problems.push(`${name}: unknown key [i18n] ${key}`)
   }
   if (
     !Array.isArray(languages) ||
@@ -201,7 +202,20 @@ function readI18n(raw, name, problems) {
       problems.push(`${name}: [i18n] language "${lang}" is not supported (supported: ${SUPPORTED_LANGUAGES.join(', ')})`)
     }
   }
-  return problems.length > before ? fallback : { default: def, languages }
+  // A hidden language is built and checked like any other but not offered to
+  // visitors: no language link, no ?lang=, no alternate-locale tag.
+  // A broken list hides nothing; the languages themselves are still read.
+  if (problems.length > before) return fallback
+  if (!Array.isArray(hidden) || hidden.some((l) => typeof l !== 'string' || !languages.includes(l))) {
+    problems.push(`${name}: [i18n] hidden must be a list of languages listed in languages`)
+  } else if (hidden.includes(def)) {
+    problems.push(`${name}: [i18n] default ${JSON.stringify(def)} cannot be hidden`)
+  } else if (new Set(hidden).size !== hidden.length) {
+    problems.push(`${name}: [i18n] hidden has duplicates`)
+  } else {
+    return { default: def, languages, hidden }
+  }
+  return { default: def, languages, hidden: [] }
 }
 
 // Splits one raw section into { neutral, byLang: { <lang>: translatable } },
@@ -321,7 +335,10 @@ const sameUrl = (a, b) => a.replace(/\/+$/, '') === b.replace(/\/+$/, '')
 
 /**
  * Resolves raw (parsed) site and family TOML into one configuration per
- * language: { default, languages, configs: { <lang>: config } }.
+ * language: { default, languages, hidden, configs: { <lang>: config } }.
+ * `languages` lists the languages shown to visitors and `hidden` the ones
+ * ([i18n] hidden) that are built and checked but not offered; `configs` has
+ * both.
  * Throws SiteConfigError listing every problem found.
  */
 export function resolve(siteRaw, familyRaw = {}, options = {}) {
@@ -352,10 +369,11 @@ export function resolve(siteRaw, familyRaw = {}, options = {}) {
     }
   }
   const app = splitApp(siteRaw.app, i18n, problems)
+  const shown = i18n.languages.filter((lang) => !i18n.hidden.includes(lang))
 
   const configs = {}
   for (const lang of i18n.languages) {
-    const config = { lang, languages: i18n.languages }
+    const config = { lang, languages: shown }
     const untranslated = new Set()
     for (const section of Object.keys(SCHEMA)) {
       const { site, family } = sections[section]
@@ -434,7 +452,24 @@ export function resolve(siteRaw, familyRaw = {}, options = {}) {
   }
 
   if (problems.length > 0) throw new SiteConfigError([...new Set(problems)])
-  return { default: i18n.default, languages: i18n.languages, configs }
+  return { default: i18n.default, languages: shown, hidden: i18n.hidden, configs }
+}
+
+/**
+ * Every language a resolved configuration has, hidden ones included: what the
+ * code generators write out.
+ */
+export function allLanguages(resolved) {
+  return [...resolved.languages, ...resolved.hidden]
+}
+
+/** A resolved configuration with its hidden languages shown, for previewing them. */
+export function showHidden(resolved) {
+  const languages = allLanguages(resolved)
+  const configs = Object.fromEntries(
+    Object.entries(resolved.configs).map(([lang, config]) => [lang, { ...config, languages }]),
+  )
+  return { ...resolved, languages, hidden: [], configs }
 }
 
 /** Reads and resolves a site's config.toml against the family defaults. */

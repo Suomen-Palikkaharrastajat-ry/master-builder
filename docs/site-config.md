@@ -46,6 +46,24 @@ description = "Event calendar"
 - **Language-neutral** keys (URLs, paths, colours, flags) only ever sit directly
   in the section.
 
+### Hidden languages
+
+```toml
+[i18n]
+default   = "fi"
+languages = ["fi", "en"]
+hidden    = ["en"]
+```
+
+A language listed in `hidden` is resolved, checked and generated like any
+other, so its translation is tested and cannot drift, but a build does not
+offer it to visitors: the resolved `languages` leaves it out, so there is no
+language link, `?lang=en` is ignored and the head has no alternate-locale tag
+for it. Its configuration is still in `configs`, and the Haskell `SiteConfig`
+module has it. The Vite dev server shows hidden languages, so `make elm-dev`
+previews them. To publish a language, remove it from `hidden`. The default
+language cannot be hidden.
+
 The build fails, listing every problem, when
 
 - a language table is not listed in `[i18n] languages`, or is the default language;
