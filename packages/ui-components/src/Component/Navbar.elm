@@ -204,7 +204,7 @@ linkVariantTw variant isActive =
               else
                 Tw.text_simple TC.textMuted
             , Bp.hover [ Tw.text_simple TC.textPrimary ]
-            , Bp.focus [ Tw.outline_none, Tw.ring_2, TwEx.ring_brand ]
+            , Bp.focus_visible [ Tw.outline_none, Tw.ring_2, TwEx.ring_brand ]
             ]
 
         Dark ->
@@ -214,7 +214,7 @@ linkVariantTw variant isActive =
               else
                 TwEx.text_white_80
             , Bp.hover [ Tw.text_simple TC.brandYellow ]
-            , Bp.focus [ Tw.outline_none, Tw.ring_2, TwEx.ring_brand_yellow ]
+            , Bp.focus_visible [ Tw.outline_none, Tw.ring_2, TwEx.ring_brand_yellow ]
             ]
 
         Compact ->
@@ -224,7 +224,7 @@ linkVariantTw variant isActive =
               else
                 TwEx.text_white_80
             , Bp.hover [ Tw.text_simple TC.brandYellow ]
-            , Bp.focus [ Tw.outline_none, Tw.ring_2, TwEx.ring_brand_yellow ]
+            , Bp.focus_visible [ Tw.outline_none, Tw.ring_2, TwEx.ring_brand_yellow ]
             ]
 
 

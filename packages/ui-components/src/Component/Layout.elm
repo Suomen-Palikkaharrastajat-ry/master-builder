@@ -442,12 +442,17 @@ viewSiteLogo config =
     if isStandard config then
         Html.a
             ([ Attr.href config.home.href
-             , classes [ Bp.focus [ Tw.outline_none, Tw.ring_2, TwEx.ring_brand_yellow ], Tw.rounded ]
+             , classes
+                [ Tw.inline_block
+                , Tw.p Th.s0_dot_5
+                , Bp.focus_visible [ Tw.outline_none, Tw.ring_2, TwEx.ring_brand_yellow ]
+                , Tw.rounded
+                ]
              ]
                 ++ brandClick config
             )
             [ Html.node "picture"
-                []
+                [ classes [ Tw.block ] ]
                 [ Html.node "source"
                     [ Attr.attribute "media" "(min-width: 640px)"
                     , Attr.attribute "srcset" branding.logoDark
@@ -456,7 +461,7 @@ viewSiteLogo config =
                 , Html.img
                     [ Attr.src branding.logoLightMobile
                     , Attr.alt branding.logoAlt
-                    , classes [ Tw.h Th.s10, Bp.sm [ Tw.h Th.s14 ] ]
+                    , classes [ Tw.h Th.s10, Bp.sm [ Tw.h Th.s14 ], Tw.block ]
                     ]
                     []
                 ]
@@ -465,7 +470,13 @@ viewSiteLogo config =
     else
         Html.a
             ([ Attr.href config.home.href
-             , classes [ Tw.flex, Tw.items_center, Tw.gap Th.s2, Bp.focus [ Tw.outline_none, Tw.ring_2, TwEx.ring_brand_yellow ], Tw.rounded ]
+             , classes
+                [ Tw.flex
+                , Tw.items_center
+                , Tw.gap Th.s2
+                , Bp.focus_visible [ Tw.outline_none, Tw.ring_2, TwEx.ring_brand_yellow ]
+                , Tw.rounded
+                ]
              ]
                 ++ brandClick config
             )
@@ -495,7 +506,7 @@ viewSiteMenuToggle config menu =
             , Tw.p Th.s2
             , Tw.ml Th.s2
             , Tw.rounded
-            , Bp.focus [ Tw.outline_none, Tw.ring_2, TwEx.ring_brand_yellow ]
+            , Bp.focus_visible [ Tw.outline_none, Tw.ring_2, TwEx.ring_brand_yellow ]
             , Tw.cursor_pointer
             ]
         , Attr.type_ "button"
