@@ -54,10 +54,10 @@ suite =
                 inLang Fi (.footer >> .links >> List.map .label)
                     |> Expect.equal
                         (Just
-                            [ "Kotisivut"
-                            , "Palikkakartta"
+                            [ "Palikkakartta"
                             , "Palikkalinkit"
                             , "Palikkaoppaat"
+                            , "Kotisivut"
                             , "Jäsenfoorumi"
                             , "Jäsenkortti"
                             , "Jäsenmaksu"

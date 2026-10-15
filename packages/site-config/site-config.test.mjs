@@ -45,17 +45,17 @@ test('family footer links are canonical and never link to the site itself', () =
   const { fi } = resolve(site(), family, { year: 2026 }).configs
   assert.deepEqual(
     fi.footer.links.map((l) => l.label),
-    ['Kotisivut', 'Palikkakartta', 'Palikkalinkit', 'Palikkaoppaat', 'Jäsenfoorumi', 'Jäsenkortti', 'Jäsenmaksu', 'Tietosuoja'],
+    ['Palikkakartta', 'Palikkalinkit', 'Palikkaoppaat', 'Kotisivut', 'Jäsenfoorumi', 'Jäsenkortti', 'Jäsenmaksu', 'Tietosuoja'],
   )
 })
 
 test('the canonical family link list is pinned', () => {
   assert.deepEqual(family.footer.links, [
-    { label: 'Kotisivut', href: 'https://palikkaharrastajat.fi' },
     { label: 'Palikkakalenteri', href: 'https://kalenteri.palikkaharrastajat.fi' },
     { label: 'Palikkakartta', href: 'https://kartta.palikkaharrastajat.fi' },
     { label: 'Palikkalinkit', href: 'https://linkit.palikkaharrastajat.fi' },
     { label: 'Palikkaoppaat', href: 'https://oppaat.palikkaharrastajat.fi' },
+    { label: 'Kotisivut', href: 'https://palikkaharrastajat.fi' },
     { label: 'Jäsenfoorumi', href: 'https://forum.palikkaharrastajat.fi' },
     { label: 'Jäsenkortti', href: 'https://kortti.palikkaharrastajat.fi' },
     { label: 'Jäsenmaksu', href: 'https://maksut.palikkaharrastajat.fi' },
@@ -98,7 +98,7 @@ motto = "Let's build"`),
     en.footer.links.map((l) => l.href),
     fi.footer.links.map((l) => l.href),
   )
-  assert.equal(en.footer.links[0].label, 'Homepage')
+  assert.equal(en.footer.links.find((l) => l.href === 'https://palikkaharrastajat.fi').label, 'Homepage')
   assert.equal(fi.app.strings.motto, 'Rakennetaan')
   assert.equal(en.app.strings.motto, "Let's build")
   assert.equal(en.app.pocketbase_url, 'https://data.palikkaharrastajat.fi')
