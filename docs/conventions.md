@@ -156,8 +156,10 @@ Note the deliberate split: **`statics/`** is the Haskell package directory;
 
 Apps and design-guide run the shared LlmAgent rules from
 `master-builder/review/src/LlmAgent/` (NoTailwindRawStrings, RequireModuleDoc,
-RequireTypeAnnotation, NoExposingEverything) — rules tuned to keep generated code
-legible to LLM coding agents. `make elm-check` runs `elm-format --validate` +
+RequireTypeAnnotation, NoExposingEverything; NoDebug and NoInlineStyleAttribute
+are available too) — rules tuned to keep generated code legible to LLM coding
+agents. Each app's `review/src/LlmAgent` is a symlink to the hub's, and its
+`ReviewConfig.elm` picks the rules it runs. `make elm-check` runs `elm-format --validate` +
 `elm-review`.
 
 ## Changing shared package APIs
