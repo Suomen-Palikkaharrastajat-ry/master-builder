@@ -89,20 +89,15 @@ jobs:
         working-directory: app
         run: node vendor/master-builder/script/check-i18n.mjs elm-app/src elm-app/main.js statics/src statics/app
 
-      - name: Build Elm app
-        working-directory: app
-        run: devenv shell --profile ci -- make elm-build
-
-      - name: Run Elm tests
-        working-directory: app
-        run: devenv shell --profile ci -- make elm-test
-
-      # Only apps whose cabal.project includes statics-common need Haskell.
-      - name: Detect statics-common usage
+      # Apps with a cabal.project build a Haskell generator. Prepare Cabal
+      # before the Elm build: an app may generate Elm sources with it (planet:
+      # elm-app/src/Data.elm via `cabal build planet`), so the package index
+      # must exist first.
+      - name: Detect Haskell generator
         id: statics
         working-directory: app
         run: |
-          if [ -f cabal.project ] && grep -q 'vendor/master-builder/packages-hs/statics-common' cabal.project; then
+          if [ -f cabal.project ]; then
             echo "used=true" >> "$GITHUB_OUTPUT"
           else
             echo "used=false" >> "$GITHUB_OUTPUT"
@@ -123,7 +118,15 @@ jobs:
         working-directory: app
         run: devenv shell --profile ci -- cabal update
 
-      - name: Build statics (compiles statics-common)
+      - name: Build Elm app
+        working-directory: app
+        run: devenv shell --profile ci -- make elm-build
+
+      - name: Run Elm tests
+        working-directory: app
+        run: devenv shell --profile ci -- make elm-test
+
+      - name: Build statics (compiles statics-common where used)
         if: steps.statics.outputs.used == 'true'
         working-directory: app
         run: devenv shell --profile ci -- make statics-build
