@@ -3,6 +3,17 @@ name: Downstream
 # Compiles every app repo against the hub commit under test, so a breaking
 # change to packages/ is caught before it is merged. See docs/conventions.md
 # ("Changing shared package APIs").
+#
+# A private app (competitions) is checked out with the DOWNSTREAM_READ_TOKEN
+# secret, a read-only token for that repository. On pull requests without the
+# secret (fork PRs) its steps are skipped, so its job passes without having
+# checked anything; on push and workflow_dispatch a missing secret fails the
+# job, so a broken setup is not silent.
+#
+# The hub is public, so the private app's build logs (Elm compiler errors and
+# elm-test failures quote source lines) are public too. The checkout does not
+# persist the token, and nothing derived from the private source is cached
+# (only ~/.elm, which holds public packages): a fork PR can restore caches.
 
 on:
   pull_request:
@@ -41,35 +52,73 @@ jobs:
   downstream:
     name: ${{ matrix.app }}
     runs-on: ubuntu-latest
+    env:
+      HAS_DOWNSTREAM_TOKEN: ${{ secrets.DOWNSTREAM_READ_TOKEN != '' }}
     strategy:
       fail-fast: false
       matrix:
-        app: [event-calendar, planet, service-map]
+        # i18n: what check-i18n scans, since the apps differ in layout
+        # (competitions has no statics/, its Haskell sits in src/).
+        include:
+          - app: event-calendar
+            i18n: elm-app/src elm-app/main.js statics/src statics/app
+            private: false
+          - app: planet
+            i18n: elm-app/src elm-app/main.js statics/src statics/app
+            private: false
+          - app: service-map
+            i18n: elm-app/src elm-app/main.js statics/src statics/app
+            private: false
+          - app: competitions
+            i18n: elm-app/src elm-app/main.js src
+            private: true
 
     steps:
+      - name: Require the read token for the private app
+        if: ${{ matrix.private && env.HAS_DOWNSTREAM_TOKEN != 'true' && github.event_name != 'pull_request' }}
+        run: |
+          echo "::error::DOWNSTREAM_READ_TOKEN is not set; ${{ matrix.app }} cannot be checked out"
+          exit 1
+
       - name: Checkout ${{ matrix.app }}
         uses: actions/checkout@v4
+        if: ${{ !matrix.private || env.HAS_DOWNSTREAM_TOKEN == 'true' }}
         with:
           repository: Suomen-Palikkaharrastajat-ry/${{ matrix.app }}
           path: app
           submodules: false
+          persist-credentials: false
+          token: ${{ matrix.private && secrets.DOWNSTREAM_READ_TOKEN || github.token }}
 
       # Replace the pinned submodule with the commit under test. Do NOT run
       # the app's `make vendor` afterwards: it would reset this to the pin.
       - name: Checkout hub under test
         uses: actions/checkout@v4
+        if: ${{ !matrix.private || env.HAS_DOWNSTREAM_TOKEN == 'true' }}
         with:
           path: app/vendor/master-builder
 
       - name: Setup Nix + devenv
         uses: ./app/vendor/master-builder/.github/actions/setup-nix
+        if: ${{ !matrix.private || env.HAS_DOWNSTREAM_TOKEN == 'true' }}
         with:
           # Absent on fork PRs; the action then uses read-only cache pulls.
           cachix-auth-token: ${{ secrets.CACHIX_AUTH_TOKEN }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
+      # Private app: cache only the downloaded packages, never elm-stuff
+      # (compiled private modules).
+      - name: Restore Elm package cache (private app)
+        uses: actions/cache@v4
+        if: ${{ matrix.private && env.HAS_DOWNSTREAM_TOKEN == 'true' }}
+        with:
+          path: ~/.elm
+          key: elm-${{ runner.os }}-${{ matrix.app }}-${{ hashFiles('app/elm-app/elm.json') }}
+          restore-keys: elm-${{ runner.os }}-${{ matrix.app }}-
+
       - name: Restore Elm cache
         uses: actions/cache@v4
+        if: ${{ !matrix.private }}
         with:
           path: |
             ~/.elm
@@ -78,22 +127,26 @@ jobs:
           restore-keys: elm-${{ runner.os }}-${{ matrix.app }}-
 
       - name: Check shared package dependencies
+        if: ${{ !matrix.private || env.HAS_DOWNSTREAM_TOKEN == 'true' }}
         working-directory: app
         run: node vendor/master-builder/script/check-consumer-deps.mjs elm-app/elm.json
 
       - name: Check shared component safelist
+        if: ${{ !matrix.private || env.HAS_DOWNSTREAM_TOKEN == 'true' }}
         working-directory: app
         run: node vendor/master-builder/script/check-safelist.mjs
 
       - name: Check display text stays in translation modules
+        if: ${{ !matrix.private || env.HAS_DOWNSTREAM_TOKEN == 'true' }}
         working-directory: app
-        run: node vendor/master-builder/script/check-i18n.mjs elm-app/src elm-app/main.js statics/src statics/app
+        run: node vendor/master-builder/script/check-i18n.mjs ${{ matrix.i18n }}
 
       # Apps with a cabal.project build a Haskell generator. Prepare Cabal
       # before the Elm build: an app may generate Elm sources with it (planet:
       # elm-app/src/Data.elm via `cabal build planet`), so the package index
       # must exist first.
       - name: Detect Haskell generator
+        if: ${{ !matrix.private || env.HAS_DOWNSTREAM_TOKEN == 'true' }}
         id: statics
         working-directory: app
         run: |
@@ -104,7 +157,7 @@ jobs:
           fi
 
       - name: Restore Cabal caches
-        if: steps.statics.outputs.used == 'true'
+        if: ${{ (!matrix.private || env.HAS_DOWNSTREAM_TOKEN == 'true') && steps.statics.outputs.used == 'true' }}
         uses: actions/cache@v4
         with:
           path: |
@@ -114,19 +167,21 @@ jobs:
           restore-keys: cabal-${{ runner.os }}-${{ matrix.app }}-
 
       - name: Update Cabal package index
-        if: steps.statics.outputs.used == 'true'
+        if: ${{ (!matrix.private || env.HAS_DOWNSTREAM_TOKEN == 'true') && steps.statics.outputs.used == 'true' }}
         working-directory: app
         run: devenv shell --profile ci -- cabal update
 
       - name: Build Elm app
+        if: ${{ !matrix.private || env.HAS_DOWNSTREAM_TOKEN == 'true' }}
         working-directory: app
         run: devenv shell --profile ci -- make elm-build
 
       - name: Run Elm tests
+        if: ${{ !matrix.private || env.HAS_DOWNSTREAM_TOKEN == 'true' }}
         working-directory: app
         run: devenv shell --profile ci -- make elm-test
 
       - name: Build statics (compiles statics-common where used)
-        if: steps.statics.outputs.used == 'true'
+        if: ${{ (!matrix.private || env.HAS_DOWNSTREAM_TOKEN == 'true') && steps.statics.outputs.used == 'true' }}
         working-directory: app
         run: devenv shell --profile ci -- make statics-build
