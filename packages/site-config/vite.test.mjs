@@ -42,12 +42,12 @@ function request(plugin, root, url) {
   })
 }
 
-test('the hub shares its icons, social image and logos, and nothing else', () => {
+test('the hub shares its icons, social image, logos and fonts, and nothing else', () => {
   const shared = sharedEntries()
-  for (const name of ['favicon.svg', 'favicon.ico', 'icon-192.png', 'apple-touch-icon.png', 'og-image.png', 'logo']) {
+  for (const name of ['favicon.svg', 'favicon.ico', 'icon-192.png', 'apple-touch-icon.png', 'og-image.png', 'logo', 'fonts']) {
     assert.ok(shared.includes(name), `${name} should be shared`)
   }
-  for (const name of ['fonts', 'vendor', 'site-config.json', 'robots.txt']) {
+  for (const name of ['vendor', 'site-config.json', 'robots.txt']) {
     assert.equal(shared.includes(name), false, `${name} should not be shared`)
   }
 })
@@ -64,11 +64,31 @@ test('the dev server serves the manifest and shared files the app does not have'
 
   const logo = await request(plugin, root, '/logo/square/svg/square-smile.svg')
   assert.equal(logo.headers['Content-Type'], 'image/svg+xml')
+
+  const font = await request(plugin, root, '/fonts/Outfit-VariableFont_wght.woff2')
+  assert.equal(font.headers['Content-Type'], 'font/woff2')
+  assert.equal(font.next, false)
+
+  const css = await request(plugin, root, '/fonts/outfit.css')
+  assert.equal(css.headers['Content-Type'], 'text/css; charset=utf-8')
+  assert.equal(css.next, false)
+
+  const licence = await request(plugin, root, '/fonts/OFL.txt')
+  assert.equal(licence.headers['Content-Type'], 'text/plain; charset=utf-8')
+  assert.equal(licence.next, false)
+})
+
+test("the dev server leaves an app's own font file to Vite", async () => {
+  const { root, plugin } = app()
+  mkdirSync(join(root, 'public', 'fonts'))
+  writeFileSync(join(root, 'public', 'fonts', 'outfit.css'), 'own css')
+  assert.equal((await request(plugin, root, '/fonts/outfit.css')).next, true)
+  assert.equal((await request(plugin, root, '/fonts/OFL.txt')).next, false)
 })
 
 test("the dev server leaves the app's own files, other paths and traversal to Vite", async () => {
   const { root, plugin } = app()
-  for (const url of ['/favicon.svg', '/main.js', '/fonts/outfit.css', '/logo/../../package.json', '/logo/missing.svg', '/logo']) {
+  for (const url of ['/favicon.svg', '/main.js', '/fonts/missing.woff2', '/fonts/../package.json', '/logo/../../package.json', '/logo/missing.svg', '/logo']) {
     assert.equal((await request(plugin, root, url)).next, true, url)
   }
 })
@@ -81,7 +101,17 @@ test("the build adds the shared files without replacing the app's own", () => {
   assert.equal(readFileSync(join(dir, 'dist', 'favicon.svg'), 'utf8'), 'own favicon')
   assert.ok(existsSync(join(dir, 'dist', 'icon-192.png')))
   assert.ok(existsSync(join(dir, 'dist', 'logo', 'square', 'svg', 'square-smile.svg')))
-  assert.equal(existsSync(join(dir, 'dist', 'fonts')), false)
+  for (const name of ['Outfit-VariableFont_wght.woff2', 'Outfit-VariableFont_wght.ttf', 'OFL.txt', 'outfit.css']) {
+    assert.ok(existsSync(join(dir, 'dist', 'fonts', name)), `dist/fonts/${name}`)
+  }
+})
+
+test("the build does not replace the app's own font file", () => {
+  const { dir, plugin } = app()
+  mkdirSync(join(dir, 'dist', 'fonts'))
+  writeFileSync(join(dir, 'dist', 'fonts', 'outfit.css'), 'own css')
+  plugin.closeBundle()
+  assert.equal(readFileSync(join(dir, 'dist', 'fonts', 'outfit.css'), 'utf8'), 'own css')
 })
 
 test('shared assets can be turned off', () => {

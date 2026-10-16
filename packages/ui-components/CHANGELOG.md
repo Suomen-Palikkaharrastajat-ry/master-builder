@@ -43,6 +43,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning: [S
 
 ### Changed
 
+- The Outfit font and its single `@font-face` now come from the hub (`public/fonts/outfit.css`, WOFF2 with TTF fallback); apps import that file and keep no font files of their own (#17).
 - **BREAKING:** `1602/elm-feather` 2.3.5 <= v < 3.0.0 replaces `feathericons/elm-feather`; apps must depend on `1602/elm-feather` (#2).
 - **BREAKING:** `Component.MobileDrawer.view` now requires a `label` field (e150ad8). Callers must supply an accessible label.
 

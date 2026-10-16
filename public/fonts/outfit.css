@@ -1,0 +1,12 @@
+/* Outfit variable font (weights 100–900), SIL Open Font License 1.1: see OFL.txt.
+   The family's only @font-face for Outfit. Imported by master-builder's style.css and the
+   apps' elm-app/main.css; served as /fonts/outfit.css (site-config Vite plugin) for
+   static pages. WOFF2 built with: nix shell nixpkgs#woff2 -c woff2_compress <ttf> */
+@font-face {
+  font-family: "Outfit";
+  src: url("/fonts/Outfit-VariableFont_wght.woff2") format("woff2"),
+       url("/fonts/Outfit-VariableFont_wght.ttf") format("truetype");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}

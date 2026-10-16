@@ -173,7 +173,8 @@ definitions live in the `design-guide` repo's `content/*.toml` (vendored here at
 color catalog the brand primitives derive from is `design-guide/reference/allowed-colors.csv`.
 
 **CSS reference:** Fetch `https://logo.palikkaharrastajat.fi/brand.css` for the canonical
-`@theme`, `@utility type-*`, `@font-face`, and reduced-motion rule.
+`@theme`, `@utility type-*`, and reduced-motion rule. The Outfit `@font-face` is not in
+brand.css: it lives only in `public/fonts/outfit.css`.
 
 **Human-readable:** https://logo.palikkaharrastajat.fi/
 **Machine-readable (JSON-LD):** https://logo.palikkaharrastajat.fi/design-guide/index.jsonld
@@ -200,7 +201,7 @@ All colour usage must pass WCAG AA contrast.
 
 ### Typography
 
-Font: **Outfit variable** (100–900), self-hosted from `public/fonts/`. Never substitute.
+Font: **Outfit variable** (100–900), self-hosted from `public/fonts/` as WOFF2 with a TTF fallback, plus its licence `OFL.txt`. `public/fonts/outfit.css` holds the only `@font-face` for Outfit: the hub's `style.css` and the apps' `main.css` import it, and the site-config Vite plugin serves `/fonts/*` to the apps. Apps never keep font files or their own `@font-face`. Vite logs two expected warnings in each app build, `/fonts/Outfit-VariableFont_wght.woff2` and `.ttf` "didn't resolve at build time"; the apps' `public/` has no `fonts/`, and the site-config plugin adds `dist/fonts` afterwards. Keep the absolute URLs. Never substitute.
 Use `type-*` utility classes from `packages/design-tokens/design-tokens.css` (imported by `style.css`). Never use raw Tailwind size/weight combos.
 
 | Class | Size | Weight | Notes |
