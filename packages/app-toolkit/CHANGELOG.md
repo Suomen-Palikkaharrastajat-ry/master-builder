@@ -21,6 +21,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning: [S
 
 - `FinnishTime`: `weekdayAbbr`, `monthName`, `formatShortDate`, `formatTime` and `formatFullDate` take a `Locale` as their first argument. `isoDateToFinnishDateInput`, `finnishDateInputToIsoDate`, `parseFinnishDate` and `formatFinnishDate` are now `isoDateToDateInput`, `dateInputToIsoDate`, `parseDate` and `formatDate` and take a `Locale`. `finnishWeekdayAbbr` and `finnishMonthName` are removed (use `weekdayAbbr`/`monthName`).
 
+### Removed (breaking)
+
+- `PocketBaseAuth.fetchOAuthToken` (from 1.1.0): sign-in uses the popup flow in `pocketbase-auth.js`; nothing completes a `#/callback` redirect any more (#16).
+
 ## [1.0.0]
 
 ### Changed
