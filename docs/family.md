@@ -175,13 +175,9 @@ Three ways of depending on the hub exist:
 - **Uses from the hub:** `ui-components` (`Component.Layout`, `Account`, `SiteSettings`, `Lang`, `UiStrings`), `design-tokens`, `site-config` (`config.toml`), `review/` rules, shared icons and logos; `elm-app/packages` is a committed symlink and icons come from `1602/elm-feather`.
 - **CI / deploy:** `quality.yml` (shared `setup-nix` action); `deploy.yml` and `scheduled.yml` are disabled. Built against hub changes by the Downstream workflow.
 - **Conventions:** conforms since [Suomen-Palikkaharrastajat-ry/competitions#1](https://github.com/Suomen-Palikkaharrastajat-ry/competitions/issues/1). The status table shows the pin.
-- **Remaining follow-ups** (tracked in a follow-up issue in competitions):
-  - The font comes from a local `outfit.css`; drop it for the hub's once the pin includes it.
-  - A stored session is not refreshed at start-up, so an expired token looks signed in.
-  - `devenv.yaml` follows nixpkgs master.
-  - No `cabal.project` and no `src/` layout like the other Haskell repositories; the build output goes to `build/`.
-  - `review/src/LlmAgent` and `pkgs/npm-tools.nix` are copies of the hub's.
-  - `Styles.hs` uses hex colours.
+- **Remaining follow-ups** (tracked in [Suomen-Palikkaharrastajat-ry/competitions#3](https://github.com/Suomen-Palikkaharrastajat-ry/competitions/issues/3)):
+  - The views use raw Tailwind class strings, so `NoTailwindRawStrings` is not enabled.
+  - The app and the gallery build into `elm-app/dist` and `dist`, not one `dist/`.
 
 ### brick-frame (public)
 

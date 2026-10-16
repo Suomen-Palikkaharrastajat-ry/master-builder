@@ -203,8 +203,8 @@ app's pinned `vendor/master-builder` with the commit under test. A red
 `downstream` job means an app needs a matching change before the hub change is
 merged (see the policy above). It runs `make elm-build`, `make elm-test` and,
 for apps using `statics-common`, `make statics-build`; it does not run
-`make check` yet. Each app lists the paths `check-i18n` scans in the
-workflow's matrix.
+`make check` yet. `check-i18n` scans `elm-app/src elm-app/main.js statics/src statics/app` in
+every app and skips the paths an app does not have.
 
 ## Consuming shared Elm packages
 

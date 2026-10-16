@@ -44,17 +44,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # i18n: what check-i18n scans, since the apps differ in layout
-        # (competitions has no statics/, its Haskell sits in src/).
-        include:
-          - app: event-calendar
-            i18n: elm-app/src elm-app/main.js statics/src statics/app
-          - app: planet
-            i18n: elm-app/src elm-app/main.js statics/src statics/app
-          - app: service-map
-            i18n: elm-app/src elm-app/main.js statics/src statics/app
-          - app: competitions
-            i18n: elm-app/src elm-app/main.js src
+        app: [event-calendar, planet, service-map, competitions]
 
     steps:
       - name: Checkout ${{ matrix.app }}
@@ -97,7 +87,7 @@ jobs:
 
       - name: Check display text stays in translation modules
         working-directory: app
-        run: node vendor/master-builder/script/check-i18n.mjs ${{ matrix.i18n }}
+        run: node vendor/master-builder/script/check-i18n.mjs elm-app/src elm-app/main.js statics/src statics/app
 
       # Apps with a cabal.project build a Haskell generator. Prepare Cabal
       # before the Elm build: an app may generate Elm sources with it (planet:
