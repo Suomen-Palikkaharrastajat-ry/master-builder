@@ -6,7 +6,7 @@ Shared Elm app plumbing for Suomen Palikkaharrastajat ry applications (`event-ca
 
 - **`FinnishTime`**: Helsinki timezone conversion (EET/EEST, daylight saving transitions), date and time formatting and parsing in a given `Locale` (`formatShortDate`, `formatTime`, `formatFullDate`, `parseDate`, `formatDate`), form input converters, and 6×7 calendar month grid generation (`monthGrid`).
 - **`Locale`**: a language's date and time conventions (month and weekday names, separators, date input placeholder); `fi`, `en` and `forCode`. Tested against `packages/site-config/locales.json`.
-- **`PocketBaseAuth`**: Msg-polymorphic OAuth2 token exchange (`fetchOAuthToken`), auth state restoration from flags (`restoreAuthFromFlags`), and PocketBase user decoding (`decodeAuthUser`).
+- **`PocketBaseAuth`**: `AuthState`/`AuthUser` with `isAuthenticated` and `getToken`; auth state restoration from flags (`restoreAuthFromFlags`); user decoding and encoding (`decodeAuthUser`, `encodeAuthUser`, `authUserModelJson`); the sign-in popup result (`userFromPopupResult`).
 - **`View.MapOverlay`**: Responsive, accessible overlays for interactive maps without inline styles (`panel`, `filterGroup`, `detailPanel`, `detailPanelWithHeaderActions`).
 - **`View.MapWidget`**: Container element for Leaflet and MapLibre map initialization.
 - **`View.Icons`**: Accessible Feather icon renderer (`featherIcon`) with `aria-hidden="true"` and `focusable="false"`.
@@ -20,28 +20,51 @@ Elm packages cannot define ports directly. Consuming applications define the fol
 port initiateOAuth : String -> Cmd msg
 port saveAuthToken : { token : String, model : String } -> Cmd msg
 port clearAuthToken : () -> Cmd msg
-port getCallbackParams : () -> Cmd msg
-port callbackParams : ({ codeVerifier : String, state : String } -> msg) -> Sub msg
 port oauthPopupResult : ({ token : String, model : String } -> msg) -> Sub msg
 ```
 
 ### JavaScript Helper
 
-`packages/app-toolkit/js/pocketbase-auth.js` provides ready-to-use helpers to wire these ports and handle token caching in `localStorage`:
+`packages/app-toolkit/js/pocketbase-auth.js` provides ready-to-use helpers to wire these ports and handle token caching in `localStorage` (`pb_auth_token`, `pb_auth_model`). Import it through the app's vendored hub; its tests are in `pocketbase-auth.test.mjs`.
+
+**Loading PocketBase.** The file lives in the hub, which has no PocketBase SDK, and the apps pin different SDK versions, so pass the SDK in: `PocketBase` (the class, when the app imports it statically) or `loadPocketBase` (`() => import('pocketbase').then((m) => m.default)`, which keeps the SDK a lazy chunk). Without either, a bare `import('pocketbase')` is tried.
+
+**Refreshing a stored token at start-up** has two variants:
+
+- `resolveInitAuth(pbBaseUrl, options)` blocks: it refreshes before the Elm app starts. A refreshed token goes into the flags; a 401/403 clears the storage and starts signed out (no reload); a network error keeps the stored token.
+- `getInitAuth()` + `triggerBackgroundAuthRefresh(pbBaseUrl, initAuth, options)` start at once with the stored token and refresh afterwards; a 401/403 clears the storage and reloads the page (or calls `options.onInvalidAuth`).
+
+```javascript
+import PocketBase from 'pocketbase'
+import {
+  resolveInitAuth,
+  wirePocketBaseAuthPorts,
+} from './packages/app-toolkit/js/pocketbase-auth.js'
+
+const initAuth = await resolveInitAuth(pbBaseUrl, { PocketBase })
+const app = Elm.Main.init({ node, flags: { ...initAuth, pbBaseUrl } })
+
+wirePocketBaseAuthPorts(app, { PocketBase })
+```
+
+The background variant, with a lazy SDK:
 
 ```javascript
 import {
   getInitAuth,
   wirePocketBaseAuthPorts,
-  triggerBackgroundAuthRefresh
-} from '../vendor/master-builder/packages/app-toolkit/js/pocketbase-auth.js'
+  triggerBackgroundAuthRefresh,
+} from './packages/app-toolkit/js/pocketbase-auth.js'
 
+const loadPocketBase = () => import('pocketbase').then((m) => m.default)
 const initAuth = getInitAuth()
 const app = Elm.Main.init({ node, flags: { ...initAuth, pbBaseUrl } })
 
-wirePocketBaseAuthPorts(app)
-triggerBackgroundAuthRefresh(pbBaseUrl, initAuth)
+wirePocketBaseAuthPorts(app, { loadPocketBase })
+triggerBackgroundAuthRefresh(pbBaseUrl, initAuth, { loadPocketBase })
 ```
+
+Sign-in is PocketBase's popup flow (`authWithOAuth2`): the popup returns to PocketBase's `/api/oauth2-redirect` and the result arrives as `oauthPopupResult`. `initiateOAuth` calls `authWithOAuth2` synchronously inside the click (Safari blocks popups opened later), so pass `PocketBase`, or `loadPocketBase`, which `wirePocketBaseAuthPorts` starts loading at once. One of the two is required.
 
 ## Focus Management (`focusElement` Port Pattern)
 

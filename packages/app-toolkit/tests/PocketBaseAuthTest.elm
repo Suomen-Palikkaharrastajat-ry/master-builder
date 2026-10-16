@@ -9,11 +9,19 @@ import PocketBaseAuth
     exposing
         ( AuthState(..)
         , AuthUser
+        , authUserModelJson
         , decodeAuthUser
-        , decodeOAuthUserResponse
+        , getToken
+        , isAuthenticated
         , restoreAuthFromFlags
+        , userFromPopupResult
         )
 import Test exposing (Test, describe, test)
+
+
+alice : AuthUser
+alice =
+    { id = "u1", name = "Alice", email = "alice@example.com", token = "jwt" }
 
 
 suite : Test
@@ -55,26 +63,20 @@ suite =
 
                         Err err ->
                             Expect.fail (Decode.errorToString err)
-            ]
-        , describe "decodeOAuthUserResponse"
-            [ test "decodes OAuth response with token and record" <|
+            , test "fails without an id" <|
                 \_ ->
-                    let
-                        rawJson =
-                            """{"token":"jwt-abc","record":{"id":"usr789","name":"Liisa","email":"liisa@example.com"}}"""
-                    in
-                    case Decode.decodeString decodeOAuthUserResponse rawJson of
-                        Ok user ->
-                            Expect.all
-                                [ \u -> Expect.equal "usr789" u.id
-                                , \u -> Expect.equal "Liisa" u.name
-                                , \u -> Expect.equal "liisa@example.com" u.email
-                                , \u -> Expect.equal "jwt-abc" u.token
-                                ]
-                                user
-
-                        Err err ->
-                            Expect.fail (Decode.errorToString err)
+                    Decode.decodeString decodeAuthUser """{"name":"x"}"""
+                        |> Result.toMaybe
+                        |> Expect.equal Nothing
+            , test "fails on invalid JSON" <|
+                \_ ->
+                    Decode.decodeString decodeAuthUser "not json"
+                        |> Result.toMaybe
+                        |> Expect.equal Nothing
+            , test "treats a null name and email as empty" <|
+                \_ ->
+                    Decode.decodeString decodeAuthUser """{"id":"a","name":null,"email":null}"""
+                        |> Expect.equal (Ok { id = "a", name = "", email = "", token = "" })
             ]
         , describe "restoreAuthFromFlags"
             [ test "restores Authenticated state when both token and valid model are present" <|
@@ -113,5 +115,41 @@ suite =
                 \_ ->
                     restoreAuthFromFlags (Just "jwt-token-xyz") (Just "{bad-json}")
                         |> Expect.equal NotAuthenticated
+            ]
+        , describe "isAuthenticated and getToken"
+            [ test "signed in" <|
+                \_ ->
+                    Expect.equal ( True, Just "jwt" ) ( isAuthenticated (Authenticated alice), getToken (Authenticated alice) )
+            , test "signed out" <|
+                \_ ->
+                    Expect.equal ( False, Nothing ) ( isAuthenticated NotAuthenticated, getToken NotAuthenticated )
+            ]
+        , describe "authUserModelJson"
+            [ test "leaves the token out" <|
+                \_ ->
+                    authUserModelJson alice
+                        |> Expect.equal """{"id":"u1","name":"Alice","email":"alice@example.com"}"""
+            , test "round-trips names with quotes and backslashes" <|
+                \_ ->
+                    let
+                        tricky =
+                            { alice | name = "A \"Q\" \\ B" }
+                    in
+                    Decode.decodeString decodeAuthUser (authUserModelJson tricky)
+                        |> Expect.equal (Ok { tricky | token = "" })
+            ]
+        , describe "userFromPopupResult"
+            [ test "builds the user with the token" <|
+                \_ ->
+                    userFromPopupResult { token = "jwt", model = authUserModelJson alice }
+                        |> Expect.equal (Just alice)
+            , test "empty token means a failed popup" <|
+                \_ ->
+                    userFromPopupResult { token = "", model = "{}" }
+                        |> Expect.equal Nothing
+            , test "undecodable model gives Nothing" <|
+                \_ ->
+                    userFromPopupResult { token = "jwt", model = "{}" }
+                        |> Expect.equal Nothing
             ]
         ]
