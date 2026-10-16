@@ -13,7 +13,7 @@
  *
  * Sign-in is PocketBase's popup flow (`authWithOAuth2`): the popup returns to
  * `<pocketbase>/api/oauth2-redirect` and the result arrives over PocketBase's
- * realtime connection. The app's own `#/callback` route is never involved.
+ * realtime connection.
  * Safari only allows the popup inside the click, so `initiateOAuth` calls
  * `authWithOAuth2` synchronously from the port callback, with nothing awaited
  * before it.
@@ -102,14 +102,11 @@ export async function resolveInitAuth(pbBaseUrl, options = {}) {
 }
 
 /**
- * Wires the standard Elm auth ports: initiateOAuth, getCallbackParams, saveAuthToken, clearAuthToken.
+ * Wires the standard Elm auth ports: initiateOAuth, saveAuthToken, clearAuthToken.
  *
  * With `loadPocketBase` the SDK starts loading at once, so that the sign-in
  * click can call `authWithOAuth2` synchronously. If the click comes before the
  * SDK has loaded, sign-in waits for it, and Safari may then block the popup.
- *
- * `getCallbackParams` is legacy: sign-in no longer stores a code verifier or
- * state, so it answers with empty strings.
  *
  * @param {object} app - The initialized Elm application object with `ports`
  * @param {object} [options] - Configuration options:
@@ -166,18 +163,6 @@ export function wirePocketBaseAuthPorts(app, options = {}) {
       if (PB) return signIn(PB, pbBaseUrl)
       // Rare path: the SDK is not loaded yet, so the popup may be blocked on Safari.
       return load().then((cls) => signIn(cls, pbBaseUrl), sendFailure)
-    })
-  }
-
-  if (app.ports.getCallbackParams) {
-    // Legacy (see above): kept so apps that still subscribe get an answer.
-    app.ports.getCallbackParams.subscribe(() => {
-      if (app.ports.callbackParams) {
-        app.ports.callbackParams.send({
-          codeVerifier: sessionStorage.getItem('pb_code_verifier') || '',
-          state: sessionStorage.getItem('pb_provider_state') || '',
-        })
-      }
     })
   }
 

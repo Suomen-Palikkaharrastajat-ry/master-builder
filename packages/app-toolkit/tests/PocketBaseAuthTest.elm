@@ -10,32 +10,18 @@ import PocketBaseAuth
         ( AuthState(..)
         , AuthUser
         , authUserModelJson
-        , callbackQuery
-        , callbackRedirectUrl
         , decodeAuthUser
-        , decodeOAuthUserResponse
         , getToken
         , isAuthenticated
         , restoreAuthFromFlags
         , userFromPopupResult
         )
 import Test exposing (Test, describe, test)
-import Url
 
 
 alice : AuthUser
 alice =
     { id = "u1", name = "Alice", email = "alice@example.com", token = "jwt" }
-
-
-urlWith : String -> Url.Url
-urlWith str =
-    case Url.fromString str of
-        Just url ->
-            url
-
-        Nothing ->
-            Debug.todo ("bad test url " ++ str)
 
 
 suite : Test
@@ -91,31 +77,6 @@ suite =
                 \_ ->
                     Decode.decodeString decodeAuthUser """{"id":"a","name":null,"email":null}"""
                         |> Expect.equal (Ok { id = "a", name = "", email = "", token = "" })
-            ]
-        , describe "decodeOAuthUserResponse"
-            [ test "decodes OAuth response with token and record" <|
-                \_ ->
-                    let
-                        rawJson =
-                            """{"token":"jwt-abc","record":{"id":"usr789","name":"Liisa","email":"liisa@example.com"}}"""
-                    in
-                    case Decode.decodeString decodeOAuthUserResponse rawJson of
-                        Ok user ->
-                            Expect.all
-                                [ \u -> Expect.equal "usr789" u.id
-                                , \u -> Expect.equal "Liisa" u.name
-                                , \u -> Expect.equal "liisa@example.com" u.email
-                                , \u -> Expect.equal "jwt-abc" u.token
-                                ]
-                                user
-
-                        Err err ->
-                            Expect.fail (Decode.errorToString err)
-            , test "fails without a token" <|
-                \_ ->
-                    Decode.decodeString decodeOAuthUserResponse """{"record":{"id":"a"}}"""
-                        |> Result.toMaybe
-                        |> Expect.equal Nothing
             ]
         , describe "restoreAuthFromFlags"
             [ test "restores Authenticated state when both token and valid model are present" <|
@@ -190,49 +151,5 @@ suite =
                 \_ ->
                     userFromPopupResult { token = "jwt", model = "{}" }
                         |> Expect.equal Nothing
-            ]
-        , describe "callbackQuery"
-            [ test "reads code and state" <|
-                \_ ->
-                    callbackQuery (urlWith "https://x.test/app/#/callback?code=abc&state=xyz")
-                        |> Expect.equal { code = Just "abc", state = Just "xyz" }
-            , test "percent-decodes values" <|
-                \_ ->
-                    callbackQuery (urlWith "https://x.test/#/callback?code=a%2Fb%20c&state=s%3D1")
-                        |> Expect.equal { code = Just "a/b c", state = Just "s=1" }
-            , test "reads + as a space" <|
-                \_ ->
-                    callbackQuery (urlWith "https://x.test/#/callback?code=a+b%2Bc&state=s")
-                        |> Expect.equal { code = Just "a b+c", state = Just "s" }
-            , test "keeps = inside values" <|
-                \_ ->
-                    callbackQuery (urlWith "https://x.test/#/callback?code=a=b==&state=z")
-                        |> Expect.equal { code = Just "a=b==", state = Just "z" }
-            , test "missing state is Nothing" <|
-                \_ ->
-                    callbackQuery (urlWith "https://x.test/#/callback?code=abc")
-                        |> Expect.equal { code = Just "abc", state = Nothing }
-            , test "no query gives Nothing for both" <|
-                \_ ->
-                    callbackQuery (urlWith "https://x.test/#/callback")
-                        |> Expect.equal { code = Nothing, state = Nothing }
-            , test "no fragment gives Nothing for both" <|
-                \_ ->
-                    callbackQuery (urlWith "https://x.test/?code=abc")
-                        |> Expect.equal { code = Nothing, state = Nothing }
-            , test "keeps a malformed escape as is" <|
-                \_ ->
-                    callbackQuery (urlWith "https://x.test/#/callback?code=%E0%A4%A&state=s")
-                        |> Expect.equal { code = Just "%E0%A4%A", state = Just "s" }
-            ]
-        , describe "callbackRedirectUrl"
-            [ test "drops query and fragment" <|
-                \_ ->
-                    callbackRedirectUrl (urlWith "https://x.test/app/?a=1#/events?b=2")
-                        |> Expect.equal "https://x.test/app/#/callback"
-            , test "keeps a port" <|
-                \_ ->
-                    callbackRedirectUrl (urlWith "http://localhost:5173/")
-                        |> Expect.equal "http://localhost:5173/#/callback"
             ]
         ]

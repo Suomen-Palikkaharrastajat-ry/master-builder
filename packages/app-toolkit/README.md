@@ -6,7 +6,7 @@ Shared Elm app plumbing for Suomen Palikkaharrastajat ry applications (`event-ca
 
 - **`FinnishTime`**: Helsinki timezone conversion (EET/EEST, daylight saving transitions), date and time formatting and parsing in a given `Locale` (`formatShortDate`, `formatTime`, `formatFullDate`, `parseDate`, `formatDate`), form input converters, and 6×7 calendar month grid generation (`monthGrid`).
 - **`Locale`**: a language's date and time conventions (month and weekday names, separators, date input placeholder); `fi`, `en` and `forCode`. Tested against `packages/site-config/locales.json`.
-- **`PocketBaseAuth`**: `AuthState`/`AuthUser` with `isAuthenticated` and `getToken`; msg-polymorphic OAuth2 token exchange (`fetchOAuthToken`, `fetchOAuthUser`); auth state restoration from flags (`restoreAuthFromFlags`); user decoding and encoding (`decodeAuthUser`, `encodeAuthUser`, `authUserModelJson`); the sign-in popup result (`userFromPopupResult`); and the `#/callback?code=&state=` redirect (`callbackQuery`, `callbackRedirectUrl`). Error messages and the `state` check stay in the app, which owns the texts and the update loop.
+- **`PocketBaseAuth`**: `AuthState`/`AuthUser` with `isAuthenticated` and `getToken`; auth state restoration from flags (`restoreAuthFromFlags`); user decoding and encoding (`decodeAuthUser`, `encodeAuthUser`, `authUserModelJson`); the sign-in popup result (`userFromPopupResult`).
 - **`View.MapOverlay`**: Responsive, accessible overlays for interactive maps without inline styles (`panel`, `filterGroup`, `detailPanel`, `detailPanelWithHeaderActions`).
 - **`View.MapWidget`**: Container element for Leaflet and MapLibre map initialization.
 - **`View.Icons`**: Accessible Feather icon renderer (`featherIcon`) with `aria-hidden="true"` and `focusable="false"`.
@@ -20,8 +20,6 @@ Elm packages cannot define ports directly. Consuming applications define the fol
 port initiateOAuth : String -> Cmd msg
 port saveAuthToken : { token : String, model : String } -> Cmd msg
 port clearAuthToken : () -> Cmd msg
-port getCallbackParams : () -> Cmd msg
-port callbackParams : ({ codeVerifier : String, state : String } -> msg) -> Sub msg
 port oauthPopupResult : ({ token : String, model : String } -> msg) -> Sub msg
 ```
 
@@ -66,7 +64,7 @@ wirePocketBaseAuthPorts(app, { loadPocketBase })
 triggerBackgroundAuthRefresh(pbBaseUrl, initAuth, { loadPocketBase })
 ```
 
-Sign-in is PocketBase's popup flow (`authWithOAuth2`): the popup returns to PocketBase's `/api/oauth2-redirect` and the result arrives as `oauthPopupResult`. `initiateOAuth` calls `authWithOAuth2` synchronously inside the click (Safari blocks popups opened later), so pass `PocketBase`, or `loadPocketBase`, which `wirePocketBaseAuthPorts` starts loading at once. One of the two is required. The apps' `#/callback` route, `getCallbackParams` and `PocketBaseAuth.callbackQuery`/`callbackRedirectUrl` are legacy and unused by this flow; `getCallbackParams` answers with empty strings.
+Sign-in is PocketBase's popup flow (`authWithOAuth2`): the popup returns to PocketBase's `/api/oauth2-redirect` and the result arrives as `oauthPopupResult`. `initiateOAuth` calls `authWithOAuth2` synchronously inside the click (Safari blocks popups opened later), so pass `PocketBase`, or `loadPocketBase`, which `wirePocketBaseAuthPorts` starts loading at once. One of the two is required.
 
 ## Focus Management (`focusElement` Port Pattern)
 

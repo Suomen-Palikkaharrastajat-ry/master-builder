@@ -61,18 +61,16 @@ function fakePocketBase(behaviour = {}) {
 
 function fakeApp() {
   const handlers = {}
-  const sent = { oauthPopupResult: [], callbackParams: [] }
+  const sent = { oauthPopupResult: [] }
   const port = (name) => ({ subscribe: (fn) => (handlers[name] = fn) })
   return {
     handlers,
     sent,
     ports: {
       initiateOAuth: port('initiateOAuth'),
-      getCallbackParams: port('getCallbackParams'),
       saveAuthToken: port('saveAuthToken'),
       clearAuthToken: port('clearAuthToken'),
       oauthPopupResult: { send: (v) => sent.oauthPopupResult.push(v) },
-      callbackParams: { send: (v) => sent.callbackParams.push(v) },
     },
   }
 }
@@ -300,17 +298,4 @@ test('saveAuthToken and clearAuthToken write and clear both keys', () => {
   app.handlers.clearAuthToken()
   assert.equal(localStorage.has('pb_auth_token'), false)
   assert.equal(localStorage.has('pb_auth_model'), false)
-})
-
-test('getCallbackParams answers from sessionStorage', () => {
-  const app = fakeApp()
-  wirePocketBaseAuthPorts(app, {})
-  app.handlers.getCallbackParams()
-  sessionStorage.setItem('pb_code_verifier', 'v')
-  sessionStorage.setItem('pb_provider_state', 's')
-  app.handlers.getCallbackParams()
-  assert.deepEqual(app.sent.callbackParams, [
-    { codeVerifier: '', state: '' },
-    { codeVerifier: 'v', state: 's' },
-  ])
 })
