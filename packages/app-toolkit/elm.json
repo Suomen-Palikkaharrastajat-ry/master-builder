@@ -3,7 +3,7 @@
     "name": "palikkaharrastajat/app-toolkit",
     "summary": "Shared Elm app plumbing for Suomen Palikkaharrastajat ry apps",
     "license": "BSD-3-Clause",
-    "version": "1.1.0",
+    "version": "2.0.0",
     "exposed-modules": [
         "FinnishTime",
         "Geocoding",
