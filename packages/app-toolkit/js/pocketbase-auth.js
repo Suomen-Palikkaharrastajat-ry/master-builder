@@ -3,7 +3,35 @@
  *
  * Used by event-calendar and service-map to manage authentication lifecycle,
  * token persistence in localStorage, and port subscriptions.
+ *
+ * Starting up, pick one of two ways to refresh a stored token:
+ *   - `resolveInitAuth` (blocking): refreshes before the Elm app starts, so the
+ *     first render already has the fresh token or is signed out. No reload.
+ *   - `getInitAuth` + `triggerBackgroundAuthRefresh`: start at once with the
+ *     stored token and refresh afterwards; an invalid token reloads the page
+ *     (or calls `onInvalidAuth`).
+ *
+ * Loading the PocketBase SDK: this file is reached through the vendored hub, where
+ * a bare `import('pocketbase')` finds no SDK, and the apps pin different SDK
+ * versions. So `options.PocketBase` (the class, for apps that import it
+ * statically) or `options.loadPocketBase` (`() => import('pocketbase').then((m) =>
+ * m.default)`, which keeps the SDK a lazy chunk) should be passed. Without either
+ * the fallback is a bare `import('pocketbase')`.
  */
+
+async function resolvePocketBase(options) {
+  if (options.PocketBase) return options.PocketBase
+  if (options.loadPocketBase) return options.loadPocketBase()
+  return (await import('pocketbase')).default
+}
+
+function modelFromRecord(record) {
+  return JSON.stringify({
+    id: record.id,
+    name: record.name || '',
+    email: record.email || '',
+  })
+}
 
 export function readStoredAuth() {
   return {
@@ -35,11 +63,44 @@ export function getInitAuth() {
 }
 
 /**
+ * Blocking start-up auth: refreshes a stored token before the Elm app starts.
+ *
+ * - Success: stores and returns the refreshed token and model.
+ * - 401/403: clears the stored auth and returns a signed-out result (no reload).
+ * - Any other error (network down): keeps and returns the stored auth.
+ *
+ * @param {string} pbBaseUrl - PocketBase API endpoint URL
+ * @param {object} [options] - `PocketBase` or `loadPocketBase`, see the file header
+ * @returns {Promise<{authToken: string|null, authModel: string|null}>}
+ */
+export async function resolveInitAuth(pbBaseUrl, options = {}) {
+  const stored = getInitAuth()
+  if (!stored.authToken) return stored
+
+  try {
+    const PB = await resolvePocketBase(options)
+    const pb = new PB(pbBaseUrl)
+    pb.authStore.save(stored.authToken, null)
+    const authData = await pb.collection('users').authRefresh()
+    const refreshedModel = modelFromRecord(authData.record)
+    saveStoredAuth(authData.token, refreshedModel)
+    return { authToken: authData.token, authModel: refreshedModel }
+  } catch (err) {
+    if (isInvalidAuthError(err)) {
+      clearStoredAuth()
+      return { authToken: null, authModel: null }
+    }
+    console.warn('Auth refresh failed during app init, keeping stored auth:', err)
+    return stored
+  }
+}
+
+/**
  * Wires the standard Elm auth ports: initiateOAuth, getCallbackParams, saveAuthToken, clearAuthToken.
  *
  * @param {object} app - The initialized Elm application object with `ports`
  * @param {object} [options] - Configuration options:
- *   - PocketBase: PocketBase constructor (if pre-imported; otherwise dynamically imported)
+ *   - PocketBase / loadPocketBase: how to get the SDK, see the file header
  *   - provider: OAuth provider name (defaults to 'oidc')
  */
 export function wirePocketBaseAuthPorts(app, options = {}) {
@@ -48,7 +109,7 @@ export function wirePocketBaseAuthPorts(app, options = {}) {
   if (app.ports.initiateOAuth) {
     app.ports.initiateOAuth.subscribe(async (pbBaseUrl) => {
       try {
-        const PB = options.PocketBase || (await import('pocketbase')).default
+        const PB = await resolvePocketBase(options)
         const pb = new PB(pbBaseUrl)
 
         const authMethods = await pb.collection('users').listAuthMethods()
@@ -62,11 +123,7 @@ export function wirePocketBaseAuthPorts(app, options = {}) {
         if (app.ports.oauthPopupResult) {
           app.ports.oauthPopupResult.send({
             token: authData.token,
-            model: JSON.stringify({
-              id: authData.record.id,
-              name: authData.record.name || '',
-              email: authData.record.email || '',
-            }),
+            model: modelFromRecord(authData.record),
           })
         }
       } catch (err) {
@@ -108,7 +165,7 @@ export function wirePocketBaseAuthPorts(app, options = {}) {
  * @param {string} pbBaseUrl - PocketBase API endpoint URL
  * @param {object} initAuth - Object with { authToken, authModel }
  * @param {object} [options] - Configuration options:
- *   - PocketBase: PocketBase constructor (if pre-imported)
+ *   - PocketBase / loadPocketBase: how to get the SDK, see the file header
  *   - onInvalidAuth: callback when token is expired/invalid (defaults to reload)
  */
 export function triggerBackgroundAuthRefresh(pbBaseUrl, initAuth, options = {}) {
@@ -116,15 +173,11 @@ export function triggerBackgroundAuthRefresh(pbBaseUrl, initAuth, options = {}) 
 
   setTimeout(async () => {
     try {
-      const PB = options.PocketBase || (await import('pocketbase')).default
+      const PB = await resolvePocketBase(options)
       const pb = new PB(pbBaseUrl)
       pb.authStore.save(initAuth.authToken, null)
       const authData = await pb.collection('users').authRefresh()
-      const refreshedModel = JSON.stringify({
-        id: authData.record.id,
-        name: authData.record.name || '',
-        email: authData.record.email || '',
-      })
+      const refreshedModel = modelFromRecord(authData.record)
       saveStoredAuth(authData.token, refreshedModel)
     } catch (err) {
       if (isInvalidAuthError(err)) {

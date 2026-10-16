@@ -1,15 +1,44 @@
-module PocketBaseAuth exposing (AuthState(..), AuthUser, decodeAuthUser, decodeOAuthUserResponse, fetchOAuthToken, fetchOAuthUser, restoreAuthFromFlags)
+module PocketBaseAuth exposing
+    ( AuthState(..), AuthUser, isAuthenticated, getToken
+    , decodeAuthUser, decodeOAuthUserResponse, restoreAuthFromFlags
+    , encodeAuthUser, authUserModelJson, userFromPopupResult
+    , callbackQuery, callbackRedirectUrl
+    , fetchOAuthToken, fetchOAuthUser
+    )
 
-{-| PocketBase authentication helpers: token restore from flags, user JSON decoding,
-and msg-polymorphic OAuth2 token exchange.
+{-| PocketBase authentication helpers: token restore from flags, user JSON
+decoding and encoding, popup and `#/callback` redirect handling, and
+msg-polymorphic OAuth2 token exchange.
 
-@docs AuthState, AuthUser, decodeAuthUser, decodeOAuthUserResponse, fetchOAuthToken, fetchOAuthUser, restoreAuthFromFlags
+The matching JavaScript lives in `js/pocketbase-auth.js`.
+
+
+# State
+
+@docs AuthState, AuthUser, isAuthenticated, getToken
+
+
+# Decoding and storing
+
+@docs decodeAuthUser, decodeOAuthUserResponse, restoreAuthFromFlags
+@docs encodeAuthUser, authUserModelJson, userFromPopupResult
+
+
+# Redirect flow
+
+@docs callbackQuery, callbackRedirectUrl
+
+
+# Token exchange
+
+@docs fetchOAuthToken, fetchOAuthUser
 
 -}
 
 import Http
 import Json.Decode as Decode exposing (Decoder)
 import Json.Encode as Encode
+import Url exposing (Url)
 
 
 {-| Authenticated PocketBase user details.
@@ -27,6 +56,30 @@ type alias AuthUser =
 type AuthState
     = NotAuthenticated
     | Authenticated AuthUser
+
+
+{-| Whether the state holds a signed-in user.
+-}
+isAuthenticated : AuthState -> Bool
+isAuthenticated state =
+    case state of
+        Authenticated _ ->
+            True
+
+        NotAuthenticated ->
+            False
+
+
+{-| The signed-in user's token, if any.
+-}
+getToken : AuthState -> Maybe String
+getToken state =
+    case state of
+        Authenticated user ->
+            Just user.token
+
+        NotAuthenticated ->
+            Nothing
 
 
 {-| JSON decoder for PocketBase user records.
@@ -74,6 +127,91 @@ restoreAuthFromFlags maybeToken maybeModel =
             NotAuthenticated
 
 
+{-| Encode the user as `{ id, name, email }`. The token is left out: it is
+stored separately.
+-}
+encodeAuthUser : AuthUser -> Encode.Value
+encodeAuthUser user =
+    Encode.object
+        [ ( "id", Encode.string user.id )
+        , ( "name", Encode.string user.name )
+        , ( "email", Encode.string user.email )
+        ]
+
+
+{-| `encodeAuthUser` as a string, the `model` of the `saveAuthToken` port.
+Quotes and backslashes in the name are escaped.
+-}
+authUserModelJson : AuthUser -> String
+authUserModelJson user =
+    Encode.encode 0 (encodeAuthUser user)
+
+
+{-| Turn the `oauthPopupResult` port payload into a user. An empty token (the
+script's way of reporting a failed or cancelled popup) or an undecodable model
+gives `Nothing`.
+-}
+userFromPopupResult : { token : String, model : String } -> Maybe AuthUser
+userFromPopupResult { token, model } =
+    if String.isEmpty token then
+        Nothing
+
+    else
+        Decode.decodeString decodeAuthUser model
+            |> Result.toMaybe
+            |> Maybe.map (\user -> { user | token = token })
+
+
+{-| The `code` and `state` of an OAuth redirect to `#/callback?code=…&state=…`.
+Values are percent-decoded; a missing parameter is `Nothing`.
+-}
+callbackQuery : Url -> { code : Maybe String, state : Maybe String }
+callbackQuery url =
+    let
+        pairs =
+            case url.fragment of
+                Just fragment ->
+                    case String.split "?" fragment of
+                        _ :: rest :: more ->
+                            String.join "?" (rest :: more)
+                                |> String.split "&"
+                                |> List.filterMap pair
+
+                        _ ->
+                            []
+
+                Nothing ->
+                    []
+
+        pair part =
+            case String.split "=" part of
+                key :: valueParts ->
+                    let
+                        raw =
+                            String.join "=" valueParts
+                    in
+                    Just ( key, Url.percentDecode raw |> Maybe.withDefault raw )
+
+                [] ->
+                    Nothing
+
+        find key =
+            pairs
+                |> List.filter (\( k, _ ) -> k == key)
+                |> List.head
+                |> Maybe.map Tuple.second
+    in
+    { code = find "code", state = find "state" }
+
+
+{-| The redirect URL to send PocketBase with the code: the current page without
+query and fragment, plus `#/callback`. It must match what the sign-in popup used.
+-}
+callbackRedirectUrl : Url -> String
+callbackRedirectUrl url =
+    Url.toString { url | query = Nothing, fragment = Nothing } ++ "#/callback"
+
+
 {-| Exchange an OAuth2 authorization code and code verifier with PocketBase for an `AuthUser`.
 This is msg-polymorphic, allowing any application Msg type to receive the HTTP result.
 -}
@@ -115,21 +253,4 @@ fetchOAuthToken :
     -> (Result Http.Error AuthState -> msg)
     -> Cmd msg
 fetchOAuthToken pbBaseUrl code codeVerifier redirectUrl state toMsg =
-    let
-        body =
-            Encode.object
-                [ ( "provider", Encode.string "oidc" )
-                , ( "code", Encode.string code )
-                , ( "codeVerifier", Encode.string codeVerifier )
-                , ( "redirectUrl", Encode.string redirectUrl )
-                , ( "state", Encode.string state )
-                ]
-
-        decoder =
-            Decode.map Authenticated decodeOAuthUserResponse
-    in
-    Http.post
-        { url = pbBaseUrl ++ "/api/collections/users/auth-with-oauth2"
-        , body = Http.jsonBody body
-        , expect = Http.expectJson toMsg decoder
-        }
+    fetchOAuthUser pbBaseUrl code codeVerifier redirectUrl state (Result.map Authenticated >> toMsg)

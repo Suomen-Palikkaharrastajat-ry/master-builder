@@ -9,11 +9,33 @@ import PocketBaseAuth
     exposing
         ( AuthState(..)
         , AuthUser
+        , authUserModelJson
+        , callbackQuery
+        , callbackRedirectUrl
         , decodeAuthUser
         , decodeOAuthUserResponse
+        , getToken
+        , isAuthenticated
         , restoreAuthFromFlags
+        , userFromPopupResult
         )
 import Test exposing (Test, describe, test)
+import Url
+
+
+alice : AuthUser
+alice =
+    { id = "u1", name = "Alice", email = "alice@example.com", token = "jwt" }
+
+
+urlWith : String -> Url.Url
+urlWith str =
+    case Url.fromString str of
+        Just url ->
+            url
+
+        Nothing ->
+            Debug.todo ("bad test url " ++ str)
 
 
 suite : Test
@@ -55,6 +77,20 @@ suite =
 
                         Err err ->
                             Expect.fail (Decode.errorToString err)
+            , test "fails without an id" <|
+                \_ ->
+                    Decode.decodeString decodeAuthUser """{"name":"x"}"""
+                        |> Result.toMaybe
+                        |> Expect.equal Nothing
+            , test "fails on invalid JSON" <|
+                \_ ->
+                    Decode.decodeString decodeAuthUser "not json"
+                        |> Result.toMaybe
+                        |> Expect.equal Nothing
+            , test "treats a null name and email as empty" <|
+                \_ ->
+                    Decode.decodeString decodeAuthUser """{"id":"a","name":null,"email":null}"""
+                        |> Expect.equal (Ok { id = "a", name = "", email = "", token = "" })
             ]
         , describe "decodeOAuthUserResponse"
             [ test "decodes OAuth response with token and record" <|
@@ -75,6 +111,11 @@ suite =
 
                         Err err ->
                             Expect.fail (Decode.errorToString err)
+            , test "fails without a token" <|
+                \_ ->
+                    Decode.decodeString decodeOAuthUserResponse """{"record":{"id":"a"}}"""
+                        |> Result.toMaybe
+                        |> Expect.equal Nothing
             ]
         , describe "restoreAuthFromFlags"
             [ test "restores Authenticated state when both token and valid model are present" <|
@@ -113,5 +154,81 @@ suite =
                 \_ ->
                     restoreAuthFromFlags (Just "jwt-token-xyz") (Just "{bad-json}")
                         |> Expect.equal NotAuthenticated
+            ]
+        , describe "isAuthenticated and getToken"
+            [ test "signed in" <|
+                \_ ->
+                    Expect.equal ( True, Just "jwt" ) ( isAuthenticated (Authenticated alice), getToken (Authenticated alice) )
+            , test "signed out" <|
+                \_ ->
+                    Expect.equal ( False, Nothing ) ( isAuthenticated NotAuthenticated, getToken NotAuthenticated )
+            ]
+        , describe "authUserModelJson"
+            [ test "leaves the token out" <|
+                \_ ->
+                    authUserModelJson alice
+                        |> Expect.equal """{"id":"u1","name":"Alice","email":"alice@example.com"}"""
+            , test "round-trips names with quotes and backslashes" <|
+                \_ ->
+                    let
+                        tricky =
+                            { alice | name = "A \"Q\" \\ B" }
+                    in
+                    Decode.decodeString decodeAuthUser (authUserModelJson tricky)
+                        |> Expect.equal (Ok { tricky | token = "" })
+            ]
+        , describe "userFromPopupResult"
+            [ test "builds the user with the token" <|
+                \_ ->
+                    userFromPopupResult { token = "jwt", model = authUserModelJson alice }
+                        |> Expect.equal (Just alice)
+            , test "empty token means a failed popup" <|
+                \_ ->
+                    userFromPopupResult { token = "", model = "{}" }
+                        |> Expect.equal Nothing
+            , test "undecodable model gives Nothing" <|
+                \_ ->
+                    userFromPopupResult { token = "jwt", model = "{}" }
+                        |> Expect.equal Nothing
+            ]
+        , describe "callbackQuery"
+            [ test "reads code and state" <|
+                \_ ->
+                    callbackQuery (urlWith "https://x.test/app/#/callback?code=abc&state=xyz")
+                        |> Expect.equal { code = Just "abc", state = Just "xyz" }
+            , test "percent-decodes values" <|
+                \_ ->
+                    callbackQuery (urlWith "https://x.test/#/callback?code=a%2Fb%20c&state=s%3D1")
+                        |> Expect.equal { code = Just "a/b c", state = Just "s=1" }
+            , test "keeps = inside values" <|
+                \_ ->
+                    callbackQuery (urlWith "https://x.test/#/callback?code=a=b==&state=z")
+                        |> Expect.equal { code = Just "a=b==", state = Just "z" }
+            , test "missing state is Nothing" <|
+                \_ ->
+                    callbackQuery (urlWith "https://x.test/#/callback?code=abc")
+                        |> Expect.equal { code = Just "abc", state = Nothing }
+            , test "no query gives Nothing for both" <|
+                \_ ->
+                    callbackQuery (urlWith "https://x.test/#/callback")
+                        |> Expect.equal { code = Nothing, state = Nothing }
+            , test "no fragment gives Nothing for both" <|
+                \_ ->
+                    callbackQuery (urlWith "https://x.test/?code=abc")
+                        |> Expect.equal { code = Nothing, state = Nothing }
+            , test "keeps a malformed escape as is" <|
+                \_ ->
+                    callbackQuery (urlWith "https://x.test/#/callback?code=%E0%A4%A&state=s")
+                        |> Expect.equal { code = Just "%E0%A4%A", state = Just "s" }
+            ]
+        , describe "callbackRedirectUrl"
+            [ test "drops query and fragment" <|
+                \_ ->
+                    callbackRedirectUrl (urlWith "https://x.test/app/?a=1#/events?b=2")
+                        |> Expect.equal "https://x.test/app/#/callback"
+            , test "keeps a port" <|
+                \_ ->
+                    callbackRedirectUrl (urlWith "http://localhost:5173/")
+                        |> Expect.equal "http://localhost:5173/#/callback"
             ]
         ]

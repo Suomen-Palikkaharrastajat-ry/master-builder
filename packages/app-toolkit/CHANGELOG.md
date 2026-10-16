@@ -8,6 +8,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning: [S
 ### Added
 
 - `Locale`: a language's date and time conventions, with `fi`, `en` and `forCode`.
+- `PocketBaseAuth`: `isAuthenticated`, `getToken`, `encodeAuthUser`, `authUserModelJson` (escapes names with quotes), `userFromPopupResult`, `callbackQuery` (percent-decoded `code` and `state` of `#/callback`) and `callbackRedirectUrl`, so event-calendar and service-map can drop their own `Auth.elm` (#16). `fetchOAuthToken` now delegates to `fetchOAuthUser`.
+- `pocketbase-auth.js`: `resolveInitAuth`, a blocking start-up refresh (signed out on 401/403 without reload, stored token kept on network errors), and the `PocketBase` / `loadPocketBase` options for loading the SDK from the vendored hub, where a bare `import('pocketbase')` finds none (#16).
+- `pocketbase-auth.test.mjs`: tests for the script (`node --test`, part of `make check`) (#16).
 
 ### Changed (breaking)
 
