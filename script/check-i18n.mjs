@@ -9,7 +9,7 @@
 // which is enough to keep text from creeping back into views. Text belongs in a module named I18n, UiStrings, Locale or
 // Translations (per language), or in config.toml. A file that legitimately
 // holds such text (sample content) opts out with `i18n-exempt: <reason>`.
-import { readdirSync, readFileSync, statSync } from 'node:fs'
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
 import { join, relative } from 'node:path'
 
 const EXTENSIONS = /\.(elm|js|mjs|ts|hs)$/
@@ -40,8 +40,10 @@ const READS_LIKE_TEXT = /\s|^["'`]+[A-ZÅÄÖ][a-zåäö]+["'`]+$/
 const looksFinnish = (literal) =>
   FINNISH.test(literal) || (READS_LIKE_TEXT.test(literal) && FINNISH_WORD.test(literal))
 
-function files(path) {
-  if (SKIPPED.test(path)) return []
+// A path that does not exist yields nothing: the Downstream workflow passes the
+// same list (elm-app/src … statics/app) to every app, and not all have all.
+export function files(path) {
+  if (SKIPPED.test(path) || !existsSync(path)) return []
   if (statSync(path).isDirectory()) return readdirSync(path).flatMap((entry) => files(join(path, entry)))
   return EXTENSIONS.test(path) && !TRANSLATION_MODULE.test(path) ? [path] : []
 }

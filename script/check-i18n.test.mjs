@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { findingsIn, literals } from './check-i18n.mjs'
+import { files, findingsIn, literals } from './check-i18n.mjs'
 
 const elm = (source) => findingsIn(source, 'View.elm')
 const js = (source) => findingsIn(source, 'main.js')
@@ -41,4 +41,8 @@ test('Elm and Haskell character literals and primes are not strings', () => {
 
 test('a file opts out with an i18n-exempt reason', () => {
   assert.deepEqual(elm('-- i18n-exempt: generated feed content\na = "Sivua ei löydy"'), [])
+})
+
+test('a path that does not exist yields no files', () => {
+  assert.deepEqual(files('no/such/directory'), [])
 })
