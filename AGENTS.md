@@ -152,7 +152,8 @@ order: 1            # Nav sort order (default: 999)
 
 ## elm-review
 
-Four custom rules in `review/src/LlmAgent/` enforce LLM-friendly code:
+Custom rules in `review/src/LlmAgent/` enforce LLM-friendly code (an app
+picks the ones it runs in its own `ReviewConfig.elm`):
 
 | Rule | Purpose |
 |---|---|
@@ -160,6 +161,8 @@ Four custom rules in `review/src/LlmAgent/` enforce LLM-friendly code:
 | `RequireModuleDoc` | Mandatory `{-\| ... -}` module documentation |
 | `RequireTypeAnnotation` | Type signatures on all top-level values |
 | `NoExposingEverything` | Explicit export lists, no `exposing (..)` |
+| `NoDebug` | No committed `Debug.log` / `Debug.todo` / `Debug.toString` |
+| `NoInlineStyleAttribute` | No `Html.Attributes.style`; style through tokens and classes |
 
 Run: `devenv shell -- make check`
 
