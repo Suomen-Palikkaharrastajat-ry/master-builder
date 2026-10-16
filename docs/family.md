@@ -175,9 +175,7 @@ Three ways of depending on the hub exist:
 - **Uses from the hub:** `ui-components` (`Component.Layout`, `Account`, `SiteSettings`, `Lang`, `UiStrings`), `design-tokens`, `site-config` (`config.toml`), `review/` rules, shared icons and logos; `elm-app/packages` is a committed symlink and icons come from `1602/elm-feather`.
 - **CI / deploy:** `quality.yml` (shared `setup-nix` action); `deploy.yml` and `scheduled.yml` are disabled. Built against hub changes by the Downstream workflow.
 - **Conventions:** conforms since [Suomen-Palikkaharrastajat-ry/competitions#1](https://github.com/Suomen-Palikkaharrastajat-ry/competitions/issues/1). The status table shows the pin.
-- **Remaining follow-ups** (tracked in [Suomen-Palikkaharrastajat-ry/competitions#3](https://github.com/Suomen-Palikkaharrastajat-ry/competitions/issues/3)):
-  - The views use raw Tailwind class strings, so `NoTailwindRawStrings` is not enabled.
-  - The app and the gallery build into `elm-app/dist` and `dist`, not one `dist/`.
+- **Layout:** the gallery pipeline is the `statics/` package; the app builds into `dist/` and the gallery into `dist/galleria/`, published together. The scheduled update (disabled until production) rebuilds the gallery from PocketBase data with a cached native binary.
 
 ### brick-frame (public)
 
