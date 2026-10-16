@@ -1,5 +1,5 @@
 /**
- * Shared PocketBase + Keycloak OAuth popup and authentication storage helpers.
+ * Shared PocketBase OAuth2 popup sign-in and authentication storage helpers.
  *
  * Used by event-calendar and service-map to manage authentication lifecycle,
  * token persistence in localStorage, and port subscriptions.
@@ -11,18 +11,24 @@
  *     stored token and refresh afterwards; an invalid token reloads the page
  *     (or calls `onInvalidAuth`).
  *
- * Loading the PocketBase SDK: this file is reached through the vendored hub, where
- * a bare `import('pocketbase')` finds no SDK, and the apps pin different SDK
- * versions. So `options.PocketBase` (the class, for apps that import it
- * statically) or `options.loadPocketBase` (`() => import('pocketbase').then((m) =>
- * m.default)`, which keeps the SDK a lazy chunk) should be passed. Without either
- * the fallback is a bare `import('pocketbase')`.
+ * Sign-in is PocketBase's popup flow (`authWithOAuth2`): the popup returns to
+ * `<pocketbase>/api/oauth2-redirect` and the result arrives over PocketBase's
+ * realtime connection. The app's own `#/callback` route is never involved.
+ * Safari only allows the popup inside the click, so `initiateOAuth` calls
+ * `authWithOAuth2` synchronously from the port callback, with nothing awaited
+ * before it.
+ *
+ * Loading the PocketBase SDK: this file is reached through the vendored hub, and
+ * the apps pin different SDK versions, so the app must pass either
+ * `options.PocketBase` (the class, for apps that import it statically) or
+ * `options.loadPocketBase` (`() => import('pocketbase').then((m) => m.default)`,
+ * which keeps the SDK a lazy chunk). Passing neither throws an error.
  */
 
 async function resolvePocketBase(options) {
   if (options.PocketBase) return options.PocketBase
   if (options.loadPocketBase) return options.loadPocketBase()
-  return (await import('pocketbase')).default
+  throw new Error('pocketbase-auth: pass PocketBase or loadPocketBase in the options')
 }
 
 function modelFromRecord(record) {
@@ -98,6 +104,13 @@ export async function resolveInitAuth(pbBaseUrl, options = {}) {
 /**
  * Wires the standard Elm auth ports: initiateOAuth, getCallbackParams, saveAuthToken, clearAuthToken.
  *
+ * With `loadPocketBase` the SDK starts loading at once, so that the sign-in
+ * click can call `authWithOAuth2` synchronously. If the click comes before the
+ * SDK has loaded, sign-in waits for it, and Safari may then block the popup.
+ *
+ * `getCallbackParams` is legacy: sign-in no longer stores a code verifier or
+ * state, so it answers with empty strings.
+ *
  * @param {object} app - The initialized Elm application object with `ports`
  * @param {object} [options] - Configuration options:
  *   - PocketBase / loadPocketBase: how to get the SDK, see the file header
@@ -106,36 +119,58 @@ export async function resolveInitAuth(pbBaseUrl, options = {}) {
 export function wirePocketBaseAuthPorts(app, options = {}) {
   const providerName = options.provider || 'oidc'
 
-  if (app.ports.initiateOAuth) {
-    app.ports.initiateOAuth.subscribe(async (pbBaseUrl) => {
-      try {
-        const PB = await resolvePocketBase(options)
-        const pb = new PB(pbBaseUrl)
+  let PB = options.PocketBase || null
+  let loading = null
 
-        const authMethods = await pb.collection('users').listAuthMethods()
-        const provider = authMethods.oauth2.providers.find((p) => p.name === providerName)
-        if (provider) {
-          sessionStorage.setItem('pb_code_verifier', provider.codeVerifier)
-          sessionStorage.setItem('pb_provider_state', provider.state)
-        }
+  function load() {
+    if (!loading) {
+      loading = resolvePocketBase(options).then(
+        (cls) => (PB = cls),
+        (err) => {
+          loading = null // a later sign-in retries
+          throw err
+        },
+      )
+    }
+    return loading
+  }
 
-        const authData = await pb.collection('users').authWithOAuth2({ provider: providerName })
-        if (app.ports.oauthPopupResult) {
-          app.ports.oauthPopupResult.send({
-            token: authData.token,
-            model: modelFromRecord(authData.record),
-          })
-        }
-      } catch (err) {
-        console.error('OAuth2 login failed:', err)
-        if (app.ports.oauthPopupResult) {
-          app.ports.oauthPopupResult.send({ token: '', model: '{}' })
-        }
+  // Eager load; a failure is reported at the first sign-in.
+  if (!PB && options.loadPocketBase) load().catch(() => {})
+
+  function sendFailure(err) {
+    console.error('OAuth2 login failed:', err)
+    if (app.ports.oauthPopupResult) {
+      app.ports.oauthPopupResult.send({ token: '', model: '{}' })
+    }
+  }
+
+  async function signIn(Class, pbBaseUrl) {
+    try {
+      const pb = new Class(pbBaseUrl)
+      // No await before this call: it opens the popup, which must happen inside the click.
+      const authData = await pb.collection('users').authWithOAuth2({ provider: providerName })
+      if (app.ports.oauthPopupResult) {
+        app.ports.oauthPopupResult.send({
+          token: authData.token,
+          model: modelFromRecord(authData.record),
+        })
       }
+    } catch (err) {
+      sendFailure(err)
+    }
+  }
+
+  if (app.ports.initiateOAuth) {
+    app.ports.initiateOAuth.subscribe((pbBaseUrl) => {
+      if (PB) return signIn(PB, pbBaseUrl)
+      // Rare path: the SDK is not loaded yet, so the popup may be blocked on Safari.
+      return load().then((cls) => signIn(cls, pbBaseUrl), sendFailure)
     })
   }
 
   if (app.ports.getCallbackParams) {
+    // Legacy (see above): kept so apps that still subscribe get an answer.
     app.ports.getCallbackParams.subscribe(() => {
       if (app.ports.callbackParams) {
         app.ports.callbackParams.send({

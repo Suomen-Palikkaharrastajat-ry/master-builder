@@ -66,7 +66,7 @@ wirePocketBaseAuthPorts(app, { loadPocketBase })
 triggerBackgroundAuthRefresh(pbBaseUrl, initAuth, { loadPocketBase })
 ```
 
-`initiateOAuth` also stores the PKCE `codeVerifier` and `state` in `sessionStorage`, for the `#/callback` redirect path (`getCallbackParams` reads them back).
+Sign-in is PocketBase's popup flow (`authWithOAuth2`): the popup returns to PocketBase's `/api/oauth2-redirect` and the result arrives as `oauthPopupResult`. `initiateOAuth` calls `authWithOAuth2` synchronously inside the click (Safari blocks popups opened later), so pass `PocketBase`, or `loadPocketBase`, which `wirePocketBaseAuthPorts` starts loading at once. One of the two is required. The apps' `#/callback` route, `getCallbackParams` and `PocketBaseAuth.callbackQuery`/`callbackRedirectUrl` are legacy and unused by this flow; `getCallbackParams` answers with empty strings.
 
 ## Focus Management (`focusElement` Port Pattern)
 

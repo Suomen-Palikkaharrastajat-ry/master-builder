@@ -32,7 +32,7 @@ beforeEach(() => {
 
 /** Fake PocketBase class. `behaviour` decides what authRefresh/authWithOAuth2 do. */
 function fakePocketBase(behaviour = {}) {
-  const calls = { saved: [], urls: [], authMethods: 0 }
+  const calls = { saved: [], urls: [], authMethods: 0, oauth: 0 }
   class FakePB {
     constructor(url) {
       calls.urls.push(url)
@@ -49,6 +49,7 @@ function fakePocketBase(behaviour = {}) {
           return { oauth2: { providers: [{ name: 'oidc', codeVerifier: 'ver', state: 'st' }] } }
         },
         authWithOAuth2: async () => {
+          calls.oauth++
           if (behaviour.oauthError) throw behaviour.oauthError
           return { token: 'oauth-token', record: behaviour.record ?? { id: 'u2', name: 'Bob', email: 'b@x.fi' } }
         },
@@ -169,14 +170,13 @@ test('triggerBackgroundAuthRefresh 403 reloads by default', async () => {
   assert.equal(reloads, 1)
 })
 
-test('initiateOAuth stores verifier and state and sends the user', async () => {
+test('initiateOAuth sends the user', async () => {
   const { FakePB, calls } = fakePocketBase()
   const app = fakeApp()
   wirePocketBaseAuthPorts(app, { PocketBase: FakePB })
   await app.handlers.initiateOAuth('http://pb')
-  assert.equal(calls.authMethods, 1)
-  assert.equal(sessionStorage.getItem('pb_code_verifier'), 'ver')
-  assert.equal(sessionStorage.getItem('pb_provider_state'), 'st')
+  assert.equal(calls.authMethods, 0)
+  assert.equal(sessionStorage.has('pb_code_verifier'), false)
   assert.deepEqual(app.sent.oauthPopupResult, [
     { token: 'oauth-token', model: '{"id":"u2","name":"Bob","email":"b@x.fi"}' },
   ])
@@ -211,6 +211,84 @@ test('initiateOAuth uses loadPocketBase', async () => {
   await app.handlers.initiateOAuth('http://pb')
   assert.equal(loads, 1)
   assert.equal(app.sent.oauthPopupResult[0].token, 'oauth-token')
+})
+
+test('initiateOAuth calls authWithOAuth2 synchronously with PocketBase', () => {
+  const { FakePB, calls } = fakePocketBase()
+  const app = fakeApp()
+  wirePocketBaseAuthPorts(app, { PocketBase: FakePB })
+  app.handlers.initiateOAuth('http://pb')
+  assert.equal(calls.oauth, 1)
+})
+
+test('initiateOAuth calls authWithOAuth2 synchronously once loadPocketBase has resolved', async () => {
+  const { FakePB, calls } = fakePocketBase()
+  const app = fakeApp()
+  wirePocketBaseAuthPorts(app, { loadPocketBase: async () => FakePB })
+  await new Promise((r) => setTimeout(r, 0))
+  app.handlers.initiateOAuth('http://pb')
+  assert.equal(calls.oauth, 1)
+})
+
+test('initiateOAuth waits for a slow loadPocketBase', async () => {
+  const { FakePB, calls } = fakePocketBase()
+  const app = fakeApp()
+  let release
+  wirePocketBaseAuthPorts(app, { loadPocketBase: () => new Promise((r) => (release = () => r(FakePB))) })
+  const done = app.handlers.initiateOAuth('http://pb')
+  assert.equal(calls.oauth, 0)
+  release()
+  await done
+  assert.equal(calls.oauth, 1)
+  assert.equal(app.sent.oauthPopupResult[0].token, 'oauth-token')
+})
+
+test('initiateOAuth reports a loadPocketBase failure as an empty token', async () => {
+  const app = fakeApp()
+  wirePocketBaseAuthPorts(app, { loadPocketBase: async () => { throw new Error('chunk') } })
+  await app.handlers.initiateOAuth('http://pb')
+  assert.deepEqual(app.sent.oauthPopupResult, [{ token: '', model: '{}' }])
+})
+
+test('initiateOAuth without PocketBase or loadPocketBase reports a failure', async () => {
+  const app = fakeApp()
+  wirePocketBaseAuthPorts(app, {})
+  await app.handlers.initiateOAuth('http://pb')
+  assert.deepEqual(app.sent.oauthPopupResult, [{ token: '', model: '{}' }])
+})
+
+test('resolveInitAuth with loadPocketBase refreshes the token', async () => {
+  const { FakePB } = fakePocketBase()
+  localStorage.setItem('pb_auth_token', 'old')
+  localStorage.setItem('pb_auth_model', '{}')
+  const r = await resolveInitAuth('http://pb', { loadPocketBase: async () => FakePB })
+  assert.equal(r.authToken, 'new-token')
+})
+
+test('resolveInitAuth with loadPocketBase signs out on 401', async () => {
+  const { FakePB } = fakePocketBase({ refreshError: httpError(401) })
+  localStorage.setItem('pb_auth_token', 'old')
+  localStorage.setItem('pb_auth_model', '{}')
+  const r = await resolveInitAuth('http://pb', { loadPocketBase: async () => FakePB })
+  assert.deepEqual(r, { authToken: null, authModel: null })
+  assert.equal(localStorage.has('pb_auth_token'), false)
+})
+
+test('resolveInitAuth keeps stored auth when loadPocketBase fails', async () => {
+  localStorage.setItem('pb_auth_token', 'old')
+  localStorage.setItem('pb_auth_model', '{"id":"1"}')
+  const r = await resolveInitAuth('http://pb', { loadPocketBase: async () => { throw new Error('chunk') } })
+  assert.deepEqual(r, { authToken: 'old', authModel: '{"id":"1"}' })
+  assert.equal(localStorage.getItem('pb_auth_token'), 'old')
+  assert.equal(warnings.length, 1)
+})
+
+test('resolveInitAuth keeps stored auth when no SDK option is given', async () => {
+  localStorage.setItem('pb_auth_token', 'old')
+  localStorage.setItem('pb_auth_model', '{}')
+  const r = await resolveInitAuth('http://pb', {})
+  assert.equal(r.authToken, 'old')
+  assert.equal(warnings.length, 1)
 })
 
 test('saveAuthToken and clearAuthToken write and clear both keys', () => {

@@ -7,7 +7,7 @@ module PocketBaseAuth exposing
     )
 
 {-| PocketBase authentication helpers: token restore from flags, user JSON
-decoding and encoding, popup and `#/callback` redirect handling, and
+decoding and encoding, popup results, legacy `#/callback` redirect helpers, and
 msg-polymorphic OAuth2 token exchange.
 
 The matching JavaScript lives in `js/pocketbase-auth.js`.
@@ -24,7 +24,7 @@ The matching JavaScript lives in `js/pocketbase-auth.js`.
 @docs encodeAuthUser, authUserModelJson, userFromPopupResult
 
 
-# Redirect flow
+# Legacy redirect flow
 
 @docs callbackQuery, callbackRedirectUrl
 
@@ -163,7 +163,10 @@ userFromPopupResult { token, model } =
 
 
 {-| The `code` and `state` of an OAuth redirect to `#/callback?code=…&state=…`.
-Values are percent-decoded; a missing parameter is `Nothing`.
+Values are percent-decoded (`+` is a space); a missing parameter is `Nothing`.
+
+Legacy: the popup sign-in (`authWithOAuth2`) never redirects to `#/callback`.
+
 -}
 callbackQuery : Url -> { code : Maybe String, state : Maybe String }
 callbackQuery url =
@@ -190,7 +193,7 @@ callbackQuery url =
                         raw =
                             String.join "=" valueParts
                     in
-                    Just ( key, Url.percentDecode raw |> Maybe.withDefault raw )
+                    Just ( key, String.replace "+" " " raw |> Url.percentDecode |> Maybe.withDefault raw )
 
                 [] ->
                     Nothing

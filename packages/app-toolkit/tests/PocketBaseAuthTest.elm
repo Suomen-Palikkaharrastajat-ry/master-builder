@@ -200,6 +200,10 @@ suite =
                 \_ ->
                     callbackQuery (urlWith "https://x.test/#/callback?code=a%2Fb%20c&state=s%3D1")
                         |> Expect.equal { code = Just "a/b c", state = Just "s=1" }
+            , test "reads + as a space" <|
+                \_ ->
+                    callbackQuery (urlWith "https://x.test/#/callback?code=a+b%2Bc&state=s")
+                        |> Expect.equal { code = Just "a b+c", state = Just "s" }
             , test "keeps = inside values" <|
                 \_ ->
                     callbackQuery (urlWith "https://x.test/#/callback?code=a=b==&state=z")
