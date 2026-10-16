@@ -8,7 +8,8 @@
 // - site.webmanifest is generated (the path is [pwa] manifest_path).
 // - `import siteConfig from 'virtual:site-config'` gives the resolved
 //   configuration of every language, to pass to Elm as a flag.
-// - The family's icons, social image and logos are served from the hub's
+// - The family's icons, social image, logos and the Outfit font (with its
+//   @font-face file, /fonts/outfit.css) are served from the hub's
 //   public/ directory, so apps do not keep copies. A file the app has in its
 //   own public/ directory wins.
 
@@ -25,9 +26,9 @@ import { headTags, webManifest } from './head.mjs'
 export { documentTitle, headTags, webManifest } from './head.mjs'
 
 // The hub's public/ directory, and which of its entries every site shares:
-// favicons and app icons, the social image, and the logo set.
+// favicons and app icons, the social image, the logo set and the fonts.
 const SHARED_DIR = resolvePath(dirname(fileURLToPath(import.meta.url)), '../../public')
-const SHARED = /^(favicon[^/]*|icon-[^/]*|apple-touch-icon[^/]*|og-image\.[a-z]+|logo)$/
+const SHARED = /^(favicon[^/]*|icon-[^/]*|apple-touch-icon[^/]*|og-image\.[a-z]+|logo|fonts)$/
 const MIME = {
   '.png': 'image/png',
   '.svg': 'image/svg+xml',
@@ -35,6 +36,10 @@ const MIME = {
   '.ico': 'image/x-icon',
   '.gif': 'image/gif',
   '.jpg': 'image/jpeg',
+  '.woff2': 'font/woff2',
+  '.ttf': 'font/ttf',
+  '.css': 'text/css; charset=utf-8',
+  '.txt': 'text/plain; charset=utf-8',
 }
 
 /** The shared entries (files and directories) of the hub's public/ directory. */

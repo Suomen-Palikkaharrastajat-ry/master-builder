@@ -15,6 +15,7 @@ which hub commit it is on and what it needs at runtime — is described in
 | Design tokens (machine) | `design-guide/content/*.toml` → generated into `master-builder/packages/design-tokens/` |
 | Design tokens CSS | `packages/design-tokens/design-tokens.css` (generated from `design-guide/dist/design-tokens.css`) |
 | Shared component styles & safelist | `packages/ui-components/ui-components.css` |
+| Brand font (Outfit files, `@font-face`, OFL) | `master-builder/public/fonts/`, served to apps by `packages/site-config/vite.mjs` |
 | Design system (prose: colors, typography, logos, WCAG) | `master-builder/AGENTS.md` → "Design system" |
 | LEGO color catalog (reference) | `design-guide/reference/allowed-colors.csv` |
 | Shared Elm UI components | `master-builder/packages/ui-components/` |
@@ -229,8 +230,13 @@ the compiler. The contract is therefore:
   @import "tailwindcss";
   @import "./vendor/master-builder/packages/design-tokens/design-tokens.css";
   @import "./vendor/master-builder/packages/ui-components/ui-components.css";
+  @import "./vendor/master-builder/public/fonts/outfit.css";
   @source "./src";
   ```
+
+  The font import path above is for a CSS file at the app root; from
+  `elm-app/main.css` it is `../vendor/master-builder/public/fonts/outfit.css`.
+  Apps keep no font files or `@font-face` of their own.
 
 ## Site layout, configuration and language
 
