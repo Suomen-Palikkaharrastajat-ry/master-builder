@@ -14,8 +14,8 @@ SITE_CONFIG ?= vendor/master-builder/packages/site-config
 SITE_CONFIG_FIXTURE ?= elm-app/tests/SiteFixture.elm
 SITE_CONFIG_I18N ?= elm-app/src elm-app/main.js
 
-# What a build that reads config.toml depends on.
-SITE_CONFIG_DEPS := config.toml $(SITE_CONFIG)/family.toml $(wildcard $(SITE_CONFIG)/*.mjs)
+# What a build that reads config.toml depends on, including the hub's shared fonts.
+SITE_CONFIG_DEPS := config.toml $(SITE_CONFIG)/family.toml $(wildcard $(SITE_CONFIG)/*.mjs) $(wildcard $(SITE_CONFIG)/../../public/fonts/*)
 
 .PHONY: site-config
 site-config: ## Regenerate the files derived from config.toml

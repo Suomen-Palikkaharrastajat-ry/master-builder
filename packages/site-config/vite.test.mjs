@@ -75,6 +75,15 @@ test('the dev server serves the manifest and shared files the app does not have'
 
   const licence = await request(plugin, root, '/fonts/OFL.txt')
   assert.equal(licence.headers['Content-Type'], 'text/plain; charset=utf-8')
+  assert.equal(licence.next, false)
+})
+
+test("the dev server leaves an app's own font file to Vite", async () => {
+  const { root, plugin } = app()
+  mkdirSync(join(root, 'public', 'fonts'))
+  writeFileSync(join(root, 'public', 'fonts', 'outfit.css'), 'own css')
+  assert.equal((await request(plugin, root, '/fonts/outfit.css')).next, true)
+  assert.equal((await request(plugin, root, '/fonts/OFL.txt')).next, false)
 })
 
 test("the dev server leaves the app's own files, other paths and traversal to Vite", async () => {

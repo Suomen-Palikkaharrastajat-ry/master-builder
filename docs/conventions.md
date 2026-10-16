@@ -238,6 +238,13 @@ the compiler. The contract is therefore:
   `elm-app/main.css` it is `../vendor/master-builder/public/fonts/outfit.css`.
   Apps keep no font files or `@font-face` of their own.
 
+  Each app build logs two expected Vite warnings, that
+  `/fonts/Outfit-VariableFont_wght.woff2` and `.ttf` "didn't resolve at build
+  time, it will remain unchanged to be resolved at runtime". The app's `public/`
+  has no `fonts/`; the site-config plugin copies the hub's into `dist/fonts`
+  after the bundle. The absolute URLs are deliberate (the static pages link
+  `/fonts/outfit.css` too), so do not switch to relative URLs to silence them.
+
 ## Site layout, configuration and language
 
 Every site describes itself in `config.toml` and renders its chrome with
