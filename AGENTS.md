@@ -200,7 +200,7 @@ All colour usage must pass WCAG AA contrast.
 
 ### Typography
 
-Font: **Outfit variable** (100–900), self-hosted from `public/fonts/`. Never substitute.
+Font: **Outfit variable** (100–900), self-hosted from `public/fonts/` as WOFF2 with a TTF fallback, plus its licence `OFL.txt`. `public/fonts/outfit.css` holds the only `@font-face` for Outfit: the hub's `style.css` and the apps' `main.css` import it, and the site-config Vite plugin serves `/fonts/*` to the apps. Apps never keep font files or their own `@font-face`. Never substitute.
 Use `type-*` utility classes from `packages/design-tokens/design-tokens.css` (imported by `style.css`). Never use raw Tailwind size/weight combos.
 
 | Class | Size | Weight | Notes |

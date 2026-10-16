@@ -1,17 +1,10 @@
 @import "tailwindcss";
 @import "./packages/design-tokens/design-tokens.css";
 @import "./packages/ui-components/ui-components.css";
+@import "./public/fonts/outfit.css";
 @source "./content/**/*.md";
 @source "./template/**/*.md";
 @plugin "@tailwindcss/typography";
-
-@font-face {
-  font-family: "Outfit";
-  src: url("/fonts/Outfit-VariableFont_wght.ttf") format("truetype");
-  font-weight: 100 900;
-  font-style: normal;
-  font-display: swap;
-}
 
 /* ── Base ─────────────────────────────────────────────────────────────────── */
 
