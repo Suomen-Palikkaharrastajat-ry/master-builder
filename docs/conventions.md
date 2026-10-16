@@ -196,15 +196,14 @@ Instead use one of:
   message when moving the `vendor/master-builder` pin.
 
 The `downstream` workflow (`.github/workflows/downstream.yml`) compiles every
-app (event-calendar, planet, service-map and the private competitions) against hub changes to `packages/`,
+app (event-calendar, planet, service-map and competitions) against hub changes to `packages/`,
 `packages-hs/`, `review/`, `pkgs/` and `.github/actions/`, by replacing each
 app's pinned `vendor/master-builder` with the commit under test. A red
 `downstream` job means an app needs a matching change before the hub change is
 merged (see the policy above). It runs `make elm-build`, `make elm-test` and,
 for apps using `statics-common`, `make statics-build`; it does not run
-`make check` yet. The private app is checked out with the
-`DOWNSTREAM_READ_TOKEN` secret and skipped when it is absent; each app lists the
-paths `check-i18n` scans in the workflow's matrix.
+`make check` yet. Each app lists the paths `check-i18n` scans in the
+workflow's matrix.
 
 ## Consuming shared Elm packages
 

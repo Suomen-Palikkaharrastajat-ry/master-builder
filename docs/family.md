@@ -75,11 +75,8 @@ Three ways of depending on the hub exist:
   app only when the app bumps its pin; `.github/workflows/downstream.yml`
   builds event-calendar's, service-map's, planet's and competitions' `main`
   against hub commits that touch shared code (it is path-filtered), so
-  breakage is seen first. competitions is private: its job checks it out with
-  the `DOWNSTREAM_READ_TOKEN` secret; it is skipped (green, without having
-  checked anything) on fork PRs, and fails on push or manual runs when the
-  secret is absent. Its build log is public like the rest of the hub's. The other submodule consumers
-  are not in that matrix.
+  breakage is seen first. The other submodule consumers are not in that
+  matrix.
 - **Reusable workflow** (`deploy-content.yml@main`): the content sites. They
   are **unpinned**: every hub merge changes those sites at their next deploy,
   so a breaking hub change reaches production through them first. Two ways to
@@ -170,16 +167,17 @@ Three ways of depending on the hub exist:
 - **Runtime services:** none (the feeds are fetched at build time).
 - **CI / deploy:** `deploy.yml` (GitHub Pages) and `scheduled.yml` (four times a day).
 
-### competitions (private)
+### competitions (public)
 
 - **Role:** "Palikkakilpailu", the building competition service.
 - **Stack:** custom PocketBase 0.37.5 Go backend (`go.mod`, `pb_hooks/`, `pb_migrations/`), Elm SPA, Haskell gallery pipeline, Keycloak realm `competitions`; Caddy and Mailpit locally.
 - **Depends on the hub via:** submodule pin `vendor/master-builder`.
 - **Uses from the hub:** `ui-components` (`Component.Layout`, `Account`, `SiteSettings`, `Lang`, `UiStrings`), `design-tokens`, `site-config` (`config.toml`), `review/` rules, shared icons and logos; `elm-app/packages` is a committed symlink and icons come from `1602/elm-feather`.
-- **CI / deploy:** `quality.yml` (shared `setup-nix` action); `deploy.yml` and `scheduled.yml` are disabled. Built against hub changes by the Downstream workflow (private checkout through the `DOWNSTREAM_READ_TOKEN` secret; its build log is public, since the hub is, so compiler and test errors quote private source lines, which the repository owner must accept).
-- **Conventions:** conforms once the `family-conventions` branch of [Suomen-Palikkaharrastajat-ry/competitions#1](https://github.com/Suomen-Palikkaharrastajat-ry/competitions/issues/1) is merged (until then its `main` is behind). The status table shows the pin.
-- **Remaining follow-ups** (also tracked in that issue):
-  - `config.toml` holds a placeholder production URL; the font comes from a local `outfit.css` until the hub ships one.
+- **CI / deploy:** `quality.yml` (shared `setup-nix` action); `deploy.yml` and `scheduled.yml` are disabled. Built against hub changes by the Downstream workflow.
+- **Conventions:** conforms since [Suomen-Palikkaharrastajat-ry/competitions#1](https://github.com/Suomen-Palikkaharrastajat-ry/competitions/issues/1). The status table shows the pin.
+- **Remaining follow-ups** (tracked in a follow-up issue in competitions):
+  - The font comes from a local `outfit.css`; drop it for the hub's once the pin includes it.
+  - A stored session is not refreshed at start-up, so an expired token looks signed in.
   - `devenv.yaml` follows nixpkgs master.
   - No `cabal.project` and no `src/` layout like the other Haskell repositories; the build output goes to `build/`.
   - `review/src/LlmAgent` and `pkgs/npm-tools.nix` are copies of the hub's.
