@@ -5,6 +5,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning: [S
 
 ## [Unreleased]
 
+## [2.0.0]
+
 ### Added
 
 - `Locale`: a language's date and time conventions, with `fi`, `en` and `forCode`.
